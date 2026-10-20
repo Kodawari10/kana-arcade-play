@@ -1,7 +1,16 @@
 /* Kana Arcade — falling-kana typing/tapping shooter. Plain JS, no dependencies. */
 (function () {
   "use strict";
-  var ROWS = window.KANA.ROWS;
+  var BASE = window.KANA.ROWS, ROWS = window.KANA.ALL || BASE; // ゛ levels 11-15 add the tenten/maru rows; words + omikuji stay on the basic rows
+  var KANA_TOTAL = window.KANA.TOTAL || 92;
+  var DAKU_OF = {}; // ゛ voiced kana → { base, mark, tip, same } (が → か + ゛), for the companion-screen grid
+  (window.KANA.DAKUTEN || []).forEach(function (row) {
+    var from = BASE.filter(function (r) { return r.name === row.from; })[0]; if (!from) return;
+    row.kana.forEach(function (k, i) { [0, 1].forEach(function (s) {
+      var same = { "ぢ": "じ", "づ": "ず", "ヂ": "ジ", "ヅ": "ズ" }[k[s]] || "";
+      DAKU_OF[k[s]] = { base: from.kana[i][s], mark: row.mark, tip: row.tip, same: same };
+    }); });
+  });
   var $ = function (id) { return document.getElementById(id); };
   var canvas = $("game"), ctx = canvas.getContext("2d");
   var stage = $("stage"), input = $("input");
@@ -46,7 +55,7 @@
   save("quest", quest);
   // 🎋 omikuji (own save key { date }): once drawn today, the lucky kana sparkles gold in games for ×2 points
   var OMI = window.KA_OMIKUJI;
-  function omikujiToday() { var key = QUEST.dayKey(); return OMI && OMI.drawnOn(load("omikuji", null), key) ? OMI.draw(key, ROWS) : null; }
+  function omikujiToday() { var key = QUEST.dayKey(); return OMI && OMI.drawnOn(load("omikuji", null), key) ? OMI.draw(key, BASE) : null; }
   function questDay() { // a new day while the game is open → a new quest
     var key = QUEST.dayKey();
     if (quest.date !== key) { quest = QUEST.normalize(quest, key, { hasMissed: hasMissed() }); save("quest", quest); }
@@ -164,7 +173,7 @@
     if (!KW) return false;
     if (!force && (wordsOnScreen() >= KW.maxOnScreen(G.level, settings.gentle) || Math.random() >= KW.chance(G.level, settings.gentle))) return false;
     var skip = {}; G.enemies.forEach(function (e) { if (e.word) skip[e.word.jp] = 1; });
-    var w = jp ? KW.info(jp, ROWS) : KW.pick(G.level, settings.script, ROWS, progress.kana, wordStats, skip);
+    var w = jp ? KW.info(jp, BASE) : KW.pick(G.level, settings.script, BASE, progress.kana, wordStats, skip);
     if (!w) return false;
     var fs = fontSize(), wfs = wordFont(), half = wordHalf(w, wfs), x = half + 8 + Math.random() * Math.max(1, W - (half + 8) * 2);
     for (var i = 0; i < 6; i++) {
@@ -350,7 +359,7 @@
   }
   function romajiOf(ch) {
     for (var r = 0; r < ROWS.length; r++) for (var i = 0; i < ROWS[r].kana.length; i++) { var k = ROWS[r].kana[i]; if (k[0] === ch || k[1] === ch) return k[2]; }
-    if (KW && ch && ch.length > 1) { var w = KW.info(ch, ROWS); if (w.ok) return w.ro + " (" + w.emoji + " " + w.en + ")"; }
+    if (KW && ch && ch.length > 1) { var w = KW.info(ch, BASE); if (w.ok) return w.ro + " (" + w.emoji + " " + w.en + ")"; }
     return "";
   }
   // tap a kana in the grid / practice list: say it out loud and show it big in the speech line
@@ -421,7 +430,7 @@
     G.target = t;
     if (!t) { ansBtns.forEach(function (b) { b.textContent = "·"; b.disabled = true; b.dataset.v = ""; }); return; }
     if (t.word) { // 💬 a word: the right romaji plus three look-alikes
-      var wo = shuffle([t.answers[0]].concat(KW.distractors(t.word, G.level, settings.script, ROWS)));
+      var wo = shuffle([t.answers[0]].concat(KW.distractors(t.word, G.level, settings.script, BASE)));
       ansBtns.forEach(function (b, i) { b.textContent = wo[i]; b.dataset.v = wo[i]; b.disabled = false; b.className = "ans word"; });
       return;
     }
@@ -753,6 +762,7 @@
     } else if (b.row) {
       neonText("NEW KANA: " + b.row.name.toUpperCase(), W / 2, H * 0.41, Math.min(18, W / 24), "#ffe94d", 8);
       if (KW && G.level === KW.START) neonText("💬 + WORDS!", W / 2, H * 0.6, Math.min(18, W / 24), "#ff8fd9", 8);
+      if (b.row.mark) neonText("✦ " + (b.row.mark === "゛" ? "TENTEN" : "MARU") + " CHANGES THE SOUND: " + b.row.tip.toUpperCase() + " ✦", W / 2, H * 0.6, Math.min(18, W / 30), "#ff8fd9", 8);
       var n = b.row.kana.length, cw = Math.min(W / (n + 0.5), 110);
       b.row.kana.forEach(function (kk, i) {
         var x = W / 2 + (i - (n - 1) / 2) * cw;
@@ -894,36 +904,45 @@
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
-    var g = $("kanaGrid"), html = "", n = 0, tot = 0, near = 0;
+    var g = $("kanaGrid"), html = "", n = 0, tot = 0, near = 0, dn = 0, dt = 0, dhtml = "";
     document.querySelectorAll(".gridTab").forEach(function (b) { b.classList.toggle("on", b.dataset.script === gridScript); });
     ROWS.forEach(function (row) {
+      var isD = !!row.mark, rh = ""; // ゛ tenten/maru rows go in their own little grid below
       var cells = row.kana.slice();
       if (row.name === "ya-row") cells = [cells[0], null, cells[1], null, cells[2]];
       if (row.name === "wa-row") cells = [cells[0], null, null, cells[1], cells[2]];
       cells.forEach(function (k) {
-        if (!k) { html += '<div class="kc blank" aria-hidden="true"></div>'; return; }
-        var ch = gridScript === "katakana" ? k[1] : k[0], s0 = progress.kana[ch], ms = CP.isMastered(s0); tot++; if (ms) n++;
+        if (!k) { rh += '<div class="kc blank" aria-hidden="true"></div>'; return; }
+        var ch = gridScript === "katakana" ? k[1] : k[0], s0 = progress.kana[ch], ms = CP.isMastered(s0);
+        if (isD) { dt++; if (ms) dn++; } else { tot++; if (ms) n++; }
         var nd = NEAR && !ms ? NEAR.need(s0, CP.MASTER_CORRECT, CP.MASTER_ACC) : Infinity, nr = nd >= 1 && nd <= (NEAR ? NEAR.NEAR : 0); if (nr) near++;
         var cls = ms ? "kc mastered" : (s0 ? "kc seen" + (nr ? " near" : "") : "kc"), pr = s0 ? Math.min(1, s0.c / CP.MASTER_CORRECT) : 0;
         var tip = s0 ? (s0.c + " correct, " + s0.w + " missed") : "not seen yet";
-        var label = ch + ", " + k[2] + (ms ? ", mastered" : "") + (nr ? ", almost mastered: " + NEAR.needText(nd) : "") + ", " + tip + ". Tap to hear it.";
-        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '"' + (nr ? ' data-need="' + nd + '"' : "") + ' title="' + tip + (nr ? " · 🌱 " + NEAR.needText(nd) + " to master" : "") + ' · tap to hear" aria-label="' + label + '"><i aria-hidden="true">' + k[2] + '</i><b lang="ja">' + ch + '</b>' + (nr ? '<span class="sprout" aria-hidden="true">🌱</span>' : "") + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
+        var label = ch + ", " + k[2] + (isD ? ", " + (row.mark === "゛" ? "tenten" : "maru") + " " + row.tip.replace("→", "to") : "") + (ms ? ", mastered" : "") + (nr ? ", almost mastered: " + NEAR.needText(nd) : "") + ", " + tip + ". Tap to hear it.";
+        rh += '<button type="button" class="' + cls + '" data-ch="' + ch + '"' + (nr ? ' data-need="' + nd + '"' : "") + ' title="' + tip + (nr ? " · 🌱 " + NEAR.needText(nd) + " to master" : "") + ' · tap to hear" aria-label="' + label + '"><i aria-hidden="true">' + k[2] + '</i><b lang="ja">' + ch + '</b>' + (nr ? '<span class="sprout" aria-hidden="true">🌱</span>' : "") + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
       });
+      if (isD) dhtml += rh; else html += rh;
     });
     g.innerHTML = html;
-    $("masteryCount").textContent = (gridScript === "katakana" ? "Katakana" : "Hiragana") + " mastered: " + n + " / " + tot + "  ·  total mastered: " + masteredCount() + " / 92" + (near ? "  ·  🌱 " + near + " almost there" : "");
+    $("dakuGrid").innerHTML = dhtml;
+    $("dakuCount").textContent = dn + " / " + dt + " mastered · unlocked from level 11";
+    $("masteryCount").textContent = (gridScript === "katakana" ? "Katakana" : "Hiragana") + " mastered: " + n + " / " + tot + "  ·  total mastered: " + masteredCount() + " / " + KANA_TOTAL + (near ? "  ·  🌱 " + near + " almost there" : "");
   }
   $("petBtn").addEventListener("click", openPetScreen);
   $("overPetBtn").addEventListener("click", openPetScreen);
   $("petBack").addEventListener("click", function () { show("petScreen", false); toTitle(); });
-  $("kanaGrid").addEventListener("click", function (ev) {
+  function gridClick(ev) {
     var b = ev.target.closest && ev.target.closest(".kc[data-ch]"); if (!b) return;
     hearKana(b, "gridSay");
     var nd = +b.dataset.need; // 🌱 almost mastered: say how close it is
     if (nd && NEAR) $("gridSay").innerHTML += " · 🌱 " + NEAR.needText(nd) + " to master it!";
     var lp = LOOK ? LOOK.partners(b.dataset.ch) : []; // 👀 looks like…
     if (lp.length) $("gridSay").innerHTML += "<span class='lookNote'> · 👀 looks like " + lp.map(function (c) { return "<b lang='ja'>" + c + "</b> (" + romajiOf(c) + ")"; }).join(", ") + ". " + LOOK.tipFor(b.dataset.ch, lp[0]).replace(/[\u3040-\u30ff]/g, "<b lang='ja'>$&</b>") + "</span>";
-  });
+    var dk = DAKU_OF[b.dataset.ch]; // ゛ how it's built from the plain kana
+    if (dk) $("gridSay").innerHTML += "<span class='dakuNote'> · <b lang='ja'>" + b.dataset.ch + "</b> = <b lang='ja'>" + dk.base + "</b> + " + dk.mark + " (" + dk.tip + ")" + (dk.same ? ", sounds like <b lang='ja'>" + dk.same + "</b>" : "") + "</span>";
+  }
+  $("kanaGrid").addEventListener("click", gridClick);
+  $("dakuGrid").addEventListener("click", gridClick);
   $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
   function petChat() {
@@ -1009,7 +1028,7 @@
   }
   function stickerInfo() {
     var P = CP.petById(progress.pet), si = petStage(), st = CP.STAGES[si], ks = masteredList();
-    return { petId: P.id, name: P.name, nick: nickOf(P.id), jp: P.jp, ro: romajiWord(P.jp), stage: si, stageName: st.name, stageJp: st.jp, mastered: ks.length, total: 92, kana: ks, date: new Date() };
+    return { petId: P.id, name: P.name, nick: nickOf(P.id), jp: P.jp, ro: romajiWord(P.jp), stage: si, stageName: st.name, stageJp: st.jp, mastered: ks.length, total: KANA_TOTAL, kana: ks, date: new Date() };
   }
   var stickerBusy = false;
   function saveSticker(opts) {
@@ -1189,7 +1208,7 @@
     show("newHigh", isNew);
     var missed = Object.keys(G.missed).sort(function (a, b) { return G.missed[b] - G.missed[a]; }).slice(0, 6);
     var lookup = {}; ROWS.forEach(function (r) { r.kana.forEach(function (k) { lookup[k[0]] = k[2]; lookup[k[1]] = k[2]; }); });
-    var mw = KW ? Object.keys(G.missedWords).slice(0, 3).map(function (j) { return KW.info(j, ROWS); }) : [];
+    var mw = KW ? Object.keys(G.missedWords).slice(0, 3).map(function (j) { return KW.info(j, BASE); }) : [];
     $("toPractice").innerHTML = (missed.length || mw.length) ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).concat(mw.map(function (w) {
       return "<button type='button' class='pk pw' data-ch='" + w.jp + "' aria-label='" + w.jp + " = " + w.ro + ", " + w.en + ", tap to hear it'><b lang='ja'>" + rubyHTML(w.jp) + "</b>=" + w.ro + " " + w.emoji + "</button>"; })).join(" ") : "";
     $("practiceSay").textContent = ""; show("practiceSay", false);
@@ -1366,7 +1385,8 @@
     killWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) kill(e); return !!e; },
     missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
-    sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount,
+    sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount, dakuOf: function (ch) { return DAKU_OF[ch] || null; }, pool: function () { return G ? pool().map(function (x) { return x.k[0]; }) : []; },
+    showBanner: function () { if (G) showBanner(); return G && G.banner ? { title: G.banner.title, row: G.banner.row ? G.banner.row.name : null } : null; },
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },

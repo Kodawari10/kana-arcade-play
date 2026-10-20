@@ -47,7 +47,7 @@
       <button id="wbClose" type="button" class="wbClose" aria-label="Close the welcome message" title="Close">✕</button>
     </div>
     <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
-       Each level unlocks a new kana row and the invaders get faster. Chain hits for a combo multiplier!</p>
+       Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. Chain hits for a combo multiplier!</p>
     <div class="row" id="scriptRow">
       <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
       <button class="alt modeBtn rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
@@ -145,6 +145,9 @@
     <p class="tips" id="masteryCount"></p>
     <p id="gridSay" class="tips hearLine" role="status" aria-live="polite"></p>
     <div id="kanaGrid"></div>
+    <h3 class="dakuHead"><span lang="ja">が ぱ</span> Tenten &amp; maru <small id="dakuCount"></small></h3>
+    <p class="tips dakuTip">Two little ticks (<span lang="ja">゛</span>) or a tiny circle (<span lang="ja">゜</span>) change the sound: <span lang="ja">か</span> ka → <span lang="ja">が</span> ga, <span lang="ja">は</span> ha → <span lang="ja">ぱ</span> pa.</p>
+    <div id="dakuGrid" aria-label="Tenten and maru kana"></div>
     <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. 🌱 = almost there (3 or fewer right answers to go). Mastered kana grow your companion!</p>
     <button id="petBack">◀ BACK</button>
   </div>

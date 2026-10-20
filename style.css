@@ -52,7 +52,7 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 .bar { position: relative; width: min(360px, 86vw); height: 20px; background: #1b0f45; border: 2px solid #2be8ff; border-radius: 10px; overflow: hidden; flex: 0 0 auto; }
 #xpFill { height: 100%; width: 0; background: linear-gradient(90deg, #2be8ff, #ff2bd6); transition: width .4s; }
 #xpText { position: absolute; inset: 0; font-size: 12px; line-height: 16px; color: #fff; text-shadow: 0 0 3px #000; font-weight: bold; }
-#kanaGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; width: min(380px, 92vw); flex: 0 0 auto; }
+#kanaGrid, #dakuGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; width: min(380px, 92vw); flex: 0 0 auto; }
 .kc { font: inherit; padding: 0; min-height: 0; box-shadow: none; cursor: pointer; font-weight: normal; width: 100%; }
 .kc:focus-visible, .pk:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
 .kc { position: relative; aspect-ratio: 1 / 1; max-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; background: #0b0430; border: 1px solid #2a1f5c; color: #554a88; }
@@ -361,3 +361,10 @@ body.calm button.nickBtn.pop { animation: none !important; }
 .nickCount { font-size: 12px; color: #ffb3d1; min-width: 3.2em; }
 .srOnly { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .nickTag { display: block; font-style: normal; font-size: .72em; color: #ff8fb8; margin-top: 1px; }
+
+/* ---- ゛ tenten & ゜ maru grid ---- */
+.dakuHead { font-size: clamp(15px, 4vw, 18px); color: #ff8fd9; text-shadow: 0 0 8px #ff8fd9; margin-top: 6px; }
+.dakuHead small { display: block; font-size: 11px; color: #b9c8ff; text-shadow: none; font-weight: normal; margin-top: 2px; }
+.dakuTip { margin-top: -4px; }
+.dakuHead [lang="ja"], .dakuTip [lang="ja"], .dakuNote [lang="ja"] { font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.dakuNote b { color: #ff8fd9; }
