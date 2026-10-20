@@ -51,6 +51,7 @@
     <div class="row">
       <button id="startBtn">▶ START</button>
       <button id="petBtn" class="alt">★ MY COMPANION</button>
+      <button id="badgeBtn" class="alt">🏅 BADGES</button>
     </div>
     <p class="tips" id="tips"></p>
   </div>
@@ -69,9 +70,11 @@
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
+    <p id="overBadges" class="tips hidden" role="status"></p>
     <div class="row">
       <button id="againBtn">▶ PLAY AGAIN</button>
       <button id="overPetBtn" class="alt">★ COMPANION</button>
+      <button id="overBadgeBtn" class="alt">🏅 BADGES</button>
       <button id="titleBtn" class="alt">TITLE</button>
     </div>
   </div>
@@ -91,9 +94,27 @@
     <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. Mastered kana grow your companion!</p>
     <button id="petBack">◀ BACK</button>
   </div>
+  <div id="badgeScreen" class="overlay hidden" role="dialog" aria-labelledby="badgeTitle">
+    <h2 class="petTitle" id="badgeTitle">🏅 KANA BADGES</h2>
+    <p class="tips" id="badgeSub"></p>
+    <div id="badgeHelper">
+      <canvas id="badgePet" class="petCanvas" data-size="96" title="Tap me for a tip!"></canvas>
+      <div id="badgeSay" class="say" aria-live="polite"></div>
+    </div>
+    <div id="badgeGrid" role="list"></div>
+    <div id="chainBox" class="hidden"></div>
+    <button id="badgeBack">◀ BACK</button>
+  </div>
+  <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
+<script src="js/badges.js"></script>
+<script src="js/badge-book.js"></script>
+<!-- optional Starknet layer: never loads a wallet library or touches the network until you tap Connect -->
+<script src="js/starknet-config.js"></script>
+<script src="js/starknet-abi.js"></script>
+<script src="js/starknet.js"></script>
 </body>
 </html>
