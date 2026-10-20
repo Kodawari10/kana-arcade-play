@@ -126,7 +126,8 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 @media (prefers-reduced-motion: reduce) { .kc.hear, .pk.hear { animation: none; } }
 
 /* ---- 🫧 gentle mode ---- */
-#gentleBtn { font-size: 14px; }
+#gentleBtn, #musicBtn { font-size: 14px; }
+#musicBtn.on { background: #ffd36b; color: #07021a; border-color: #ffd36b; box-shadow: 0 0 10px #ffd36b88; }
 #gentleBtn.on { background: #b9f3ff; color: #07021a; border-color: #b9f3ff; box-shadow: 0 0 10px #b9f3ff88; }
 #gentleNote { max-width: 420px; min-height: 1.4em; flex: 0 0 auto; }
 #startScreen > * { flex-shrink: 0; }

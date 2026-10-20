@@ -47,6 +47,7 @@
     if (typingRomaji(ev) || ev.repeat) return;
     var key = (ev.key || "").toLowerCase();
     if (key === "m") { ev.preventDefault(); $("muteBtn").click(); }
+    else if (key === "b" && $("musicBtn")) { ev.preventDefault(); $("musicBtn").click(); }
     else if (key === "t") { ev.preventDefault(); $("modeToggle").click(); }
   }, true);
   document.querySelectorAll(".keysOpen").forEach(function (b) { b.addEventListener("click", function () { isOpen() ? close() : open(); }); });

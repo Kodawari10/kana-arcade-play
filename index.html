@@ -59,6 +59,7 @@
     </div>
     <div class="row" id="gentleRow">
       <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
+      <button id="musicBtn" class="alt small" type="button" aria-pressed="false" aria-keyshortcuts="B" title="Soft arcade music (B)">🎵 Music: OFF</button>
       <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
       <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
       <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
@@ -170,6 +171,7 @@
           <dl>
             <dt><kbd>?</kbd></dt><dd>Open / close this list</dd>
             <dt><kbd>M</kbd></dt><dd>Sound on / off</dd>
+            <dt><kbd>B</kbd></dt><dd>🎵 Music on / off</dd>
             <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
             <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
             <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, welcome card or home screen help</dd>
@@ -186,7 +188,7 @@
             <dt><kbd>Enter</kbd></dt><dd>Start / play again</dd>
           </dl></section>
       </div>
-      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd> and <kbd>T</kbd> are just letters.</p>
+      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd>, <kbd>B</kbd> and <kbd>T</kbd> are just letters.</p>
       <button id="keysBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
@@ -217,6 +219,7 @@
 <script src="js/review.js"></script>
 <script src="js/chatter.js"></script>
 <script src="js/sticker.js"></script>
+<script src="js/music.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/keys.js"></script>

@@ -17,7 +17,9 @@
     input: params.get("input") || load("input", isTouch ? "tap" : "type"),
     muted: load("muted", false),
     // 🫧 Gentle mode: slower, calmer play. Bad saved values fall back to off.
-    gentle: params.get("gentle") ? params.get("gentle") === "1" : load("gentle", false) === true
+    gentle: params.get("gentle") ? params.get("gentle") === "1" : load("gentle", false) === true,
+    // 🎵 arcade music (off by default; bad saved values fall back to off)
+    music: load("music", false) === true
   };
   var reduceMQ = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   // calm = no shaking, flashing, wobbling or buzzing (Gentle mode, or the device's "reduce motion" setting)
@@ -999,6 +1001,29 @@
 
   function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; }
 
+  // ---------- 🎵 arcade music (js/music.js): a soft chiptune loop, quicker each level, calm in Gentle mode ----------
+  var KM = window.KA_MUSIC, music = KM ? KM.create({
+    getCtx: function () { return actx; }, // never creates audio by itself: browsers only allow sound after a tap
+    mood: function () { return { on: settings.music, muted: settings.muted, hidden: document.hidden, state: state, level: G ? G.level : 1, gentle: settings.gentle }; }
+  }) : null;
+  function applyMusic() {
+    var b = $("musicBtn"); if (!b) return; var on = settings.music;
+    show("musicBtn", !!KM);
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.textContent = on ? "🎵 Music: ON" : "🎵 Music: OFF";
+  }
+  function setMusic(on) {
+    settings.music = !!on; save("music", settings.music); applyMusic();
+    if (settings.music) audio();
+    showToast(!settings.music ? "Music off" : settings.muted ? "🎵 Music on · unmute 🔇 to hear it" : "🎵 Music on");
+    if (music) music.tick();
+  }
+  $("musicBtn").addEventListener("click", function () { setMusic(!settings.music); });
+  // saved music starts quietly on the first tap or key press
+  function firstGesture() { if (settings.music && !settings.muted) { audio(); if (music) setTimeout(music.tick, 30); } }
+  document.addEventListener("pointerdown", firstGesture, true);
+  document.addEventListener("keydown", firstGesture, true);
+
   // 👩/👨 kana voice (choice saved by js/voice.js in its own key; default female)
   var voiceNotes = load("voiceNotes", {}); if (!voiceNotes || typeof voiceNotes !== "object") voiceNotes = {};
   function applyVoice() {
@@ -1219,7 +1244,7 @@
   window.addEventListener("pagehide", seenNow);
 
   // ---------- boot ----------
-  applyHomeRomaji(); buildPicker(); renderQuest(); applyReviewBtn(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); applyCostumes(); resize(); checkWelcome(); costumeHello();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyReviewBtn(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyMusic(); applyVoice(); applyInputMode(); applyCostumes(); resize(); checkWelcome(); costumeHello();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) { if (params.get("review") === "1") startReview() || startNormal(); else startNormal(); }
@@ -1230,7 +1255,7 @@
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
-    setGentle: setGentle, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+    setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     spawnWord: function (jp) { return state === "play" && G ? spawnWord(true, jp) : false; }, wordStats: function () { return wordStats; },
     killWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) kill(e); return !!e; },
