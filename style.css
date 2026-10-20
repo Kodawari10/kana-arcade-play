@@ -249,3 +249,19 @@ kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; font: bold 13px
 /* phones and tablets without a keyboard don't need the ? button */
 #keysTitleBtn kbd { font-size: 11px; padding: 0 4px; min-width: 1.4em; border-bottom-width: 2px; }
 @media (hover: none) and (pointer: coarse) { .keysOpen { display: none; } }
+
+/* ---- 📲 add to home screen ---- */
+#installRow { align-items: center; max-width: 560px; }
+#installNote { max-width: 300px; text-align: left; }
+#installScreen { z-index: 30; background: #07021acc; }
+#installSheet { position: relative; width: min(460px, 100%); background: #10063a; border: 2px solid #ff8fb8; border-radius: 14px; box-shadow: 0 0 22px #ff8fb888;
+  padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#installTitle { font-size: clamp(22px, 6vw, 30px); color: #ff8fb8; text-shadow: 0 0 10px #ff8fb8; }
+#installTitle .rubyJp { font-size: .62em; color: #2be8ff; text-shadow: 0 0 8px #2be8ff; }
+#installClose { position: absolute; top: 8px; right: 8px; }
+.installSteps { text-align: left; font-size: 14px; line-height: 1.5; color: #e8f7ff; padding-left: 1.6em; display: flex; flex-direction: column; gap: 6px; }
+.installSteps li::marker { color: #ffe94d; font-weight: bold; }
+.shareIcon { display: inline-block; padding: 0 5px; border: 1px solid #2be8ff; border-radius: 5px; color: #2be8ff; font-size: 12px; }
+#installDone .rubyJp { font-size: .9em; }
+#installDone ruby.ro rt { font-size: 9px; color: inherit; text-shadow: none; }
+.is-app #installRow { display: none !important; }

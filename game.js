@@ -671,6 +671,10 @@
       CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, petPokeT > 0 ? "cheer" : "idle", t);
       if (petPokeT > 0) { b.x.font = "28px sans-serif"; b.x.textAlign = "center"; b.x.fillStyle = "#ff6b9a"; b.x.globalAlpha = Math.min(1, petPokeT); b.x.fillText("♥", b.sz / 2 + 50, b.sz * 0.3 - (1 - petPokeT) * 30); b.x.globalAlpha = 1; }
     }
+    if (!$("installScreen").classList.contains("hidden")) { // 📲 home screen help: your companion waves along
+      var ic = prepCanvas($("installPet")), iw = !calm() && (t % 2.4) < 0.9;
+      CP.draw(ic.x, progress.pet, petStage(), ic.sz / 2, ic.sz * 0.94, ic.sz * 0.8, iw ? "cheer" : "happy", t);
+    }
     if (!$("overScreen").classList.contains("hidden")) {
       var o = prepCanvas($("overPet"));
       CP.draw(o.x, progress.pet, petStage(), o.sz / 2, o.sz * 0.92, o.sz * 0.7, overPetMood, t);
@@ -951,6 +955,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+    toast: showToast, cheer: function () { sfx.level(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };

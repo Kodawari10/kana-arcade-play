@@ -42,6 +42,7 @@
       if (q || ev.key === "Escape") close();
       return;
     }
+    if (window.KA_INSTALL && window.KA_INSTALL.isOpen()) return; // the 📲 home screen help owns the keyboard while open
     if (q) { ev.stopImmediatePropagation(); ev.preventDefault(); open(); return; }
     if (typingRomaji(ev) || ev.repeat) return;
     var key = (ev.key || "").toLowerCase();

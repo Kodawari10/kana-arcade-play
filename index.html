@@ -77,6 +77,10 @@
       <button id="badgeBtn" class="alt">🏅 BADGES</button>
       <button id="omikujiBtn" class="alt" aria-haspopup="dialog">🎋 OMIKUJI</button>
     </div>
+    <div class="row hidden" id="installRow">
+      <button id="installBtn" class="alt small" type="button" aria-describedby="installNote">📲 Add to Home Screen</button>
+      <span class="tips" id="installNote">Keep Kana Arcade as a little app: one tap to open, plays offline.</span>
+    </div>
     <p class="tips" id="tips"></p>
   </div>
 
@@ -161,7 +165,7 @@
             <dt><kbd>M</kbd></dt><dd>Sound on / off</dd>
             <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
             <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
-            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji or welcome card</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, welcome card or home screen help</dd>
           </dl></section>
         <section aria-labelledby="kPlay"><h3 id="kPlay">In a game</h3>
           <dl>
@@ -179,6 +183,20 @@
       <button id="keysBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
+  <div id="installScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div id="installSheet">
+      <button id="installClose" type="button" class="wbClose" aria-label="Close home screen help" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="installTitle">📲 HOME SCREEN <span class="rubyJp" lang="ja" aria-label="ホーム, hōmu">ホーム</span></h2>
+      <canvas id="installPet" class="petCanvas" data-size="96" aria-hidden="true"></canvas>
+      <p class="tips">Keep Kana Arcade as a little app on your iPhone or iPad. It opens in one tap and plays offline.</p>
+      <ol class="installSteps">
+        <li>Tap the <b>Share</b> button <span class="shareIcon" aria-hidden="true">⬆</span> at the bottom (or top) of Safari.</li>
+        <li>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
+        <li>Tap <b>Add</b>. Your companion is now one tap away 💕</li>
+      </ol>
+      <button id="installDone" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
@@ -190,6 +208,7 @@
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/keys.js"></script>
+<script src="js/install.js"></script>
 <script src="js/badges.js"></script>
 <script src="js/badge-book.js"></script>
 <!-- optional Starknet layer: never loads a wallet library or touches the network until you tap Connect -->
