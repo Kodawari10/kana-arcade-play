@@ -22,6 +22,7 @@
       <button id="modeToggle" class="alt small" title="Switch input: keyboard typing / tap answers">⌨ TYPE</button>
       <button id="muteBtn" class="alt small" title="Mute / unmute">🔊</button>
       <button id="pauseBtn" class="alt small hidden" title="Pause (Esc)">❚❚</button>
+      <button id="keysBtn" class="alt small keysOpen" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash">?</button>
     </div>
   </div>
   <div id="controls" class="hidden">
@@ -59,6 +60,7 @@
     <div class="row" id="gentleRow">
       <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
       <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
+      <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
     </div>
     <p class="tips" id="gentleNote"></p>
     <div id="questCard" role="group" aria-labelledby="questTitle">
@@ -148,6 +150,35 @@
     <p id="okSay" class="tips hearLine" role="status" aria-live="polite"></p>
     <button id="omikujiBack">◀ BACK</button>
   </div>
+  <div id="keysScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="keysTitle">
+    <div id="keysSheet">
+      <button id="keysClose" type="button" class="wbClose" aria-label="Close keyboard shortcuts" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="keysTitle">⌨ SHORTCUTS <span class="rubyJp" lang="ja" aria-label="ショートカット, shōtokatto">ショートカット</span></h2>
+      <div class="keysCols">
+        <section aria-labelledby="kAny"><h3 id="kAny">Anywhere</h3>
+          <dl>
+            <dt><kbd>?</kbd></dt><dd>Open / close this list</dd>
+            <dt><kbd>M</kbd></dt><dd>Sound on / off</dd>
+            <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
+            <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji or welcome card</dd>
+          </dl></section>
+        <section aria-labelledby="kPlay"><h3 id="kPlay">In a game</h3>
+          <dl>
+            <dt><kbd>a</kbd>–<kbd>z</kbd></dt><dd>Type the romaji, kana fire by themselves</dd>
+            <dt><kbd>Enter</kbd> <kbd>Space</kbd></dt><dd>Fire what you typed</dd>
+            <dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Pick an answer in 👆 Tap mode</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Pause / resume</dd>
+          </dl></section>
+        <section aria-labelledby="kTitle"><h3 id="kTitle">Title &amp; game over</h3>
+          <dl>
+            <dt><kbd>Enter</kbd></dt><dd>Start / play again</dd>
+          </dl></section>
+      </div>
+      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd> and <kbd>T</kbd> are just letters.</p>
+      <button id="keysBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
@@ -158,6 +189,7 @@
 <script src="js/welcome.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
+<script src="js/keys.js"></script>
 <script src="js/badges.js"></script>
 <script src="js/badge-book.js"></script>
 <!-- optional Starknet layer: never loads a wallet library or touches the network until you tap Connect -->

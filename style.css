@@ -228,3 +228,24 @@ body.calm #omikujiBox.shake, body.calm #omikujiSlip.reveal, body.calm .okLucky.h
 body.calm #welcomeCard.pop { animation: none; }
 @media (prefers-reduced-motion: reduce) { #welcomeCard.pop { animation: none; } }
 @media (max-height: 700px) { #welcomeCard { padding-top: 5px; padding-bottom: 5px; } #welcomeCard .petCanvas { display: none; } }
+
+/* ---- ⌨ keyboard shortcuts sheet ---- */
+#keysScreen { z-index: 30; background: #07021acc; }
+#keysSheet { position: relative; width: min(700px, 100%); background: #10063a; border: 2px solid #2be8ff; border-radius: 14px; box-shadow: 0 0 22px #2be8ff88;
+  padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#keysTitle { font-size: clamp(24px, 6vw, 32px); color: #2be8ff; text-shadow: 0 0 10px #2be8ff; }
+#keysTitle .rubyJp { font-size: .62em; color: #ffd0e6; text-shadow: 0 0 8px #ff8fb8; }
+.keysCols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; width: 100%; text-align: left; }
+@media (max-width: 560px) { .keysCols { grid-template-columns: 1fr; } }
+.keysCols h3 { font-size: 14px; color: #ffe94d; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+.keysCols dl { display: grid; grid-template-columns: minmax(5.5em, auto) 1fr; gap: 5px 8px; align-items: center; font-size: 13px; color: #e8f7ff; }
+.keysCols dt { white-space: nowrap; }
+kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; font: bold 13px "Courier New", monospace; text-align: center; color: #07021a; background: #ffe0f0;
+  border: 1px solid #ff8fb8; border-bottom-width: 3px; border-radius: 6px; }
+#keysNote { text-align: center; }
+#keysClose { position: absolute; top: 8px; right: 8px; }
+#keysBack .rubyJp { font-size: .9em; }
+#keysBack ruby.ro rt { font-size: 9px; color: inherit; text-shadow: none; }
+/* phones and tablets without a keyboard don't need the ? button */
+#keysTitleBtn kbd { font-size: 11px; padding: 0 4px; min-width: 1.4em; border-bottom-width: 2px; }
+@media (hover: none) and (pointer: coarse) { .keysOpen { display: none; } }
