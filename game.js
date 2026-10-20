@@ -32,6 +32,15 @@
   function masteredCount() { return CP.countMastered(progress.kana); }
   function petStage() { return CP.stageFor(petXP(), masteredCount()); }
   function stat(ch) { return progress.kana[ch] || (progress.kana[ch] = { c: 0, w: 0 }); }
+  // 📜 daily quest (own save key, so old saves load unchanged)
+  var QUEST = window.KA_QUEST;
+  function hasMissed() { return Object.keys(progress.kana).some(function (k) { return (progress.kana[k].w || 0) > 0; }); }
+  var quest = QUEST.normalize(load("quest", null), QUEST.dayKey(), { hasMissed: hasMissed() });
+  save("quest", quest);
+  function questDay() { // a new day while the game is open → a new quest
+    var key = QUEST.dayKey();
+    if (quest.date !== key) { quest = QUEST.normalize(quest, key, { hasMissed: hasMissed() }); save("quest", quest); }
+  }
 
   // ---------- audio ----------
   var actx = null, master = null;
@@ -201,8 +210,10 @@
     gainXP(2 + Math.floor(Math.min(G.combo, 20) / 5));
     if (G.combo > 0 && G.combo % 5 === 0) petMood("cheer", 1.2, CHEERS[Math.floor(Math.random() * CHEERS.length)]);
     else if (G.pet.mood !== "cheer") petMood("happy", 0.6, Math.random() < 0.25 ? "♪" : "");
+    var practiced = !!(progress.kana[e.ch] && progress.kana[e.ch].w > 0);
     recordAnswer(e.ch, true);
     if (G.levelKills >= 8 + G.level) { G.level++; G.levelKills = 0; showBanner(); sfx.level(); gainXP(10); petMood("cheer", 2, "レベルアップ!"); }
+    questEvent({ type: "kill", kata: e.ch === e.k[1], practiced: practiced, combo: G.combo, level: G.level });
     refreshTap(true);
   }
 
@@ -567,6 +578,34 @@
   }
 
   // ---------- screens ----------
+  function questEvent(ev) {
+    questDay();
+    var before = quest.prog, cleared = QUEST.advance(quest, ev);
+    if (quest.prog !== before || cleared) save("quest", quest);
+    if (!cleared) return false;
+    if (G) {
+      gainXP(QUEST.REWARD); G.questCleared = true;
+      G.texts.push({ x: W / 2, y: H * 0.13, s: "📜 QUEST CLEAR! +" + QUEST.REWARD + " XP", c: "#6dffb0", t: 0, dur: 2, big: true });
+      if (state === "play") { petMood("cheer", 1.8, "やった! クエスト!"); sfx.level(); }
+    } else { progress.pets[progress.pet].xp += QUEST.REWARD; }
+    saveProgress();
+    showToast("📜 Daily quest complete! +" + QUEST.REWARD + " XP for " + CP.petById(progress.pet).name + (quest.streak > 1 ? " · 🔥 " + quest.streak + "-day streak" : ""));
+    return true;
+  }
+  function renderQuest() {
+    questDay();
+    var def = QUEST.byId(quest.id), goal = def.goal, prog = quest.done ? goal : quest.prog;
+    $("questJp").textContent = def.jp;
+    $("questText").textContent = def.icon + " " + def.text;
+    $("questFill").style.width = Math.round(100 * prog / goal) + "%";
+    $("questProg").textContent = quest.done ? "✓ DONE! +" + QUEST.REWARD + " XP earned" : prog + " / " + goal + " · reward +" + QUEST.REWARD + " XP";
+    var bar = $("questBar"); bar.setAttribute("aria-valuemax", goal); bar.setAttribute("aria-valuenow", prog);
+    bar.setAttribute("aria-valuetext", quest.done ? "complete" : prog + " of " + goal);
+    $("questCard").classList.toggle("done", quest.done);
+    $("questStreak").textContent = quest.done
+      ? (quest.streak > 1 ? "🔥 " + quest.streak + "-day streak! " : "") + "New quest tomorrow ✨"
+      : (quest.streak > 0 ? "🔥 " + quest.streak + "-day streak · finish today to keep it!" : "Finish quests on different days to build a streak 🔥");
+  }
   function show(id, on) { $(id).classList.toggle("hidden", !on); }
   function applyInputMode() {
     var tap = settings.input === "tap";
@@ -675,6 +714,7 @@
   var toastT = 0;
   function showToast(msg) {
     var el = $("kaToast"); el.textContent = msg; el.classList.remove("hidden");
+    el.classList.toggle("sr", state === "play"); // mid-game the canvas banner shows it; screen readers still hear it
     clearTimeout(toastT); toastT = setTimeout(function () { el.classList.add("hidden"); }, 1800);
   }
   function setGentle(on) {
@@ -706,6 +746,11 @@
     var lookup = {}; ROWS.forEach(function (r) { r.kana.forEach(function (k) { lookup[k[0]] = k[2]; lookup[k[1]] = k[2]; }); });
     $("toPractice").innerHTML = missed.length ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).join(" ") : "";
     $("practiceSay").textContent = ""; show("practiceSay", false);
+    questEvent({ type: "game" });
+    var qd = QUEST.byId(quest.id);
+    $("overQuest").textContent = G.questCleared
+      ? "📜 Daily quest complete! +" + QUEST.REWARD + " XP" + (quest.streak > 1 ? " · 🔥 " + quest.streak + "-day streak" : "")
+      : quest.done ? "📜 Daily quest done ✓ · new one tomorrow" : "📜 Daily quest: " + qd.text + " · " + quest.prog + " / " + qd.goal;
     saveProgress();
     var ps = CP.STAGES[petStage()];
     $("overPetLine").innerHTML = CP.petById(progress.pet).name + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
@@ -715,7 +760,7 @@
   }
   function pause() { if (state !== "play") return; state = "pause"; show("pauseScreen", true); input.blur(); }
   function resume() { if (state !== "pause") return; state = "play"; show("pauseScreen", false); if (settings.input === "type" && !isTouch) input.focus(); }
-  function toTitle() { state = "title"; G = null; buildPicker(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); requestAnimationFrame(resize); }
+  function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); requestAnimationFrame(resize); }
 
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);
@@ -733,7 +778,7 @@
   canvas.addEventListener("pointerdown", function () { if (state === "play" && settings.input === "type") input.focus(); });
 
   // ---------- boot ----------
-  buildPicker(); applyScript(); applyGentle(); applyMute(); applyInputMode(); resize();
+  buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyInputMode(); resize();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -742,6 +787,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
-    setGentle: setGentle, isCalm: calm, speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
+    setGentle: setGentle, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+ speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

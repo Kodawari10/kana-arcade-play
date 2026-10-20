@@ -50,6 +50,12 @@
       <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
     </div>
     <p class="tips" id="gentleNote"></p>
+    <div id="questCard" role="group" aria-labelledby="questTitle">
+      <div id="questTitle">📜 DAILY QUEST <span id="questJp" lang="ja"></span></div>
+      <div id="questText"></div>
+      <div class="bar qbar" id="questBar" role="progressbar" aria-labelledby="questText" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><div id="questFill"></div><span id="questProg"></span></div>
+      <div id="questStreak"></div>
+    </div>
     <div id="petPicker" class="row"></div>
     <p class="big"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
     <div class="row">
@@ -75,6 +81,7 @@
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
     <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
+    <p id="overQuest" class="tips"></p>
     <p id="overBadges" class="tips hidden" role="status"></p>
     <div class="row">
       <button id="againBtn">▶ PLAY AGAIN</button>
@@ -115,6 +122,7 @@
 </div>
 <script src="kana.js"></script>
 <script src="js/voice.js"></script>
+<script src="js/quest.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/badges.js"></script>
