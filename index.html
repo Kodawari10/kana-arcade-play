@@ -70,6 +70,7 @@
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
+    <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
     <p id="overBadges" class="tips hidden" role="status"></p>
     <div class="row">
       <button id="againBtn">▶ PLAY AGAIN</button>
@@ -90,6 +91,7 @@
       <button class="alt gridTab" data-script="katakana">カタカナ</button>
     </div>
     <p class="tips" id="masteryCount"></p>
+    <p id="gridSay" class="tips hearLine" role="status" aria-live="polite"></p>
     <div id="kanaGrid"></div>
     <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. Mastered kana grow your companion!</p>
     <button id="petBack">◀ BACK</button>
@@ -108,6 +110,7 @@
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
+<script src="js/voice.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/badges.js"></script>

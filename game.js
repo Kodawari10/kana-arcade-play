@@ -203,6 +203,8 @@
     G.texts.push({ x: e.x, y: groundY() - fontSize() * 1.4, s: e.ch + " = " + e.answers[0], c: "#ff3b5c", t: 0, dur: 1.8, reveal: true });
     sfx.miss();
     petMood("sad", 1.4, "うぅ…");
+    sayKana(e.ch, 380); // hear the one you missed
+
     recordAnswer(e.ch, false);
     if (navigator.vibrate) try { navigator.vibrate(120); } catch (er) {}
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
@@ -214,6 +216,27 @@
     G.shots++; G.combo = 0; G.shake = Math.max(G.shake, 0.15); sfx.wrong();
     petMood("sad", 0.8, "あれ?");
     if (ch) recordAnswer(ch, false);
+  }
+
+  // 🔊 hear the kana (js/voice.js; quietly does nothing without speech support or when muted)
+  function sayKana(ch, delay) {
+    if (settings.muted || !window.KA_VOICE) return;
+    if (delay) setTimeout(function () { if (!settings.muted) window.KA_VOICE.speak(ch, { interrupt: false }); }, delay);
+    else window.KA_VOICE.speak(ch);
+  }
+  function romajiOf(ch) {
+    for (var r = 0; r < ROWS.length; r++) for (var i = 0; i < ROWS[r].kana.length; i++) { var k = ROWS[r].kana[i]; if (k[0] === ch || k[1] === ch) return k[2]; }
+    return "";
+  }
+  // tap a kana in the grid / practice list: say it out loud and show it big in the speech line
+  function hearKana(btn, lineId) {
+    var ch = btn.dataset.ch, ro = romajiOf(ch), line = $(lineId);
+    btn.classList.remove("hear"); void btn.offsetWidth; btn.classList.add("hear");
+    var V = window.KA_VOICE, msg;
+    if (!V || !V.supported) msg = "<b lang='ja'>" + ch + "</b> = " + ro + " · your browser can't speak Japanese yet";
+    else if (settings.muted) msg = "<b lang='ja'>" + ch + "</b> = " + ro + " · sound is off, tap 🔇 to hear it";
+    else { V.speak(ch, { force: true }); msg = "🔊 <b lang='ja'>" + ch + "</b> = " + ro + (V.hasJapaneseVoice ? "" : " · add a Japanese voice in your device settings for the best sound"); }
+    if (line) { line.innerHTML = msg; line.classList.remove("hidden"); }
   }
 
   // ---------- typing input ----------
@@ -597,7 +620,7 @@
     } else {
       $("xpFill").style.width = "100%"; $("xpText").textContent = xp + " XP · MAX"; $("petNext").textContent = "Fully grown! A true kana sensei. 先生!";
     }
-    buildGrid();
+    buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -608,11 +631,12 @@
       if (row.name === "ya-row") cells = [cells[0], null, cells[1], null, cells[2]];
       if (row.name === "wa-row") cells = [cells[0], null, null, cells[1], cells[2]];
       cells.forEach(function (k) {
-        if (!k) { html += '<div class="kc blank"></div>'; return; }
+        if (!k) { html += '<div class="kc blank" aria-hidden="true"></div>'; return; }
         var ch = gridScript === "katakana" ? k[1] : k[0], s0 = progress.kana[ch], ms = CP.isMastered(s0); tot++; if (ms) n++;
         var cls = ms ? "kc mastered" : (s0 ? "kc seen" : "kc"), pr = s0 ? Math.min(1, s0.c / CP.MASTER_CORRECT) : 0;
         var tip = s0 ? (s0.c + " correct, " + s0.w + " missed") : "not seen yet";
-        html += '<div class="' + cls + '" title="' + tip + '"><b>' + ch + '</b><i>' + k[2] + '</i>' + (s0 && !ms ? '<div class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></div>' : "") + "</div>";
+        var label = ch + ", " + k[2] + (ms ? ", mastered" : "") + ", " + tip + ". Tap to hear it.";
+        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '" title="' + tip + ' · tap to hear" aria-label="' + label + '"><b lang="ja">' + ch + '</b><i>' + k[2] + '</i>' + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
       });
     });
     g.innerHTML = html;
@@ -621,6 +645,8 @@
   $("petBtn").addEventListener("click", openPetScreen);
   $("overPetBtn").addEventListener("click", openPetScreen);
   $("petBack").addEventListener("click", function () { show("petScreen", false); toTitle(); });
+  $("kanaGrid").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".kc[data-ch]"); if (b) hearKana(b, "gridSay"); });
+  $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   $("bigPet").addEventListener("pointerdown", function () { petPokeT = 1.2; audio(); sfx.master(); });
   document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
 
@@ -644,7 +670,8 @@
     show("newHigh", isNew);
     var missed = Object.keys(G.missed).sort(function (a, b) { return G.missed[b] - G.missed[a]; }).slice(0, 6);
     var lookup = {}; ROWS.forEach(function (r) { r.kana.forEach(function (k) { lookup[k[0]] = k[2]; lookup[k[1]] = k[2]; }); });
-    $("toPractice").innerHTML = missed.length ? "Practice these: " + missed.map(function (c) { return "<b style='color:#fff;font-size:1.3em'>" + c + "</b>=" + lookup[c]; }).join("  ") : "";
+    $("toPractice").innerHTML = missed.length ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).join(" ") : "";
+    $("practiceSay").textContent = ""; show("practiceSay", false);
     saveProgress();
     var ps = CP.STAGES[petStage()];
     $("overPetLine").innerHTML = CP.petById(progress.pet).name + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
@@ -679,5 +706,6 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
   // test hook
-  window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage };
+  window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+    missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

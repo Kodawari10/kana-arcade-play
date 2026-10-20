@@ -50,6 +50,8 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 #xpFill { height: 100%; width: 0; background: linear-gradient(90deg, #2be8ff, #ff2bd6); transition: width .4s; }
 #xpText { position: absolute; inset: 0; font-size: 12px; line-height: 16px; color: #fff; text-shadow: 0 0 3px #000; font-weight: bold; }
 #kanaGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; width: min(380px, 92vw); flex: 0 0 auto; }
+.kc { font: inherit; padding: 0; min-height: 0; box-shadow: none; cursor: pointer; font-weight: normal; width: 100%; }
+.kc:focus-visible, .pk:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
 .kc { position: relative; aspect-ratio: 1 / 1; max-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; background: #0b0430; border: 1px solid #2a1f5c; color: #554a88; }
 .kc b { font-size: clamp(18px, 6vw, 26px); font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; line-height: 1; }
 .kc i { font-style: normal; font-size: 10px; }
@@ -109,3 +111,13 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 .lb li.me { background: #2a1a66; color: #ffe94d; }
 #kaToast { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 20; max-width: 90%; background: #fff5fb; color: #07021a; border: 2px solid #ff8fb8;
   border-radius: 12px; padding: 8px 14px; font-size: 14px; font-weight: bold; box-shadow: 0 0 14px #ff8fb8; text-align: center; }
+
+/* ---- 🔊 hear the kana ---- */
+.kc.hear, .pk.hear { animation: kanaHear .45s ease-out; }
+@keyframes kanaHear { 0% { transform: scale(1); } 35% { transform: scale(1.18); box-shadow: 0 0 16px #ff8fb8; } 100% { transform: scale(1); } }
+.kc .pb { display: block; }
+.hearLine { min-height: 1.5em; color: #ffd0e6; }
+.hearLine b { font-size: 1.5em; color: #fff; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; vertical-align: -2px; }
+.pk { font: inherit; font-size: 1em; padding: 2px 8px; min-height: 36px; margin: 2px; color: #b9c8ff; background: #1b0f45; border: 1px solid #ff8fb8; border-radius: 10px; box-shadow: 0 0 6px #ff8fb866; cursor: pointer; }
+.pk b { color: #fff; font-size: 1.3em; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+@media (prefers-reduced-motion: reduce) { .kc.hear, .pk.hear { animation: none; } }
