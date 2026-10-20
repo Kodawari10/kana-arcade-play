@@ -704,6 +704,7 @@
     } else {
       $("xpFill").style.width = "100%"; $("xpText").textContent = xp + " XP · MAX"; $("petNext").textContent = "Fully grown! A true kana sensei. 先生!";
     }
+    var cl = costumeLine(); $("petCostume").textContent = cl; show("petCostume", !!cl);
     buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
@@ -745,8 +746,9 @@
     document.body.classList.toggle("calm", calm());
     applyScript();
   }
-  var toastT = 0;
+  var toastT = 0, lastToastAt = 0;
   function showToast(msg) {
+    lastToastAt = Date.now();
     var el = $("kaToast"); el.textContent = msg; el.classList.remove("hidden");
     el.classList.toggle("sr", state === "play"); // mid-game the canvas banner shows it; screen readers still hear it
     clearTimeout(toastT); toastT = setTimeout(function () { el.classList.add("hidden"); }, 1800);
@@ -756,6 +758,42 @@
     showToast(settings.gentle ? "🫧 Gentle mode on" : "Gentle mode off");
   }
   if (reduceMQ.addEventListener) reduceMQ.addEventListener("change", function () { document.body.classList.toggle("calm", calm()); });
+
+  // ---------- 🎃 spooky-season costumes (js/costumes.js) ----------
+  var KC = window.KA_COSTUMES, helloStarted = false;
+  function applyCostumes() {
+    var b = $("costumeBtn"); if (!KC || !b) return;
+    var season = KC.inSeason(), on = KC.wanted();
+    show("costumeBtn", season);
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.textContent = on ? "🎃 Costumes: ON" : "🎃 Costumes: OFF";
+  }
+  function costumeLine() {
+    var look = KC && KC.costumeFor(progress.pet, petStage()), P = CP.petById(progress.pet);
+    if (look) return look.emoji + " " + P.name + " dressed up as " + look.name + " for spooky season!";
+    if (KC && KC.active() && petStage() >= 4) return "👑 " + P.name + " keeps the sensei crown on for spooky season.";
+    return "";
+  }
+  function setCostumes(on) {
+    if (!KC) return;
+    KC.setOn(on); KC.markHello(); applyCostumes();
+    var line = costumeLine();
+    showToast(on ? (line ? "🎃 Costumes on! " + line.replace(/^\S+ /, "").replace(" for spooky season!", "!") : "🎃 Costumes on!") : "Costumes off");
+    if (on) { audio(); sfx.level(); }
+  }
+  function costumeHello() {
+    if (!KC || DEMO || !KC.needsHello()) return;
+    if (!helloStarted) { helloStarted = true; return setTimeout(costumeHello, 900); }
+    var tries = 0;
+    (function tryHello() {
+      // wait politely: never cover another toast, and only say hello on the title or game over screen
+      if ((Date.now() - lastToastAt < 2500 || (state !== "title" && state !== "over")) && ++tries < 120) { setTimeout(tryHello, 1000); return; }
+      if (!KC.needsHello()) return;
+      KC.markHello(); var line = costumeLine();
+      showToast("🎃 Spooky season! " + (line ? line.replace(/^\S+ /, "").replace(" for spooky season!", "!") : "Your companions dressed up!"));
+    })();
+  }
+  $("costumeBtn").addEventListener("click", function () { setCostumes(!KC.wanted()); });
 
   function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; }
 
@@ -947,7 +985,7 @@
   window.addEventListener("pagehide", seenNow);
 
   // ---------- boot ----------
-  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize(); checkWelcome();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); applyCostumes(); resize(); checkWelcome(); costumeHello();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -957,7 +995,7 @@
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     toast: showToast, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
-    setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+    setGentle: setGentle, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

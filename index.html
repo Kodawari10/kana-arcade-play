@@ -60,6 +60,7 @@
     <div class="row" id="gentleRow">
       <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
       <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
+      <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
       <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
     </div>
     <p class="tips" id="gentleNote"></p>
@@ -113,6 +114,7 @@
     <h2 class="petTitle" id="petName">Nekomaru</h2>
     <canvas id="bigPet" class="petCanvas" data-size="200" title="Tap to pet!"></canvas>
     <p class="big" id="petStage">Egg · たまご</p>
+    <p class="tips hidden" id="petCostume"></p>
     <div class="bar"><div id="xpFill"></div><span id="xpText"></span></div>
     <p class="tips" id="petNext"></p>
     <div class="row">
@@ -205,6 +207,7 @@
 <script src="js/quest.js"></script>
 <script src="js/omikuji.js"></script>
 <script src="js/welcome.js"></script>
+<script src="js/costumes.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/keys.js"></script>

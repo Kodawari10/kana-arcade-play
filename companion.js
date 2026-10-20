@@ -45,7 +45,10 @@
     else if (mood === "sad") squash = 0.92;
     else bounce = Math.abs(Math.sin(t * 2.2)) * s * 0.03;
 
-    if (stage <= 0) { drawEgg(ctx, P, x, y - bounce, s, mood, t, C); ctx.restore(); return; }
+    // 🎃 spooky-season costume (js/costumes.js); opts.costume can force one ("none" = off)
+    var KC = root.KA_COSTUMES, look = sil ? null : (opts.costume ? (KC && KC.LOOKS && opts.costume !== "none" ? { id: opts.costume } : null) : (KC ? KC.costumeFor(P.id, stage) : null));
+    var still = !!opts.still || !!(KC && KC.still());
+    if (stage <= 0) { drawEgg(ctx, P, x, y - bounce, s, mood, t, C, look, still); ctx.restore(); return; }
     var k = [0, 0.58, 0.72, 0.86, 1][stage], r = s * 0.36 * k;
     var cx = x, cy = y - r * squash - bounce;
 
@@ -138,7 +141,7 @@
     if (P.kind === "dragon") { ell(ctx, cx - r * 0.1, my - r * 0.14, r * 0.03, r * 0.03, P.dark); ell(ctx, cx + r * 0.1, my - r * 0.14, r * 0.03, r * 0.03, P.dark); }
 
     // accessories by stage
-    if (stage === 1) { // bit of eggshell on the head
+    if (stage === 1 && !look) { // bit of eggshell on the head (a costume hat replaces it)
       ctx.fillStyle = "#fff8e6"; ctx.strokeStyle = "#e8d6a8"; ctx.lineWidth = Math.max(1, r * 0.04);
       ctx.beginPath(); ctx.moveTo(cx - r * 0.45, cy - r * 0.78);
       ctx.lineTo(cx - r * 0.3, cy - r * 1.02); ctx.lineTo(cx - r * 0.12, cy - r * 0.88); ctx.lineTo(cx, cy - r * 1.06); ctx.lineTo(cx + r * 0.14, cy - r * 0.88);
@@ -162,11 +165,61 @@
       ctx.lineTo(cx + cw / 4, by - ch * 0.25); ctx.lineTo(cx + cw / 2, by - ch * 0.6); ctx.lineTo(cx + cw / 2, by); ctx.closePath(); ctx.fill(); ctx.stroke();
       ell(ctx, cx, by - ch * 0.3, r * 0.06, r * 0.06, "#ff3b5c");
     }
+    if (look) drawCostume(ctx, look.id, cx, cy - r * squash * 0.8, r, t, still);
     if (stage >= 3) sparkles(ctx, cx, cy - r * 0.2, r * 1.6, t, stage >= 4 ? 5 : 3);
     ctx.restore();
   }
 
-  function drawEgg(ctx, P, x, y, s, mood, t, C) {
+  // 🎃 costumes, drawn on top of the head. hx,hy = top-centre of the head, r = head radius.
+  function drawCostume(ctx, id, hx, hy, r, t, still) {
+    var sway = still ? 0 : Math.sin(t * 2.2) * 0.07, lw = Math.max(1, r * 0.04);
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(sway);
+    if (id === "witch") {
+      ctx.rotate(-0.12);
+      ell(ctx, 0, 0, r * 0.82, r * 0.17, "#4a2a7a");                     // brim
+      ctx.fillStyle = "#6b3fa0"; ctx.strokeStyle = "#3a1f63"; ctx.lineWidth = lw;
+      ctx.beginPath(); ctx.moveTo(-r * 0.46, -r * 0.04);
+      ctx.quadraticCurveTo(-r * 0.2, -r * 0.7, r * 0.05, -r * 1.05);       // cone up to a bent tip
+      ctx.quadraticCurveTo(r * 0.35, -r * 1.2, r * 0.6, -r * 0.98);
+      ctx.quadraticCurveTo(r * 0.3, -r * 0.85, r * 0.2, -r * 0.6);
+      ctx.lineTo(r * 0.46, -r * 0.04); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ff9a3d"; ctx.beginPath();                          // orange band
+      ctx.moveTo(-r * 0.43, -r * 0.1); ctx.lineTo(r * 0.43, -r * 0.1); ctx.lineTo(r * 0.38, -r * 0.27); ctx.lineTo(-r * 0.36, -r * 0.27); ctx.closePath(); ctx.fill();
+      star(ctx, 0, -r * 0.19, r * 0.11, "#ffe94d");                        // gold star buckle
+    } else if (id === "pumpkin") {
+      var py = -r * 0.25, pr = r * 0.74;
+      ell(ctx, -pr * 0.45, py, pr * 0.5, pr * 0.5, "#ff8a24"); ell(ctx, pr * 0.45, py, pr * 0.5, pr * 0.5, "#ff8a24");
+      ell(ctx, 0, py - pr * 0.05, pr * 0.55, pr * 0.56, "#ffa23d");
+      ctx.strokeStyle = "#d9661a"; ctx.lineWidth = lw;
+      [-0.28, 0.28].forEach(function (k) { ctx.beginPath(); ctx.moveTo(pr * k, py - pr * 0.5); ctx.quadraticCurveTo(pr * k * 1.6, py, pr * k, py + pr * 0.45); ctx.stroke(); });
+      ell(ctx, -pr * 0.18, py - pr * 0.05, pr * 0.07, pr * 0.07, "#7a3a0c"); ell(ctx, pr * 0.18, py - pr * 0.05, pr * 0.07, pr * 0.07, "#7a3a0c"); // tiny happy face
+      ctx.strokeStyle = "#7a3a0c"; ctx.beginPath(); ctx.arc(0, py + pr * 0.08, pr * 0.12, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
+      ctx.fillStyle = "#4f8a2a"; ctx.fillRect(-pr * 0.07, py - pr * 0.82, pr * 0.14, pr * 0.3); // stem
+      ctx.save(); ctx.translate(pr * 0.12, py - pr * 0.7); ctx.rotate(-0.5); ell(ctx, pr * 0.2, 0, pr * 0.22, pr * 0.1, "#5fcf6a"); ctx.restore(); // leaf
+    } else if (id === "bat") {
+      ctx.strokeStyle = "#3b2a55"; ctx.lineWidth = Math.max(1.5, r * 0.1);
+      ctx.beginPath(); ctx.ellipse(0, r * 0.25, r * 0.72, r * 0.42, 0, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke(); // headband
+      var flap = still ? 0 : Math.sin(t * 6) * 0.12;
+      [-1, 1].forEach(function (sd) {
+        ctx.save(); ctx.translate(sd * r * 0.62, -r * 0.05); ctx.rotate(sd * (0.35 + flap)); ctx.scale(sd, 1);
+        ctx.fillStyle = "#3b2a55"; ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(r * 0.3, -r * 0.5, r * 0.7, -r * 0.42);
+        ctx.quadraticCurveTo(r * 0.6, -r * 0.2, r * 0.55, -r * 0.05);
+        ctx.quadraticCurveTo(r * 0.45, -r * 0.18, r * 0.36, -r * 0.02);
+        ctx.quadraticCurveTo(r * 0.25, -r * 0.14, r * 0.16, r * 0.02); ctx.closePath(); ctx.fill();
+        ell(ctx, r * 0.4, -r * 0.3, r * 0.04, r * 0.04, "#b98cff");        // a little shine
+        ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+  function star(ctx, x, y, R, c) {
+    ctx.fillStyle = c; ctx.beginPath();
+    for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? R * 0.45 : R; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+    ctx.closePath(); ctx.fill();
+  }
+
+  function drawEgg(ctx, P, x, y, s, mood, t, C, look, still) {
     var w = s * 0.27, h = s * 0.34, rot = Math.sin(t * (mood === "happy" || mood === "cheer" ? 14 : 2.5)) * (mood === "idle" ? 0.06 : 0.18);
     ctx.globalAlpha = 0.25; ell(ctx, x, y + 2, w * 0.9, w * 0.2, "#000"); ctx.globalAlpha = 1;
     ctx.translate(x, y); ctx.rotate(rot);
@@ -180,6 +233,7 @@
     ctx.stroke(); ctx.restore();
     ctx.fillStyle = "#2a1530"; ell(ctx, -w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530"); ell(ctx, w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530");
     ctx.globalAlpha = 0.5; ell(ctx, -w * 0.45, -h * 0.6, w * 0.1, w * 0.06, "#ff6b9a"); ell(ctx, w * 0.45, -h * 0.6, w * 0.1, w * 0.06, "#ff6b9a"); ctx.globalAlpha = 1;
+    if (look) drawCostume(ctx, look.id, 0, -h * 1.9, w * 0.85, t, still); // even eggs dress up
   }
   function sparkles(ctx, x, y, R, t, n) {
     for (var i = 0; i < n; i++) {
@@ -193,6 +247,6 @@
   function tri(ctx, a, b, c, d, e, f, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.lineTo(e, f); ctx.closePath(); ctx.fill(); }
 
   var API = { PETS: PETS, STAGES: STAGES, MASTER_CORRECT: MASTER_CORRECT, MASTER_ACC: MASTER_ACC,
-    isMastered: isMastered, countMastered: countMastered, stageFor: stageFor, petById: petById, newProgress: newProgress, normalize: normalize, draw: draw };
+    drawCostume: drawCostume, isMastered: isMastered, countMastered: countMastered, stageFor: stageFor, petById: petById, newProgress: newProgress, normalize: normalize, draw: draw };
   if (typeof module !== "undefined" && module.exports) module.exports = API; else root.COMPANION = API;
 })(this);
