@@ -444,3 +444,13 @@ body.calm #petScreen.finding .kc.found { animation: none !important; }
 .recapCheer { color: #ff8fd9; font-size: .85em; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 480px) { .recap { padding: 8px; } .recapRow, .recapStats { font-size: .82em; } }
+
+/* 👯 twin kana chip in the "🔊 し = shi" lines */
+.twinWrap { white-space: nowrap; }
+.twinBtn { font: inherit; font-size: 1.25em; line-height: 1; padding: 2px 9px; margin-left: 2px; min-width: 34px; min-height: 30px; border-radius: 12px;
+  border: 2px solid #2be8ff; background: #06202a; color: #fff; cursor: pointer; vertical-align: -2px; box-shadow: none;
+  font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.twinBtn:hover, .twinBtn:focus-visible { background: #0b3a4a; outline: 2px solid #ff8fd9; outline-offset: 1px; }
+.twinBtn.hear { animation: kanaHear .35s ease-out; }
+body.calm .twinBtn.hear { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .twinBtn.hear { animation: none; } }

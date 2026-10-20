@@ -386,8 +386,18 @@
     if (!V || !V.supported) msg = "<b lang='ja'>" + ch + "</b> = " + ro + " · your browser can't speak Japanese yet";
     else if (settings.muted) msg = "<b lang='ja'>" + ch + "</b> = " + ro + " · sound is off, tap 🔇 to hear it";
     else { V.speak(ch, { force: true }); msg = "🔊 <b lang='ja'>" + ch + "</b> = " + ro + (V.hasJapaneseVoice ? "" : " · add a Japanese voice in your device settings for the best sound"); }
+    if (window.KA_TWIN) msg += window.KA_TWIN.chip(ch, ROWS); // 👯 its hiragana/katakana twin, tap to hear
     if (line) { line.innerHTML = msg; line.classList.remove("hidden"); }
   }
+  // 👯 tapping a twin chip says the twin and shows it in the same line (with its own twin to flip back)
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".twinBtn[data-ch]"), line = b && b.closest("p[id]");
+    if (!b || !line || !line.id) return;
+    ev.stopPropagation();
+    hearKana(b, line.id);
+    var nb = line.querySelector(".twinBtn"); if (nb) nb.focus({ preventScroll: true });
+    try { window.dispatchEvent(new CustomEvent("ka:twin", { detail: { ch: b.dataset.ch } })); } catch (e) {}
+  }, true);
 
   // ---------- typing input ----------
   function lowestMatching(str, exact) {
