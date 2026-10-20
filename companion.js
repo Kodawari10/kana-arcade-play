@@ -43,6 +43,7 @@
     if (mood === "happy") bounce = Math.abs(Math.sin(t * 12)) * s * 0.12;
     else if (mood === "cheer") bounce = Math.abs(Math.sin(t * 9)) * s * 0.22;
     else if (mood === "sad") squash = 0.92;
+    else if (mood === "sleep") { bounce = Math.abs(Math.sin(t * 1.1)) * s * 0.02; squash = 0.96 + 0.02 * Math.sin(t * 1.1); }
     else bounce = Math.abs(Math.sin(t * 2.2)) * s * 0.03;
 
     // 🎃 spooky-season costume (js/costumes.js); opts.costume can force one ("none" = off)
@@ -113,6 +114,8 @@
     ctx.strokeStyle = "#2a1530"; ctx.fillStyle = "#2a1530"; ctx.lineWidth = Math.max(1.5, r * 0.07);
     if (mood === "happy" || mood === "cheer") {
       [-1, 1].forEach(function (sd) { ctx.beginPath(); ctx.arc(cx + sd * ex, ey + er * 0.4, er, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); });
+    } else if (mood === "sleep") { // 💤 closed, peaceful eyes
+      [-1, 1].forEach(function (sd) { ctx.beginPath(); ctx.arc(cx + sd * ex, ey - er * 0.3, er, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); });
     } else if (blink) {
       [-1, 1].forEach(function (sd) { ctx.beginPath(); ctx.moveTo(cx + sd * ex - er, ey); ctx.lineTo(cx + sd * ex + er, ey); ctx.stroke(); });
     } else {
@@ -221,6 +224,7 @@
 
   function drawEgg(ctx, P, x, y, s, mood, t, C, look, still) {
     var w = s * 0.27, h = s * 0.34, rot = Math.sin(t * (mood === "happy" || mood === "cheer" ? 14 : 2.5)) * (mood === "idle" ? 0.06 : 0.18);
+    if (mood === "sleep") rot = Math.sin(t * 1.1) * 0.03;
     ctx.globalAlpha = 0.25; ell(ctx, x, y + 2, w * 0.9, w * 0.2, "#000"); ctx.globalAlpha = 1;
     ctx.translate(x, y); ctx.rotate(rot);
     ctx.fillStyle = C("#fff8e6"); ctx.beginPath();
@@ -231,7 +235,8 @@
     ctx.strokeStyle = P.dark; ctx.lineWidth = Math.max(1.5, s * 0.02); ctx.beginPath();
     for (var i = 0; i <= 8; i++) { var xx = -w + i * w / 4; ctx[i ? "lineTo" : "moveTo"](xx, -h * 1.05 + (i % 2 ? -h * 0.12 : h * 0.12)); }
     ctx.stroke(); ctx.restore();
-    ctx.fillStyle = "#2a1530"; ell(ctx, -w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530"); ell(ctx, w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530");
+    if (mood === "sleep") { ctx.strokeStyle = "#2a1530"; ctx.lineWidth = Math.max(1.2, w * 0.05); [-1, 1].forEach(function (sd) { ctx.beginPath(); ctx.arc(sd * w * 0.25, -h * 0.8, w * 0.09, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); }); }
+    else { ctx.fillStyle = "#2a1530"; ell(ctx, -w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530"); ell(ctx, w * 0.25, -h * 0.75, w * 0.07, w * 0.09, "#2a1530"); }
     ctx.globalAlpha = 0.5; ell(ctx, -w * 0.45, -h * 0.6, w * 0.1, w * 0.06, "#ff6b9a"); ell(ctx, w * 0.45, -h * 0.6, w * 0.1, w * 0.06, "#ff6b9a"); ctx.globalAlpha = 1;
     if (look) drawCostume(ctx, look.id, 0, -h * 1.9, w * 0.85, t, still); // even eggs dress up
   }

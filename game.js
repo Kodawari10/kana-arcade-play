@@ -858,6 +858,31 @@
     var x = c.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, sz, sz); return { x: x, sz: sz };
   }
   var petPokeT = 0, petHearts = [], petPats = 0, petPatTimes = [];
+  // 💤 sleepy companion (js/doze.js): quiet companion screen → it dozes off; any input wakes it
+  var DOZE = window.KA_DOZE, doze = DOZE ? DOZE.create() : null, wokeAt = 0, dozeCount = 0;
+  function petScreenOpen() { return !$("petScreen").classList.contains("hidden"); }
+  function dozeOff() {
+    var P = CP.petById(progress.pet), L = DOZE.sleepLine(new Date().getHours(), callName(P)), el = $("petSay");
+    dozeCount++;
+    el.innerHTML = "💤 <b lang='ja'>" + rubyHTML(L.jp) + "</b> " + escHTML(L.en); el.dataset.line = L.id;
+    $("bigPet").classList.add("dozing"); $("bigPet").setAttribute("aria-label", "Wake " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "") + ", who is dozing");
+  }
+  function wakeUp() {
+    var P = CP.petById(progress.pet), L = DOZE.wakeLine(new Date().getHours(), callName(P)), el = $("petSay");
+    wokeAt = Date.now(); petPokeT = calm() ? 0 : 1.0;
+    el.innerHTML = "☀️ <b lang='ja'>" + rubyHTML(L.jp) + "</b> " + escHTML(L.en); el.dataset.line = L.id;
+    el.classList.remove("pop"); void el.offsetWidth; if (!calm()) el.classList.add("pop");
+    $("bigPet").classList.remove("dozing"); $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : ""));
+    tone("sine", 523, 1047, 0.28, 0.22); tone("triangle", 784, 1568, 0.18, 0.12, 0.16); // soft rising stretch chirp
+    var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak(L.speak, { force: true });
+  }
+  function dozeActivity(ev) {
+    if (!doze || !petScreenOpen()) return;
+    if (ev && ev.type === "pointermove" && ev.pointerType !== "mouse") return;
+    if (doze.poke(performance.now())) wakeUp();
+  }
+  ["pointerdown", "keydown", "wheel", "pointermove", "touchstart"].forEach(function (n) { document.addEventListener(n, dozeActivity, { capture: true, passive: true }); });
+  $("petScreen").addEventListener("scroll", dozeActivity, { capture: true, passive: true });
   function drawDomPets(t) {
     if (!$("startScreen").classList.contains("hidden")) {
       document.querySelectorAll(".petPick canvas").forEach(function (c) {
@@ -871,7 +896,13 @@
     }
     if (!$("petScreen").classList.contains("hidden")) {
       var b = prepCanvas($("bigPet")); petPokeT = Math.max(0, petPokeT - 1 / 60);
-      CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, petPokeT > 0 ? "cheer" : "idle", t);
+      if (doze && doze.tick(performance.now())) dozeOff();
+      var asleep = doze && doze.isDozing();
+      CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, asleep ? "sleep" : (petPokeT > 0 ? "cheer" : "idle"), t);
+      if (asleep) DOZE.zs(t, calm()).forEach(function (z) { // 💤 little floating z's
+        b.x.font = "bold " + Math.round(b.sz * 0.11 * z.size) + "px 'Press Start 2P', monospace, sans-serif"; b.x.textAlign = "center"; b.x.globalAlpha = z.alpha;
+        b.x.lineWidth = 3; b.x.strokeStyle = "#fff"; b.x.strokeText(z.ch, b.sz * z.x, b.sz * z.y); b.x.fillStyle = "#8a6dff"; b.x.fillText(z.ch, b.sz * z.x, b.sz * z.y); b.x.globalAlpha = 1;
+      });
       // 💬 hearts from pats: they float up (in Gentle / reduce motion they just fade where they are)
       petHearts = petHearts.filter(function (h) { h.t -= 1 / 60; return h.t > 0; });
       petHearts.forEach(function (h) {
@@ -916,6 +947,7 @@
     buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
     $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); $("petSay").innerHTML = "💬 Tap " + escHTML(callName(P)) + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
     closeNick(false); renderNick(); stampMet(P.id); renderSince();
+    if (doze) doze.reset(performance.now()); $("bigPet").classList.remove("dozing");
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -962,6 +994,7 @@
   // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
   function petChat() {
     var C = window.KA_CHAT, P = CP.petById(progress.pet), si = petStage(), now = Date.now();
+    if (now - wokeAt < 350) return; // 💤 this tap just woke them up: keep the "good morning" line
     petPokeT = 1.2; audio(); sfx.master();
     var cols = ["#ff6b9a", "#ff8fb8", "#ffb3d1", "#ff4f8b"];
     petHearts.push({ t: 1.2, dx: petHearts.length ? Math.round((Math.random() - 0.5) * 120) : 50, size: 20 + Math.round(Math.random() * 12), color: cols[petPats % cols.length] });
@@ -1438,6 +1471,8 @@
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
     sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount, dakuOf: function (ch) { return DAKU_OF[ch] || null; }, pool: function () { return G ? pool().map(function (x) { return x.k[0]; }) : []; },
     showBanner: function () { if (G) showBanner(); return G && G.banner ? { title: G.banner.title, row: G.banner.row ? G.banner.row.name : null } : null; },
+    doze: function () { if (doze && petScreenOpen()) { doze.force(); dozeOff(); } return !!(doze && doze.isDozing()); },
+    isDozing: function () { return !!(doze && doze.isDozing()); }, setDozeDelay: function (ms) { if (doze) { doze.setDelay(ms); doze.reset(performance.now()); } }, dozeCount: function () { return dozeCount; },
     met: function (id) { return met[id || progress.pet] || null; }, renderSince: renderSince,
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
