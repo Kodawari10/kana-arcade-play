@@ -143,6 +143,14 @@
       <button class="alt gridTab rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
     </div>
     <div class="row"><span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span></div>
+    <div id="findBox" class="findBox">
+    <div class="row findRow" role="search" aria-label="Find a kana">
+      <label for="findInput" class="srOnly">Find a kana by romaji or kana</label>
+      <input id="findInput" type="text" inputmode="text" maxlength="12" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="🔍 Find a kana: shi, tsu, し…" aria-describedby="findSay" aria-keyshortcuts="/" aria-controls="kanaGrid dakuGrid">
+      <button id="findClear" class="alt small hidden" type="button" aria-label="Clear the kana search" title="Clear (Esc)">✕</button>
+    </div>
+    <p id="findSay" class="tips findLine hidden" role="status" aria-live="polite"></p>
+    </div>
     <p class="tips" id="masteryCount"></p>
     <p id="gridSay" class="tips hearLine" role="status" aria-live="polite"></p>
     <div id="kanaGrid"></div>
@@ -205,8 +213,14 @@
           <dl>
             <dt><kbd>Enter</kbd></dt><dd>Start / play again</dd>
           </dl></section>
+        <section aria-labelledby="kPet"><h3 id="kPet">★ My companion</h3>
+          <dl>
+            <dt><kbd>/</kbd></dt><dd>🔍 Find a kana: type romaji or a kana</dd>
+            <dt><kbd>Enter</kbd></dt><dd>Hear the first kana found</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Clear the search</dd>
+          </dl></section>
       </div>
-      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd>, <kbd>B</kbd> and <kbd>T</kbd> are just letters.</p>
+      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd>, <kbd>B</kbd> and <kbd>T</kbd> are just letters (same in the 🔍 search box).</p>
       <button id="keysBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
@@ -254,6 +268,7 @@
 <script src="js/nick.js"></script>
 <script src="js/since.js"></script>
 <script src="js/doze.js"></script>
+<script src="js/find.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/skies.js"></script>

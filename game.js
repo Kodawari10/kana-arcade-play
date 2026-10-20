@@ -944,7 +944,8 @@
       $("xpFill").style.width = "100%"; $("xpText").textContent = xp + " XP · MAX"; $("petNext").textContent = "Fully grown! A true kana sensei. 先生!";
     }
     var cl = costumeLine(); $("petCostume").textContent = cl; show("petCostume", !!cl);
-    buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
+    if ($("findInput")) $("findInput").value = ""; findRes = null; // 🔍 the search starts empty each time
+    buildGrid(); applyFind(false); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
     $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); $("petSay").innerHTML = "💬 Tap " + escHTML(callName(P)) + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
     closeNick(false); renderNick(); stampMet(P.id); renderSince();
     if (doze) doze.reset(performance.now()); $("bigPet").classList.remove("dozing");
@@ -972,8 +973,57 @@
     });
     g.innerHTML = html;
     $("dakuGrid").innerHTML = dhtml;
+    if (typeof markFind === "function" && findRes) markFind();
     $("dakuCount").textContent = dn + " / " + dt + " mastered · unlocked from level 11";
     $("masteryCount").textContent = (gridScript === "katakana" ? "Katakana" : "Hiragana") + " mastered: " + n + " / " + tot + "  ·  total mastered: " + masteredCount() + " / " + KANA_TOTAL + (near ? "  ·  🌱 " + near + " almost there" : "");
+  }
+  // 🔍 Find a kana (js/find.js): type romaji or a kana and the matching cells light up, the rest dim
+  var FIND = window.KA_FIND, findRes = null;
+  function markFind() {
+    var r = findRes, on = !!(r && r.kind !== "empty"), want = {};
+    if (r) r.matches.forEach(function (m) { want[gridScript === "katakana" ? m.k : m.h] = 1; });
+    document.querySelectorAll("#kanaGrid .kc[data-ch], #dakuGrid .kc[data-ch]").forEach(function (b) { b.classList.toggle("found", !!want[b.dataset.ch]); });
+    $("petScreen").classList.toggle("finding", on);
+  }
+  function findText(r) {
+    var cur = function (m) { return gridScript === "katakana" ? m.k : m.h; }, list = function (ms) { return ms.map(function (m) { return "<b lang='ja'>" + cur(m) + "</b> " + m.ro; }).join(", "); };
+    var q = escHTML(r.q), n = r.matches.length;
+    if (r.kind === "none") return "🤔 No kana reads “" + q + "” yet. Try <b>ka</b>, <b>shi</b> or <b>tsu</b>!";
+    if (n === 1) { var m = r.matches[0]; return "🔍 <b lang='ja'>" + m.h + "</b> <b lang='ja'>" + m.k + "</b> = " + m.ro + " · press Enter or tap it to hear it"; }
+    if (r.kind === "prefix") return "🔍 " + n + " kana start with “" + q + "”: " + list(r.matches);
+    return "🔍 " + n + " kana read “" + q + "”: " + list(r.matches) + " · they sound the same!";
+  }
+  function applyFind(scroll) {
+    var inp = $("findInput"); if (!inp || !FIND) return null;
+    var r = FIND.search(inp.value, ROWS); findRes = r;
+    if (r.script && r.script !== gridScript) { gridScript = r.script; buildGrid(); } // typed a katakana: show the katakana grid
+    markFind();
+    var say = $("findSay"), on = r.kind !== "empty";
+    say.innerHTML = on ? findText(r) : ""; show("findSay", on); show("findClear", !!inp.value);
+    var found = document.querySelectorAll("#kanaGrid .kc.found, #dakuGrid .kc.found"), first = found[0], last = found[found.length - 1];
+    if (scroll && first && first.scrollIntoView) { // bring the whole match group into view, the first one wins
+      if (last !== first) last.scrollIntoView({ block: "nearest" });
+      first.scrollIntoView({ block: "nearest", behavior: calm() || last !== first ? "auto" : "smooth" });
+    }
+    window.dispatchEvent(new CustomEvent("ka:findkana", { detail: { q: r.q, kind: r.kind, found: r.matches.map(function (m) { return m.h; }) } }));
+    return r;
+  }
+  function clearFind(focus) { var inp = $("findInput"); inp.value = ""; applyFind(false); if (focus) inp.focus(); }
+  if ($("findInput")) {
+    $("findInput").addEventListener("input", function () { applyFind(true); });
+    // typing a search never triggers game shortcuts; Enter hears the first match, Esc clears
+    $("findInput").addEventListener("keydown", function (ev) {
+      ev.stopPropagation();
+      if (ev.key === "Escape") { ev.preventDefault(); if ($("findInput").value) clearFind(true); else $("findInput").blur(); }
+      else if (ev.key === "Enter") { ev.preventDefault(); var b = document.querySelector("#kanaGrid .kc.found, #dakuGrid .kc.found"); if (b) gridClick({ target: b }); }
+    });
+    $("findClear").addEventListener("click", function () { clearFind(true); });
+    document.addEventListener("keydown", function (ev) { // "/" jumps to the search box on the companion screen
+      if (ev.key !== "/" || ev.shiftKey || ev.ctrlKey || ev.metaKey || ev.altKey || $("petScreen").classList.contains("hidden")) return;
+      var t = ev.target, tag = t && t.tagName; if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+      if (window.KA_KEYS && window.KA_KEYS.isOpen()) return;
+      ev.preventDefault(); $("findInput").focus();
+    });
   }
   $("petBtn").addEventListener("click", openPetScreen);
   $("overPetBtn").addEventListener("click", openPetScreen);
@@ -1067,7 +1117,7 @@
     ev.stopPropagation();
     if (ev.key === "Escape") { ev.preventDefault(); closeNick(true); }
   });
-  document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
+  document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); if (findRes && findRes.kind !== "empty") { $("findSay").innerHTML = findText(findRes); markFind(); } }); });
   // 📸 Save sticker (js/sticker.js): a picture card of your companion, shared on phones / downloaded on laptops
   function masteredList() {
     var out = [];
@@ -1475,6 +1525,7 @@
     isDozing: function () { return !!(doze && doze.isDozing()); }, setDozeDelay: function (ms) { if (doze) { doze.setDelay(ms); doze.reset(performance.now()); } }, dozeCount: function () { return dozeCount; },
     met: function (id) { return met[id || progress.pet] || null; }, renderSince: renderSince,
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
+    findKana: function (q) { $("findInput").value = q == null ? "" : q; return applyFind(true); }, findInfo: function () { return findRes ? { q: findRes.q, kind: findRes.kind, found: Array.prototype.map.call(document.querySelectorAll(".kc.found"), function (b) { return b.dataset.ch; }), say: $("findSay").textContent, script: gridScript } : null; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
