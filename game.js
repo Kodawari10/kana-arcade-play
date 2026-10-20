@@ -30,6 +30,11 @@
   var progress = CP.normalize(load("progress", null));
   if (params.get("pet")) progress.pet = CP.petById(params.get("pet")).id;
   function saveProgress() { save("progress", progress); }
+  // 🏷️ companion nicknames (js/nick.js): { petId: "Mochi" }, on this device only
+  var NICK = window.KA_NICK, nicks = NICK ? NICK.sanitize(load("nicks", {}), CP.PETS) : {};
+  function nickOf(id) { return nicks[id] || ""; }
+  function callName(P) { return nickOf(P.id) || P.name; }
+  function escHTML(t) { return NICK ? NICK.escapeHTML(t) : String(t).replace(/[&<>"']/g, ""); }
   function petXP() { return progress.pets[progress.pet].xp; }
   function masteredCount() { return CP.countMastered(progress.kana); }
   function petStage() { return CP.stageFor(petXP(), masteredCount()); }
@@ -787,7 +792,7 @@
       if (state === "play") { petMood("cheer", 1.8, "やった! クエスト!"); sfx.level(); }
     } else { progress.pets[progress.pet].xp += QUEST.REWARD; }
     saveProgress();
-    showToast("📜 Daily quest complete! +" + QUEST.REWARD + " XP for " + CP.petById(progress.pet).name + (quest.streak > 1 ? " · 🔥 " + quest.streak + "-day streak" : ""));
+    showToast("📜 Daily quest complete! +" + QUEST.REWARD + " XP for " + callName(CP.petById(progress.pet)) + (quest.streak > 1 ? " · 🔥 " + quest.streak + "-day streak" : ""));
     return true;
   }
   function renderQuest() {
@@ -864,7 +869,7 @@
     CP.PETS.forEach(function (P) {
       var b = document.createElement("button"); b.className = "petPick" + (P.id === progress.pet ? " on" : "");
       var st = CP.STAGES[CP.stageFor(progress.pets[P.id].xp, masteredCount())];
-      b.innerHTML = '<canvas data-size="64" data-pet="' + P.id + '"></canvas>' + P.name + '<small><span lang="ja" aria-label="' + P.jp + ", " + romajiWord(P.jp) + '">' + rubyHTML(P.jp) + "</span> · " + st.name + "</small>";
+      b.innerHTML = '<canvas data-size="64" data-pet="' + P.id + '"></canvas>' + P.name + (nickOf(P.id) ? '<em class="nickTag">\u201c' + escHTML(nickOf(P.id)) + '\u201d</em>' : "") + '<small><span lang="ja" aria-label="' + P.jp + ", " + romajiWord(P.jp) + '">' + rubyHTML(P.jp) + "</span> · " + st.name + "</small>";
       b.addEventListener("click", function () { progress.pet = P.id; saveProgress(); buildPicker(); });
       box.appendChild(b);
     });
@@ -884,7 +889,8 @@
     }
     var cl = costumeLine(); $("petCostume").textContent = cl; show("petCostume", !!cl);
     buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
-    $("bigPet").setAttribute("aria-label", "Pet " + P.name); $("petSay").innerHTML = "💬 Tap " + P.name + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
+    $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); $("petSay").innerHTML = "💬 Tap " + escHTML(callName(P)) + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
+    closeNick(false); renderNick();
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -933,13 +939,67 @@
       nextStage: CP.STAGES[si + 1] || null, weakest: C.weakest(progress.kana, CP.isMastered), romajiOf: romajiOf, rapid: rapid });
     if (rapid) petPatTimes = []; else petPats++;
     var el = $("petSay");
-    el.innerHTML = "<b lang='ja'>" + rubyHTML(L.jp) + "</b> " + L.en.replace(/[<>&]/g, "");
+    el.innerHTML = "<b lang='ja'>" + rubyHTML(L.jp) + "</b> " + escHTML(L.en);
     el.dataset.line = L.id;
     el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
     var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak(L.speak, { force: true });
   }
   $("bigPet").addEventListener("pointerdown", petChat);
   $("bigPet").addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); petChat(); } });
+  // 🏷️ nickname pill + little edit box under the companion's name
+  function renderNick() {
+    var P = CP.petById(progress.pet), n = nickOf(P.id), b = $("nickBtn");
+    b.textContent = n ? "🏷️ \u201c" + n + "\u201d ✎" : "🏷️ Give a nickname";
+    b.classList.toggle("has", !!n);
+    b.setAttribute("aria-label", n ? P.name + "'s nickname: " + n + ". Change nickname" : "Give " + P.name + " a nickname");
+    $("nickLabel").textContent = "Nickname for " + P.name + " (up to " + (NICK ? NICK.MAX : 16) + " letters, empty removes it)";
+  }
+  function nickCount() { var v = $("nickInput").value; $("nickCount").textContent = (NICK ? NICK.length(v) : v.length) + "/" + (NICK ? NICK.MAX : 16); }
+  function openNick() {
+    var P = CP.petById(progress.pet), inp = $("nickInput");
+    inp.value = nickOf(P.id); inp.placeholder = P.id === "kitsune" ? "e.g. Fluffy" : P.id === "ryu" ? "e.g. Mochi" : "e.g. Momo";
+    nickCount(); show("nickBtn", false); $("nickForm").classList.remove("hidden");
+    inp.focus(); try { inp.setSelectionRange(0, inp.value.length); } catch (e) {}
+  }
+  function closeNick(focusBtn) {
+    if ($("nickForm").classList.contains("hidden")) return;
+    $("nickForm").classList.add("hidden"); show("nickBtn", true);
+    if (focusBtn) $("nickBtn").focus();
+  }
+  function setNick(id, name) {
+    var P = CP.petById(id);
+    if (!NICK || P.id !== id) return "";
+    nicks = NICK.set(nicks, P, name); save("nicks", nicks);
+    return nickOf(id);
+  }
+  function saveNick() {
+    var P = CP.petById(progress.pet), before = nickOf(P.id), n = setNick(P.id, $("nickInput").value), el = $("petSay");
+    closeNick(true); renderNick();
+    $("bigPet").setAttribute("aria-label", "Pet " + P.name + (n ? ", nicknamed " + n : ""));
+    if (n && n !== before) {
+      el.innerHTML = "<b lang='ja'>" + rubyHTML("うれしい!") + "</b> " + escHTML(P.name) + " loves being called <b class='nickSay'>\u201c" + escHTML(n) + "\u201d</b> 💕";
+      petPokeT = 1.2; petMoodBurst();
+      if (!calm()) { var b = $("nickBtn"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
+      var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak("うれしい", { force: true });
+    } else if (!n && before) {
+      el.innerHTML = "🏷️ OK! Back to plain <b>" + escHTML(P.name) + "</b>.";
+    } else return;
+    el.dataset.line = "nick"; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+  }
+  function petMoodBurst() { petHearts.push({ t: 1.2, dx: 0, size: 28, color: "#ff8fb8" }); if (petHearts.length > 12) petHearts.shift(); }
+  $("nickBtn").addEventListener("click", openNick);
+  $("nickCancel").addEventListener("click", function () { closeNick(true); });
+  $("nickForm").addEventListener("submit", function (ev) { ev.preventDefault(); saveNick(); });
+  $("nickInput").addEventListener("input", function () {
+    var inp = $("nickInput");
+    if (NICK && NICK.length(inp.value) > NICK.MAX) inp.value = Array.from(inp.value).slice(0, NICK.MAX).join("");
+    nickCount();
+  });
+  // typing a name never triggers game shortcuts; Esc just cancels the edit
+  $("nickInput").addEventListener("keydown", function (ev) {
+    ev.stopPropagation();
+    if (ev.key === "Escape") { ev.preventDefault(); closeNick(true); }
+  });
   document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
   // 📸 Save sticker (js/sticker.js): a picture card of your companion, shared on phones / downloaded on laptops
   function masteredList() {
@@ -949,7 +1009,7 @@
   }
   function stickerInfo() {
     var P = CP.petById(progress.pet), si = petStage(), st = CP.STAGES[si], ks = masteredList();
-    return { petId: P.id, name: P.name, jp: P.jp, ro: romajiWord(P.jp), stage: si, stageName: st.name, stageJp: st.jp, mastered: ks.length, total: 92, kana: ks, date: new Date() };
+    return { petId: P.id, name: P.name, nick: nickOf(P.id), jp: P.jp, ro: romajiWord(P.jp), stage: si, stageName: st.name, stageJp: st.jp, mastered: ks.length, total: 92, kana: ks, date: new Date() };
   }
   var stickerBusy = false;
   function saveSticker(opts) {
@@ -1140,7 +1200,7 @@
       : quest.done ? "📜 Daily quest done ✓ · new one tomorrow" : "📜 Daily quest: " + qd.text + " · " + quest.prog + " / " + qd.goal;
     saveProgress();
     var ps = CP.STAGES[petStage()];
-    $("overPetLine").innerHTML = CP.petById(progress.pet).name + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
+    $("overPetLine").innerHTML = escHTML(callName(CP.petById(progress.pet))) + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
       (G.newMastered.length ? " · newly mastered: <b style='color:#fff;font-size:1.2em'>" + G.newMastered.join(" ") + "</b>" : "") +
       (G.wordsCleared.length ? " · 💬 words: <b lang='ja' style='color:#ff8fd9'>" + G.wordsCleared.slice(0, 5).join(" ") + "</b>" : "") +
       (G.luckyHits ? " · <span style='color:#ffd36b'>🎋 lucky <b lang='ja'>" + G.lucky.hira + "</b> ×" + G.luckyHits + "</span>" : "");
@@ -1260,7 +1320,7 @@
     welcomeInfo = info; welcomeOn = true;
     var P = CP.petById(progress.pet);
     $("wbEn").textContent = info.hello.en + "!";
-    $("wbText").textContent = P.name + " missed you 💕 " + info.gap;
+    $("wbText").textContent = callName(P) + " missed you 💕 " + info.gap;
     welcomeNudge();
     $("wbSay").textContent = ""; show("wbSay", false);
     var c = $("welcomeCard"); c.classList.remove("pop"); show("welcomeCard", true);
@@ -1307,6 +1367,7 @@
     missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
     sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount,
+    nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };

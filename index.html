@@ -119,6 +119,16 @@
 
   <div id="petScreen" class="overlay hidden">
     <h2 class="petTitle" id="petName">Nekomaru</h2>
+    <div id="nickRow" class="row nickRow">
+      <button id="nickBtn" class="alt small nickBtn" type="button" title="Give your companion a nickname">🏷️ Give a nickname</button>
+      <form id="nickForm" class="nickForm hidden" autocomplete="off">
+        <label for="nickInput" id="nickLabel" class="srOnly">Nickname</label>
+        <input id="nickInput" type="text" maxlength="32" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="e.g. Mochi" aria-describedby="nickCount">
+        <span id="nickCount" class="nickCount" aria-live="polite">0/16</span>
+        <button id="nickSave" class="small" type="submit">Save</button>
+        <button id="nickCancel" class="alt small" type="button" aria-label="Cancel" title="Cancel (Esc)">✕</button>
+      </form>
+    </div>
     <canvas id="bigPet" class="petCanvas" data-size="200" title="Tap to pet!" tabindex="0" role="button" aria-label="Pet your companion" aria-describedby="petSay"></canvas>
     <p id="petSay" class="say petSay" role="status" aria-live="polite">💬 Tap me! なでなで</p>
     <p class="big" id="petStage">Egg · たまご</p>
@@ -237,6 +247,7 @@
 <script src="js/music.js"></script>
 <script src="js/near.js"></script>
 <script src="js/lookalike.js"></script>
+<script src="js/nick.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/skies.js"></script>

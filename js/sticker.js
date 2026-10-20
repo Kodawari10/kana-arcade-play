@@ -15,7 +15,7 @@
     for (var i = 0; i < 8; i++) { var a = i * Math.PI / 4 - Math.PI / 2, rad = i % 2 ? R * 0.32 : R; x.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); }
     x.closePath(); x.fill();
   }
-  // o: { petId, name, jp, ro, stage, stageName, stageJp, mastered, total, kana: [chars], costume, date }
+  // o: { petId, name, nick, jp, ro, stage, stageName, stageJp, mastered, total, kana: [chars], costume, date }
   function make(o, canvas) {
     var CP = root.COMPANION;
     var c = canvas || document.createElement("canvas"); c.width = W; c.height = H;
@@ -43,7 +43,9 @@
     // name
     x.fillStyle = "#c2185b"; x.font = "bold 52px " + JP_FONT; x.fillText(o.jp || "", W / 2, 548);
     x.fillStyle = "#8a2be2"; x.font = "bold 22px 'Courier New', monospace";
-    x.fillText((o.ro ? o.ro + " · " : "") + (o.name || ""), W / 2, 580);
+    var nm = (o.ro ? o.ro + " · " : "") + (o.name || "") + (o.nick ? " aka \u201c" + o.nick + "\u201d" : "");
+    if (o.nick) { x.font = "bold 22px 'Courier New', " + JP_FONT; var nw = x.measureText(nm).width; if (nw > W - 80) x.font = "bold " + Math.max(13, Math.floor(22 * (W - 80) / nw)) + "px 'Courier New', " + JP_FONT; }
+    x.fillText(nm, W / 2, 580);
     // stage ribbon
     var rib = (o.stage >= 4 ? "★ " : "") + "Stage " + ((o.stage || 0) + 1) + "/5 · " + (o.stageName || "") + " · " + (o.stageJp || "") + (o.stage >= 4 ? " ★" : "");
     x.font = "bold 22px " + JP_FONT; var rw = Math.min(W - 80, x.measureText(rib).width + 48);

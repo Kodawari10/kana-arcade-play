@@ -43,6 +43,7 @@
       return;
     }
     if (window.KA_INSTALL && window.KA_INSTALL.isOpen()) return; // the 📲 home screen help owns the keyboard while open
+    if (ev.target && ev.target.id === "nickInput") return; // typing a 🏷️ nickname: ? and letters are just letters
     if (q) { ev.stopImmediatePropagation(); ev.preventDefault(); open(); return; }
     if (typingRomaji(ev) || ev.repeat) return;
     var key = (ev.key || "").toLowerCase();
