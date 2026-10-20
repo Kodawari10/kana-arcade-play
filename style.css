@@ -265,3 +265,16 @@ kbd { display: inline-block; min-width: 1.7em; padding: 1px 6px; font: bold 13px
 #installDone .rubyJp { font-size: .9em; }
 #installDone ruby.ro rt { font-size: 9px; color: inherit; text-shadow: none; }
 .is-app #installRow { display: none !important; }
+
+/* ---- 👇 swipe down to close (phones & tablets) ---- */
+.overlay { overscroll-behavior: contain; }
+.grabBar { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .grabBar { display: block; position: relative; flex: 0 0 auto; width: 46px; height: 5px; margin: -8px auto 0; border-radius: 3px;
+    background: #ff8fb8; box-shadow: 0 0 8px #ff8fb8; opacity: .9; }
+  .grabBar::before { content: ""; position: absolute; inset: -14px -40px; } /* bigger touch target */
+  #keysSheet > .grabBar, #installSheet > .grabBar { margin: -8px auto -2px; }
+}
+.dragging { transition: none !important; }
+.springBack { transition: transform .26s cubic-bezier(.3, 1.4, .5, 1), opacity .26s, background-color .26s; }
+.swipeOut { transition: transform .2s ease-in, opacity .2s, background-color .2s; }

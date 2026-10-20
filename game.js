@@ -79,6 +79,7 @@
     evolve: function () { [392, 523, 659, 784, 1047, 1319].forEach(function (f, i) { tone("triangle", f, f, 0.18, 0.35, i * 0.11); tone("square", f * 2, f * 2, 0.08, 0.12, i * 0.11 + 0.05); }); },
     master: function () { tone("sine", 1319, 1319, 0.1, 0.3); tone("sine", 1760, 1760, 0.18, 0.3, 0.08); },
     level: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone("square", f, f, 0.12, 0.3, i * 0.09); }); },
+    drop: function () { tone("sine", 660, 300, 0.16, 0.22); tone("triangle", 990, 495, 0.12, 0.1, 0.03); },
     over: function () { [392, 330, 262, 196].forEach(function (f, i) { tone("triangle", f, f * 0.98, 0.25, 0.4, i * 0.2); }); }
   };
 
@@ -955,7 +956,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
-    toast: showToast, cheer: function () { sfx.level(); }, pet: function () { return CP.petById(progress.pet); },
+    toast: showToast, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
