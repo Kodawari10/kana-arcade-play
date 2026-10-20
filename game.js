@@ -15,9 +15,15 @@
   var settings = {
     script: params.get("script") || load("script", "hiragana"),
     input: params.get("input") || load("input", isTouch ? "tap" : "type"),
-    muted: load("muted", false)
+    muted: load("muted", false),
+    // 🫧 Gentle mode: slower, calmer play. Bad saved values fall back to off.
+    gentle: params.get("gentle") ? params.get("gentle") === "1" : load("gentle", false) === true
   };
-  function highKey() { return "high." + settings.script; }
+  var reduceMQ = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+  // calm = no shaking, flashing, wobbling or buzzing (Gentle mode, or the device's "reduce motion" setting)
+  function calm() { return settings.gentle || !!reduceMQ.matches; }
+  // Gentle games keep their own high score so normal records stay fair
+  function highKey() { return "high." + settings.script + (settings.gentle ? ".gentle" : ""); }
   var CP = window.COMPANION;
   var progress = CP.normalize(load("progress", null));
   if (params.get("pet")) progress.pet = CP.petById(params.get("pet")).id;
@@ -106,10 +112,13 @@
   }
   function speed() { // fraction of screen height per second
     var fallTime = Math.max(2.6, 9.5 * Math.pow(0.9, G.level - 1));
-    return 1 / fallTime;
+    return 1 / (fallTime * (settings.gentle ? 1.5 : 1)); // gentle: kana fall a third slower
   }
-  function spawnEvery() { return Math.max(0.55, 2.2 * Math.pow(0.9, G.level - 1)) * (settings.input === "tap" ? 1.15 : 1); }
-  function maxOnScreen() { return Math.min(3 + G.level, settings.input === "tap" ? 6 : 10); }
+  function spawnEvery() { return Math.max(0.55, 2.2 * Math.pow(0.9, G.level - 1)) * (settings.input === "tap" ? 1.15 : 1) * (settings.gentle ? 1.35 : 1); }
+  function maxOnScreen() {
+    if (settings.gentle) return Math.min(2 + G.level, settings.input === "tap" ? 4 : 6);
+    return Math.min(3 + G.level, settings.input === "tap" ? 6 : 10);
+  }
 
   function showBanner() {
     var r = unlockedRows(G.level) - 1, newRow = (G.level <= ROWS.length) ? ROWS[r] : null;
@@ -137,6 +146,7 @@
   }
 
   function burst(x, y, color, n, power) {
+    if (calm()) { n = Math.ceil(n / 3); power *= 0.6; } // a light sprinkle instead of an explosion
     for (var i = 0; i < n; i++) {
       var a = Math.random() * Math.PI * 2, s = (Math.random() * 0.8 + 0.2) * power;
       G.particles.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.5 + Math.random() * 0.5, max: 1, c: color, sz: 2 + Math.random() * 4 });
@@ -206,7 +216,7 @@
     sayKana(e.ch, 380); // hear the one you missed
 
     recordAnswer(e.ch, false);
-    if (navigator.vibrate) try { navigator.vibrate(120); } catch (er) {}
+    if (navigator.vibrate && !calm()) try { navigator.vibrate(120); } catch (er) {}
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
     refreshTap(true);
     if (G.lives <= 0) gameOver();
@@ -310,7 +320,7 @@
       b.classList.add("flash-ok"); kill(G.target);
     } else {
       b.classList.add("flash-bad"); b.disabled = true; wrongAnswer(G.target.ch);
-      if (navigator.vibrate) try { navigator.vibrate(40); } catch (er) {}
+      if (navigator.vibrate && !calm()) try { navigator.vibrate(40); } catch (er) {}
     }
   }
   ansBtns.forEach(function (b) {
@@ -318,7 +328,8 @@
   });
   // keyboard shortcuts 1-4 for tap mode on desktop
   document.addEventListener("keydown", function (ev) {
-    if (state === "title" && ev.key === "Enter" && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
+    var onBtn = document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "startBtn";
+    if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
     if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
     if (ev.key === "Escape") { if (state === "play") pause(); else if (state === "pause") resume(); return; }
     if (state === "play" && settings.input === "tap" && /^[1-4]$/.test(ev.key)) tapAnswer(ansBtns[+ev.key - 1]);
@@ -400,7 +411,7 @@
 
   function draw(t) {
     ctx.save();
-    if (G && G.shake > 0) { var m = G.shake * 22; ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m); }
+    if (G && G.shake > 0 && !calm()) { G.shakeFrames = (G.shakeFrames || 0) + 1; var m = G.shake * 22; ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m); }
     drawBackground(t);
     if (!G) { ctx.restore(); return; }
     var fs = fontSize(), gy = groundY();
@@ -413,14 +424,14 @@
     G.enemies.forEach(function (e) {
       var danger = Math.max(0, (e.y / gy - 0.6) / 0.4);
       var col = danger > 0.01 ? "rgb(255," + Math.round(233 - 180 * danger) + "," + Math.round(255 - 160 * danger) + ")" : "#ffffff";
-      var x = e.x + Math.sin(e.wob) * 4;
+      var still = calm(), x = e.x + (still ? 0 : Math.sin(e.wob) * 4);
       var isT = settings.input === "tap" && e === G.target;
       // pixel-style invader box
       ctx.strokeStyle = isT ? "#ffe94d" : "rgba(43,232,255,0.55)"; ctx.lineWidth = isT ? 3 : 2;
       ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = isT ? 18 : 8;
       var b = fs * 0.62; ctx.strokeRect(x - b, e.y - b, b * 2, b * 2); ctx.shadowBlur = 0;
       if (isT) { // target reticle corners
-        ctx.strokeStyle = "#ffe94d"; ctx.lineWidth = 2; var r = b + 8 + Math.sin(t * 8) * 2;
+        ctx.strokeStyle = "#ffe94d"; ctx.lineWidth = 2; var r = b + 8 + (still ? 0 : Math.sin(t * 8) * 2);
         [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) {
           ctx.beginPath(); ctx.moveTo(x + c[0] * r, e.y + c[1] * (r - 10)); ctx.lineTo(x + c[0] * r, e.y + c[1] * r); ctx.lineTo(x + c[0] * (r - 10), e.y + c[1] * r); ctx.stroke();
         });
@@ -428,7 +439,7 @@
       ctx.font = "bold " + fs + "px " + JP_FONT; ctx.fillStyle = col; ctx.shadowColor = isT ? "#ffe94d" : "#ff2bd6"; ctx.shadowBlur = 14;
       ctx.fillText(e.ch, x, e.y + fs * 0.04); ctx.shadowBlur = 0;
       // thruster
-      ctx.fillStyle = "rgba(255,43,214," + (0.4 + Math.random() * 0.4) + ")"; ctx.fillRect(x - 3, e.y - b - 6 - Math.random() * 6, 6, 6);
+      ctx.fillStyle = "rgba(255,43,214," + (still ? 0.6 : 0.4 + Math.random() * 0.4) + ")"; ctx.fillRect(x - 3, e.y - b - 6 - (still ? 3 : Math.random() * 6), 6, 6);
     });
     // lasers
     G.lasers.forEach(function (l) {
@@ -459,7 +470,7 @@
     drawHUD(t);
     if (G.banner && !G.evo) drawBanner();
     if (G.evo) drawEvolution(t);
-    if (G.flash > 0) { ctx.fillStyle = "rgba(255,255,255," + G.flash * 2 + ")"; ctx.fillRect(0, 0, W, H); }
+    if (G.flash > 0 && !calm()) { ctx.fillStyle = "rgba(255,255,255," + G.flash * 2 + ")"; ctx.fillRect(0, 0, W, H); }
     ctx.restore();
   }
 
@@ -650,6 +661,28 @@
   $("bigPet").addEventListener("pointerdown", function () { petPokeT = 1.2; audio(); sfx.master(); });
   document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
 
+  function applyGentle() {
+    var b = $("gentleBtn"), on = settings.gentle;
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.textContent = on ? "🫧 Gentle: ON" : "🫧 Gentle: OFF";
+    $("gentleNote").textContent = on
+      ? "Gentle mode: kana fall slower and fewer at once, no shaking, flashing or buzzing. Gentle games have their own high score."
+      : "Want it calmer? Gentle mode slows the kana down and turns off shaking and flashing.";
+    $("highLabel").textContent = on ? "🫧 GENTLE HIGH SCORE:" : "HIGH SCORE:";
+    document.body.classList.toggle("calm", calm());
+    applyScript();
+  }
+  var toastT = 0;
+  function showToast(msg) {
+    var el = $("kaToast"); el.textContent = msg; el.classList.remove("hidden");
+    clearTimeout(toastT); toastT = setTimeout(function () { el.classList.add("hidden"); }, 1800);
+  }
+  function setGentle(on) {
+    settings.gentle = !!on; save("gentle", settings.gentle); applyGentle();
+    showToast(settings.gentle ? "🫧 Gentle mode on" : "Gentle mode off");
+  }
+  if (reduceMQ.addEventListener) reduceMQ.addEventListener("change", function () { document.body.classList.toggle("calm", calm()); });
+
   function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; }
 
   function startGame() {
@@ -665,6 +698,7 @@
     var hi = load(highKey(), 0), isNew = G.score > hi;
     if (isNew) save(highKey(), G.score);
     $("finalScore").textContent = G.score; $("overHigh").textContent = Math.max(hi, G.score);
+    show("overGentle", settings.gentle);
     $("finalLevel").textContent = G.level; $("finalCombo").textContent = G.best;
     $("finalAcc").textContent = G.shots ? Math.round(100 * G.hits / G.shots) : 0;
     show("newHigh", isNew);
@@ -689,6 +723,7 @@
   $("quitBtn").addEventListener("click", toTitle);
   $("resumeBtn").addEventListener("click", resume);
   $("pauseBtn").addEventListener("click", function () { state === "pause" ? resume() : pause(); });
+  $("gentleBtn").addEventListener("click", function () { setGentle(!settings.gentle); });
   $("muteBtn").addEventListener("click", function () { settings.muted = !settings.muted; save("muted", settings.muted); applyMute(); if (!settings.muted) { audio(); sfx.shoot(); } });
   $("modeToggle").addEventListener("click", function () { settings.input = settings.input === "tap" ? "type" : "tap"; save("input", settings.input); applyInputMode(); });
   document.querySelectorAll(".modeBtn").forEach(function (b) { b.addEventListener("click", function () { settings.script = b.dataset.script; save("script", settings.script); applyScript(); }); });
@@ -698,7 +733,7 @@
   canvas.addEventListener("pointerdown", function () { if (state === "play" && settings.input === "type") input.focus(); });
 
   // ---------- boot ----------
-  buildPicker(); applyScript(); applyMute(); applyInputMode(); resize();
+  buildPicker(); applyScript(); applyGentle(); applyMute(); applyInputMode(); resize();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -707,5 +742,6 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+    setGentle: setGentle, isCalm: calm, speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

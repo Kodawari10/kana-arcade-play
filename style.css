@@ -121,3 +121,12 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 .pk { font: inherit; font-size: 1em; padding: 2px 8px; min-height: 36px; margin: 2px; color: #b9c8ff; background: #1b0f45; border: 1px solid #ff8fb8; border-radius: 10px; box-shadow: 0 0 6px #ff8fb866; cursor: pointer; }
 .pk b { color: #fff; font-size: 1.3em; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
 @media (prefers-reduced-motion: reduce) { .kc.hear, .pk.hear { animation: none; } }
+
+/* ---- 🫧 gentle mode ---- */
+#gentleBtn { font-size: 14px; }
+#gentleBtn.on { background: #b9f3ff; color: #07021a; border-color: #b9f3ff; box-shadow: 0 0 10px #b9f3ff88; }
+#gentleNote { max-width: 420px; min-height: 1.4em; flex: 0 0 auto; }
+#startScreen > * { flex-shrink: 0; }
+.gentleTag { color: #b9f3ff; }
+body.calm .blink, body.calm .say.pop, body.calm .kc.hear, body.calm .pk.hear { animation: none !important; }
+body.calm #xpFill { transition: none; }

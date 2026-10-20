@@ -46,8 +46,12 @@
       <button class="alt inBtn" data-input="type">⌨ Type</button>
       <button class="alt inBtn" data-input="tap">👆 Tap</button>
     </div>
+    <div class="row" id="gentleRow">
+      <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
+    </div>
+    <p class="tips" id="gentleNote"></p>
     <div id="petPicker" class="row"></div>
-    <p class="big">HIGH SCORE: <span id="startHigh">0</span></p>
+    <p class="big"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
     <div class="row">
       <button id="startBtn">▶ START</button>
       <button id="petBtn" class="alt">★ MY COMPANION</button>
@@ -66,7 +70,7 @@
     <h2>GAME OVER</h2>
     <p class="big">SCORE: <span id="finalScore">0</span></p>
     <p id="newHigh" class="big blink hidden" style="color:#ff2bd6">★ NEW HIGH SCORE! ★</p>
-    <p>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
+    <p><span id="overGentle" class="gentleTag hidden">🫧 GENTLE · </span>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
