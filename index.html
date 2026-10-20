@@ -273,6 +273,18 @@
       </div>
       <p id="statsSay" class="tips hearLine" role="status" aria-live="polite"></p>
       <p id="statsSince" class="sincePill hidden"></p>
+      <div id="saveCode" class="saveCode">
+        <button id="scToggle" class="alt small" type="button" aria-expanded="false" aria-controls="scBox">💾 Move my progress to another device</button>
+        <div id="scBox" class="hidden">
+          <p class="tips">Copy this code and paste it on your other phone or laptop under <b>Restore</b>. It's only your learning progress: no wallet, no keys.</p>
+          <textarea id="scOut" readonly rows="3" spellcheck="false" aria-label="Your save code"></textarea>
+          <button id="scCopy" class="alt small" type="button">📋 Copy code</button>
+          <label for="scIn" class="scLbl">♻️ Restore from a code</label>
+          <textarea id="scIn" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a KANA1 code here"></textarea>
+          <div class="row scRow"><button id="scRestore" class="alt small" type="button">♻️ Restore</button><button id="scUndo" class="alt small hidden" type="button">↩ Undo last restore</button></div>
+          <p id="scMsg" class="scMsg" role="status" aria-live="polite"></p>
+        </div>
+      </div>
       <p id="statsSr" class="sr" role="status" aria-live="polite"></p>
       <button id="statsBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
@@ -303,6 +315,7 @@
 <script src="game.js"></script>
 <script src="js/skies.js"></script>
 <script src="js/stats.js"></script>
+<script src="js/savecode.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/install.js"></script>
 <script src="js/swipe.js"></script>

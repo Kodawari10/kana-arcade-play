@@ -43,7 +43,7 @@
       return;
     }
     if (window.KA_INSTALL && window.KA_INSTALL.isOpen()) return; // the 📲 home screen help owns the keyboard while open
-    if (ev.target && (ev.target.id === "nickInput" || ev.target.id === "findInput")) return; // typing a 🏷️ nickname or a 🔍 kana search: ? and letters are just letters
+    if (ev.target && (ev.target.id === "nickInput" || ev.target.id === "findInput" || ev.target.tagName === "TEXTAREA")) return; // typing a 🏷️ nickname, a 🔍 kana search or a 💾 save code: ? and letters are just letters
     if (q) { ev.stopImmediatePropagation(); ev.preventDefault(); open(); return; }
     if (typingRomaji(ev) || ev.repeat) return;
     var key = (ev.key || "").toLowerCase();

@@ -143,9 +143,10 @@
     root.addEventListener("keydown", function (ev) {
       if (!isOpen() || ev.ctrlKey || ev.metaKey || ev.altKey) return;
       if (ev.key === "Escape") { ev.preventDefault(); ev.stopImmediatePropagation(); close(); return; }
+      var tg = ev.target && ev.target.tagName; if (tg === "TEXTAREA" && ev.key !== "Tab") { ev.stopImmediatePropagation(); return; } // 💾 typing a save code
       if (ev.key === "Enter" || ev.key === " ") { ev.stopImmediatePropagation(); return; }
       if (ev.key === "Tab") {
-        var f = [$("statsClose"), $("statBest"), $("statTricky"), $("statsBack")].filter(function (e) { return e && e.offsetParent !== null; }), i = f.indexOf(document.activeElement);
+        var f = [$("statsClose"), $("statBest"), $("statTricky"), $("scToggle"), $("scOut"), $("scCopy"), $("scIn"), $("scRestore"), $("scUndo"), $("statsBack")].filter(function (e) { return e && e.offsetParent !== null; }), i = f.indexOf(document.activeElement);
         ev.preventDefault(); ev.stopImmediatePropagation(); f[(i + (ev.shiftKey ? f.length - 1 : 1) + f.length) % f.length].focus();
       }
     }, true);
