@@ -595,8 +595,8 @@
   function renderQuest() {
     questDay();
     var def = QUEST.byId(quest.id), goal = def.goal, prog = quest.done ? goal : quest.prog;
-    $("questJp").textContent = def.jp;
-    $("questText").textContent = def.icon + " " + def.text;
+    $("questJp").innerHTML = rubyHTML(def.jp); $("questJp").setAttribute("aria-label", def.jp + ", " + romajiWord(def.jp));
+    $("questText").innerHTML = rubyHTML(def.icon + " " + def.text); // any kana in the quest gets its romaji on top too
     $("questFill").style.width = Math.round(100 * prog / goal) + "%";
     $("questProg").textContent = quest.done ? "✓ DONE! +" + QUEST.REWARD + " XP earned" : prog + " / " + goal + " · reward +" + QUEST.REWARD + " XP";
     var bar = $("questBar"); bar.setAttribute("aria-valuemax", goal); bar.setAttribute("aria-valuenow", prog);
@@ -652,7 +652,7 @@
     CP.PETS.forEach(function (P) {
       var b = document.createElement("button"); b.className = "petPick" + (P.id === progress.pet ? " on" : "");
       var st = CP.STAGES[CP.stageFor(progress.pets[P.id].xp, masteredCount())];
-      b.innerHTML = '<canvas data-size="64" data-pet="' + P.id + '"></canvas>' + P.name + "<small>" + P.jp + " · " + st.name + "</small>";
+      b.innerHTML = '<canvas data-size="64" data-pet="' + P.id + '"></canvas>' + P.name + '<small><span lang="ja" aria-label="' + P.jp + ", " + romajiWord(P.jp) + '">' + rubyHTML(P.jp) + "</span> · " + st.name + "</small>";
       b.addEventListener("click", function () { progress.pet = P.id; saveProgress(); buildPicker(); });
       box.appendChild(b);
     });
@@ -686,7 +686,7 @@
         var cls = ms ? "kc mastered" : (s0 ? "kc seen" : "kc"), pr = s0 ? Math.min(1, s0.c / CP.MASTER_CORRECT) : 0;
         var tip = s0 ? (s0.c + " correct, " + s0.w + " missed") : "not seen yet";
         var label = ch + ", " + k[2] + (ms ? ", mastered" : "") + ", " + tip + ". Tap to hear it.";
-        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '" title="' + tip + ' · tap to hear" aria-label="' + label + '"><b lang="ja">' + ch + '</b><i>' + k[2] + '</i>' + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
+        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '" title="' + tip + ' · tap to hear" aria-label="' + label + '"><i aria-hidden="true">' + k[2] + '</i><b lang="ja">' + ch + '</b>' + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
       });
     });
     g.innerHTML = html;
@@ -805,8 +805,19 @@
   // tapping the playfield in type mode re-focuses the input (desktop)
   canvas.addEventListener("pointerdown", function () { if (state === "play" && settings.input === "type") input.focus(); });
 
+  // ---------- small romaji above the kana on the home screen (js/romaji.js) ----------
+  var KR = window.KA_ROMAJI;
+  function rubyHTML(s) { return KR ? KR.ruby(s) : String(s); }
+  function romajiWord(s) { return KR ? KR.toRomaji(s) : ""; }
+  function applyHomeRomaji() {
+    document.querySelectorAll(".rubyJp").forEach(function (el) {
+      if (!el.dataset.jp) el.dataset.jp = el.textContent;
+      el.innerHTML = rubyHTML(el.dataset.jp);
+    });
+  }
+
   // ---------- boot ----------
-  buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();

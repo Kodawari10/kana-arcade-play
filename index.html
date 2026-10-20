@@ -34,12 +34,12 @@
   </div>
 
   <div id="startScreen" class="overlay">
-    <h1>KANA ARCADE<span class="jp">かなアーケード</span></h1>
+    <h1>KANA ARCADE<span class="jp rubyJp" lang="ja">かなアーケード</span></h1>
     <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
        Each level unlocks a new kana row and the invaders get faster. Chain hits for a combo multiplier!</p>
     <div class="row" id="scriptRow">
-      <button class="alt modeBtn" data-script="hiragana">ひらがな</button>
-      <button class="alt modeBtn" data-script="katakana">カタカナ</button>
+      <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
+      <button class="alt modeBtn rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
       <button class="alt modeBtn" data-script="both">MIX</button>
     </div>
     <div class="row" id="inputRow">
@@ -99,8 +99,8 @@
     <div class="bar"><div id="xpFill"></div><span id="xpText"></span></div>
     <p class="tips" id="petNext"></p>
     <div class="row">
-      <button class="alt gridTab on" data-script="hiragana">ひらがな</button>
-      <button class="alt gridTab" data-script="katakana">カタカナ</button>
+      <button class="alt gridTab on rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
+      <button class="alt gridTab rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
     </div>
     <div class="row"><span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span></div>
     <p class="tips" id="masteryCount"></p>
@@ -123,6 +123,7 @@
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
+<script src="js/romaji.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/quest.js"></script>
 <script src="companion.js"></script>

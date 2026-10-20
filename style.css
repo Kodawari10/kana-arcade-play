@@ -158,3 +158,15 @@ body.calm #questFill { transition: none; }
 @media (prefers-reduced-motion: reduce) { .voiceBtn.hear { animation: none; } }
 body.calm .voiceBtn.hear { animation: none !important; }
 #kaToast { pointer-events: none; } /* toasts never block a tap */
+
+/* small romaji above the kana on the home screen (furigana-style, js/romaji.js) */
+ruby.ro { ruby-position: over; ruby-align: center; }
+ruby.ro rt { font-family: 'Courier New', monospace; font-weight: bold; font-size: max(9px, 0.38em); letter-spacing: 0; line-height: 1.1;
+  color: #ffe94d; text-shadow: 0 0 4px rgba(255,233,77,.55); opacity: .95; text-transform: lowercase; padding-bottom: 1px; }
+h1 .jp ruby.ro rt { font-size: max(10px, 0.34em); }
+.modeBtn ruby.ro rt, .gridTab ruby.ro rt { font-size: max(9px, 0.5em); color: inherit; text-shadow: none; opacity: .85; }
+.modeBtn.rubyJp, .gridTab.rubyJp { line-height: 1.25; padding-top: 4px; }
+#questJp ruby.ro rt { font-size: max(8px, 0.5em); }
+.petPick small ruby.ro rt { font-size: 8px; opacity: .9; }
+.kc i { order: -1; color: #ffe94d; opacity: .8; line-height: 1.1; margin-bottom: 1px; }
+.kc.mastered i { color: #5a3d00; opacity: 1; }
