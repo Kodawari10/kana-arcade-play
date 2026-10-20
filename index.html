@@ -91,6 +91,15 @@
 
   <div id="pauseScreen" class="overlay hidden">
     <h2 style="color:#2be8ff;text-shadow:0 0 12px #2be8ff">PAUSED</h2>
+    <div id="pauseRecap" class="recap" role="group" aria-labelledby="recapHead">
+      <p id="recapHead" class="recapHead">⏸ This game so far</p>
+      <p id="recapStats" class="recapStats"></p>
+      <p id="recapCaught" class="recapRow"></p>
+      <p id="recapMissed" class="recapRow"></p>
+      <p id="recapSay" class="recapSay hidden" aria-live="polite"></p>
+      <p id="recapCheer" class="recapCheer"></p>
+      <span id="recapAria" class="sr" aria-live="polite"></span>
+    </div>
     <button id="resumeBtn">▶ RESUME</button>
     <button id="quitBtn" class="alt">QUIT TO TITLE</button>
   </div>
@@ -288,6 +297,7 @@
 <script src="js/since.js"></script>
 <script src="js/doze.js"></script>
 <script src="js/find.js"></script>
+<script src="js/recap.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/skies.js"></script>

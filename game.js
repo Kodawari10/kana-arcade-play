@@ -156,7 +156,7 @@
     G = {
       level: DEMO ? 3 : 1, score: 0, lives: 5, combo: 0, best: 0, kills: 0, levelKills: 0, shots: 0, hits: 0,
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
-      banner: null, missed: {}, played: {}, target: null, demoT: 0, demoN: 0,
+      banner: null, missed: {}, played: {}, caught: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
       lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}
     };
@@ -281,6 +281,7 @@
   function recordAnswer(ch, ok) {
     var s0 = stat(ch), was = CP.isMastered(s0);
     if (G && G.played) G.played[ch] = 1;
+    if (ok && G && G.caught) G.caught[ch] = (G.caught[ch] || 0) + 1;
     if (ok) s0.c++; else s0.w++;
     var now = CP.isMastered(s0);
     if (now && !was) {
@@ -1386,7 +1387,28 @@
     overPetMood = isNew || G.newMastered.length || skyNew.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
-  function pause() { if (state !== "play") return; state = "pause"; show("pauseScreen", true); input.blur(); }
+  function pause() { if (state !== "play") return; state = "pause"; renderRecap(); show("pauseScreen", true); input.blur(); }
+  // ⏸ Pause recap: score, level, best combo, accuracy, and the kana you caught / missed (tap to hear)
+  function recapPill(it, cls) {
+    var ro = romajiOf(it.ch);
+    return "<button type='button' class='pk" + (cls ? " " + cls : "") + "' data-ch='" + it.ch + "' aria-label='" + it.ch + " = " + ro +
+      (it.n > 1 ? ", " + it.n + " times" : "") + ", tap to hear it'><b lang='ja'>" + it.ch + "</b>=" + ro + (it.n > 1 ? "<small>×" + it.n + "</small>" : "") + "</button>";
+  }
+  function renderRecap() {
+    var R = window.KA_RECAP, r = R && G ? R.build(G) : null;
+    show("pauseRecap", !!r); if (!r) return null;
+    $("recapStats").innerHTML = "SCORE <b>" + r.score + "</b> · LV <b>" + r.level + "</b> · BEST COMBO <b>" + r.best + "</b>" + (r.acc === null ? "" : " · ACC <b>" + r.acc + "%</b>");
+    $("recapCaught").innerHTML = r.caught.length ? "✨ Caught" + (r.caughtN > r.caught.length ? " (" + r.caughtN + " kana, top " + r.caught.length + ")" : "") + ": " + r.caught.map(function (it) { return recapPill(it, ""); }).join(" ") : "";
+    show("recapCaught", r.caught.length > 0);
+    $("recapMissed").innerHTML = r.missed.length ? "😅 Missed: " + r.missed.map(function (it) { return recapPill(it, "miss"); }).join(" ") : "";
+    show("recapMissed", r.missed.length > 0);
+    $("recapCheer").textContent = r.cheer;
+    $("recapSay").textContent = ""; show("recapSay", false);
+    $("recapAria").textContent = r.aria;
+    window.dispatchEvent(new CustomEvent("ka:recap", { detail: r }));
+    return r;
+  }
+  $("pauseRecap").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "recapSay"); });
   function resume() { if (state !== "pause") return; state = "play"; show("pauseScreen", false); if (settings.input === "type" && !isTouch) input.focus(); }
   function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); applyReviewBtn(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); applyOmikujiBtn(); requestAnimationFrame(resize); }
 
@@ -1524,7 +1546,7 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
   // test hook
-  window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+  window.__kanaArcade = { get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, saveGroupPhoto: saveGroupPhoto, groupInfo: groupInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },

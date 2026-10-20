@@ -430,3 +430,17 @@ body.calm #petScreen.finding .kc.found { animation: none !important; }
 .statKana:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
 #statsSay { min-height: 1.4em; }
 @media (max-height: 700px) { #statsSheet { gap: 6px; padding-top: 12px; } .statTile { padding: 5px 3px; } }
+
+/* ⏸ Pause recap */
+.recap { width: min(94vw, 520px); background: #12083acc; border: 1px solid #2be8ff66; border-radius: 16px; padding: 10px 12px; box-shadow: 0 0 14px #2be8ff33; box-sizing: border-box; }
+.recap p { margin: 4px 0; }
+.recapHead { color: #2be8ff; font-size: .95em; letter-spacing: .04em; }
+.recapStats { color: #b9c8ff; font-size: .9em; }
+.recapStats b { color: #ffe94d; }
+.recapRow { color: #b9c8ff; font-size: .9em; line-height: 1.9; overflow-wrap: anywhere; }
+.recap .pk small { margin-left: 2px; font-size: .75em; color: #ffe94d; }
+.recap .pk.miss { border-color: #ff6b8a; }
+.recapSay { color: #fff; font-size: .9em; }
+.recapCheer { color: #ff8fd9; font-size: .85em; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 480px) { .recap { padding: 8px; } .recapRow, .recapStats { font-size: .82em; } }
