@@ -102,6 +102,7 @@
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
+    <p id="overNear" class="tips nearLine hidden"></p>
     <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
     <p id="overQuest" class="tips"></p>
     <p id="overBadges" class="tips hidden" role="status"></p>
@@ -131,7 +132,7 @@
     <p class="tips" id="masteryCount"></p>
     <p id="gridSay" class="tips hearLine" role="status" aria-live="polite"></p>
     <div id="kanaGrid"></div>
-    <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. Mastered kana grow your companion!</p>
+    <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. 🌱 = almost there (3 or fewer right answers to go). Mastered kana grow your companion!</p>
     <button id="petBack">◀ BACK</button>
   </div>
   <div id="badgeScreen" class="overlay hidden" role="dialog" aria-labelledby="badgeTitle">
@@ -220,6 +221,7 @@
 <script src="js/chatter.js"></script>
 <script src="js/sticker.js"></script>
 <script src="js/music.js"></script>
+<script src="js/near.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/keys.js"></script>

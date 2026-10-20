@@ -303,3 +303,14 @@ button.sticker { border-color: #ff8fb8; color: #ffb3d1; text-shadow: 0 0 8px #ff
 @keyframes stickerFlash { 0% { filter: brightness(2.4) saturate(.4); transform: scale(.94, 1.05); } 60% { filter: brightness(1.2); transform: scale(1.03, .97); } 100% { filter: none; transform: none; } }
 body.calm #bigPet.flash { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { #bigPet.flash { animation: none !important; } }
+
+/* ---- 🌱 almost mastered ---- */
+.kc.near { color: #7dffc8; border-color: #7dffc8; box-shadow: 0 0 8px #7dffc866, inset 0 0 10px #7dffc822; }
+.kc.near .pb span { background: #7dffc8; }
+.kc .sprout { position: absolute; top: 3px; right: 3px; font-size: 12px; line-height: 14px; height: 14px; transform-origin: 50% 100%; animation: sprout 2.4s ease-in-out infinite; }
+@keyframes sprout { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+body.calm .kc .sprout { animation: none; }
+@media (prefers-reduced-motion: reduce) { .kc .sprout { animation: none; } }
+.nearLine { color: #7dffc8; }
+.nearLine b { font-size: 1.2em; color: #b6ffe0; }
+.nearLine small { font-size: .85em; opacity: .85; }

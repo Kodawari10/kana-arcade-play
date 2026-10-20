@@ -49,6 +49,7 @@
 
   // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
   var KW = window.KA_WORDS;
+  var NEAR = window.KA_NEAR; // 🌱 almost mastered kana
   var wordStats = KW ? KW.normalize(load("words", null)) : {};
   function wordStat(jp) { return wordStats[jp] || (wordStats[jp] = { c: 0, w: 0 }); }
 
@@ -125,7 +126,7 @@
     G = {
       level: DEMO ? 3 : 1, score: 0, lives: 5, combo: 0, best: 0, kills: 0, levelKills: 0, shots: 0, hits: 0,
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
-      banner: null, missed: {}, target: null, demoT: 0, demoN: 0,
+      banner: null, missed: {}, played: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
       lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null
     };
@@ -249,6 +250,7 @@
   }
   function recordAnswer(ch, ok) {
     var s0 = stat(ch), was = CP.isMastered(s0);
+    if (G && G.played) G.played[ch] = 1;
     if (ok) s0.c++; else s0.w++;
     var now = CP.isMastered(s0);
     if (now && !was) {
@@ -863,7 +865,7 @@
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
-    var g = $("kanaGrid"), html = "", n = 0, tot = 0;
+    var g = $("kanaGrid"), html = "", n = 0, tot = 0, near = 0;
     document.querySelectorAll(".gridTab").forEach(function (b) { b.classList.toggle("on", b.dataset.script === gridScript); });
     ROWS.forEach(function (row) {
       var cells = row.kana.slice();
@@ -872,19 +874,25 @@
       cells.forEach(function (k) {
         if (!k) { html += '<div class="kc blank" aria-hidden="true"></div>'; return; }
         var ch = gridScript === "katakana" ? k[1] : k[0], s0 = progress.kana[ch], ms = CP.isMastered(s0); tot++; if (ms) n++;
-        var cls = ms ? "kc mastered" : (s0 ? "kc seen" : "kc"), pr = s0 ? Math.min(1, s0.c / CP.MASTER_CORRECT) : 0;
+        var nd = NEAR && !ms ? NEAR.need(s0, CP.MASTER_CORRECT, CP.MASTER_ACC) : Infinity, nr = nd >= 1 && nd <= (NEAR ? NEAR.NEAR : 0); if (nr) near++;
+        var cls = ms ? "kc mastered" : (s0 ? "kc seen" + (nr ? " near" : "") : "kc"), pr = s0 ? Math.min(1, s0.c / CP.MASTER_CORRECT) : 0;
         var tip = s0 ? (s0.c + " correct, " + s0.w + " missed") : "not seen yet";
-        var label = ch + ", " + k[2] + (ms ? ", mastered" : "") + ", " + tip + ". Tap to hear it.";
-        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '" title="' + tip + ' · tap to hear" aria-label="' + label + '"><i aria-hidden="true">' + k[2] + '</i><b lang="ja">' + ch + '</b>' + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
+        var label = ch + ", " + k[2] + (ms ? ", mastered" : "") + (nr ? ", almost mastered: " + NEAR.needText(nd) : "") + ", " + tip + ". Tap to hear it.";
+        html += '<button type="button" class="' + cls + '" data-ch="' + ch + '"' + (nr ? ' data-need="' + nd + '"' : "") + ' title="' + tip + (nr ? " · 🌱 " + NEAR.needText(nd) + " to master" : "") + ' · tap to hear" aria-label="' + label + '"><i aria-hidden="true">' + k[2] + '</i><b lang="ja">' + ch + '</b>' + (nr ? '<span class="sprout" aria-hidden="true">🌱</span>' : "") + (s0 && !ms ? '<span class="pb"><span style="width:' + Math.round(pr * 100) + '%"></span></span>' : "") + "</button>";
       });
     });
     g.innerHTML = html;
-    $("masteryCount").textContent = (gridScript === "katakana" ? "Katakana" : "Hiragana") + " mastered: " + n + " / " + tot + "  ·  total mastered: " + masteredCount() + " / 92";
+    $("masteryCount").textContent = (gridScript === "katakana" ? "Katakana" : "Hiragana") + " mastered: " + n + " / " + tot + "  ·  total mastered: " + masteredCount() + " / 92" + (near ? "  ·  🌱 " + near + " almost there" : "");
   }
   $("petBtn").addEventListener("click", openPetScreen);
   $("overPetBtn").addEventListener("click", openPetScreen);
   $("petBack").addEventListener("click", function () { show("petScreen", false); toTitle(); });
-  $("kanaGrid").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".kc[data-ch]"); if (b) hearKana(b, "gridSay"); });
+  $("kanaGrid").addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".kc[data-ch]"); if (!b) return;
+    hearKana(b, "gridSay");
+    var nd = +b.dataset.need; // 🌱 almost mastered: say how close it is
+    if (nd && NEAR) $("gridSay").innerHTML += " · 🌱 " + NEAR.needText(nd) + " to master it!";
+  });
   $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
   function petChat() {
@@ -1111,6 +1119,10 @@
       (G.newMastered.length ? " · newly mastered: <b style='color:#fff;font-size:1.2em'>" + G.newMastered.join(" ") + "</b>" : "") +
       (G.wordsCleared.length ? " · 💬 words: <b lang='ja' style='color:#ff8fd9'>" + G.wordsCleared.slice(0, 5).join(" ") + "</b>" : "") +
       (G.luckyHits ? " · <span style='color:#ffd36b'>🎋 lucky <b lang='ja'>" + G.lucky.hira + "</b> ×" + G.luckyHits + "</span>" : "");
+    // 🌱 kana from this game that are only a few right answers away from ★ mastered
+    var nearList = NEAR ? NEAR.list(progress.kana, { only: function (c) { return !!G.played[c]; }, masterCorrect: CP.MASTER_CORRECT, masterAcc: CP.MASTER_ACC, max: 5 }) : [];
+    $("overNear").innerHTML = nearList.length ? "🌱 Almost mastered: " + nearList.map(function (it) { return "<b lang='ja'>" + it.ch + "</b> <small>+" + it.need + "</small>"; }).join(" · ") + " (right answers to go)" : "";
+    show("overNear", nearList.length > 0);
     overPetMood = isNew || G.newMastered.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
