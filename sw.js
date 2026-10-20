@@ -1,7 +1,7 @@
 // Offline cache for Kana Arcade. Bump VERSION when files change.
 // The wallet bundles in js/vendor/ are NOT precached (about 1 MB); they are cached the first time you tap Connect.
-var VERSION = "kana-arcade-v10";
-var FILES = ["./", "./index.html", "./style.css", "./kana.js", "./js/romaji.js", "./js/voice.js", "./js/quest.js", "./js/omikuji.js", "./companion.js", "./game.js", "./manifest.webmanifest",
+var VERSION = "kana-arcade-v11";
+var FILES = ["./", "./index.html", "./style.css", "./kana.js", "./js/romaji.js", "./js/voice.js", "./js/quest.js", "./js/omikuji.js", "./js/welcome.js", "./companion.js", "./game.js", "./manifest.webmanifest",
   "./js/badges.js", "./js/badge-book.js", "./js/starknet-config.js", "./js/starknet-abi.js", "./js/starknet.js",
   "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 self.addEventListener("install", function (e) {

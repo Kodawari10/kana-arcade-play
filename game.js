@@ -358,6 +358,7 @@
     if (!$("omikujiScreen").classList.contains("hidden")) { if (ev.key === "Escape") { ev.preventDefault(); closeOmikuji(); } return; }
     if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden") && !$("startScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
     if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
+    if (ev.key === "Escape" && state === "title" && welcomeOn) { ev.preventDefault(); hideWelcome(true); return; }
     if (ev.key === "Escape") { if (state === "play") pause(); else if (state === "pause") resume(); return; }
     if (state === "play" && settings.input === "tap" && /^[1-4]$/.test(ev.key)) tapAnswer(ansBtns[+ev.key - 1]);
     if (state === "play" && settings.input === "type" && document.activeElement !== input && /^[a-z]$/i.test(ev.key)) {
@@ -661,6 +662,10 @@
         CP.draw(p.x, id, st, p.sz / 2, p.sz * 0.9, p.sz * 0.85, id === progress.pet ? "happy" : "idle", t);
       });
     }
+    if (welcomeOn && !$("startScreen").classList.contains("hidden")) {
+      var wc = prepCanvas($("welcomePet")), wave = !calm() && (t % 2.4) < 0.9;
+      CP.draw(wc.x, progress.pet, petStage(), wc.sz / 2, wc.sz * 0.96, wc.sz * 1.0, wave ? "cheer" : "happy", t);
+    }
     if (!$("petScreen").classList.contains("hidden")) {
       var b = prepCanvas($("bigPet")); petPokeT = Math.max(0, petPokeT - 1 / 60);
       CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, petPokeT > 0 ? "cheer" : "idle", t);
@@ -778,7 +783,7 @@
   document.querySelectorAll(".voiceBtn").forEach(function (b) { b.addEventListener("click", function () { setVoice(b.dataset.gender, b); }); });
 
   function startGame() {
-    audio(); newGame(); state = "play";
+    hideWelcome(); audio(); newGame(); state = "play";
     show("startScreen", false); show("overScreen", false); show("pauseScreen", false); show("petScreen", false);
     show("controls", true); show("pauseBtn", true);
     applyInputMode();
@@ -893,8 +898,51 @@
   $("omikujiBack").addEventListener("click", closeOmikuji);
   $("okLucky").addEventListener("click", function () { hearKana($("okLucky"), "okSay"); });
 
+  // ---------- 👋 おかえり! welcome back (js/welcome.js, own save key kanaArcade.lastSeen) ----------
+  var WB = window.KA_WELCOME, welcomeOn = false, welcomeInfo = null;
+  function welcomeNudge() {
+    var rev = WB.reviewKana(progress.kana, ROWS, 3, CP.isMastered);
+    if (rev.length) {
+      $("wbReview").innerHTML = "Warm up with kana you missed (tap to hear): " + rev.map(function (r) {
+        return "<button type='button' class='pk' data-ch='" + r.ch + "' aria-label='" + r.ch + " = " + r.romaji + ", tap to hear it'><b lang='ja'>" + r.ch + "</b>=" + r.romaji + "</button>";
+      }).join(" ");
+      return;
+    }
+    questDay(); var qd = QUEST.byId(quest.id);
+    $("wbReview").innerHTML = quest.done ? "Today's quest is done ✓ Ready for a game? Press ▶ START!"
+      : "📜 Today's quest is waiting: " + rubyHTML(qd.icon + " " + qd.text);
+  }
+  function showWelcome(info) {
+    welcomeInfo = info; welcomeOn = true;
+    var P = CP.petById(progress.pet);
+    $("wbEn").textContent = info.hello.en + "!";
+    $("wbText").textContent = P.name + " missed you 💕 " + info.gap;
+    welcomeNudge();
+    $("wbSay").textContent = ""; show("wbSay", false);
+    var c = $("welcomeCard"); c.classList.remove("pop"); show("welcomeCard", true);
+    if (!calm()) { void c.offsetWidth; c.classList.add("pop"); }
+  }
+  function hideWelcome(focusStart) {
+    if (!welcomeOn) return; welcomeOn = false; show("welcomeCard", false);
+    if (focusStart) $("startBtn").focus();
+  }
+  // compare with the last time the game was open, then remember now
+  function checkWelcome() {
+    if (!WB) return null;
+    var now = Date.now(), info = WB.compute(load("lastSeen", null), now);
+    save("lastSeen", now);
+    if (info && !DEMO && state === "title") showWelcome(info);
+    return info;
+  }
+  function seenNow() { if (WB) save("lastSeen", Date.now()); }
+  $("wbClose").addEventListener("click", function () { hideWelcome(true); });
+  $("wbReview").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "wbSay"); });
+  setInterval(function () { if (!document.hidden) seenNow(); }, 60000);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) seenNow(); else checkWelcome(); });
+  window.addEventListener("pagehide", seenNow);
+
   // ---------- boot ----------
-  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize(); checkWelcome();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -903,7 +951,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
-    setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+    setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();
