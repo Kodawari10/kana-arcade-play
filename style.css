@@ -295,3 +295,10 @@ button.alt.review small { font-size: .75em; opacity: .85; font-weight: normal; }
 #bigPet { cursor: pointer; border-radius: 50% !important; }
 #bigPet:focus-visible { outline: 3px dashed #ffe94d; outline-offset: 2px; }
 .say.petSay ruby.ro rt { color: #8a2be2; text-shadow: none; font-size: max(10px, 0.42em); }
+/* 📸 Save sticker */
+p.sr { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+button.sticker { border-color: #ff8fb8; color: #ffb3d1; text-shadow: 0 0 8px #ff2bd6; }
+#bigPet.flash { animation: stickerFlash .45s ease-out; }
+@keyframes stickerFlash { 0% { filter: brightness(2.4) saturate(.4); transform: scale(.94, 1.05); } 60% { filter: brightness(1.2); transform: scale(1.03, .97); } 100% { filter: none; transform: none; } }
+body.calm #bigPet.flash { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { #bigPet.flash { animation: none !important; } }

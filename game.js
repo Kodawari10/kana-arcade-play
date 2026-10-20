@@ -85,6 +85,7 @@
     master: function () { tone("sine", 1319, 1319, 0.1, 0.3); tone("sine", 1760, 1760, 0.18, 0.3, 0.08); },
     level: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone("square", f, f, 0.12, 0.3, i * 0.09); }); },
     drop: function () { tone("sine", 660, 300, 0.16, 0.22); tone("triangle", 990, 495, 0.12, 0.1, 0.03); },
+    snap: function () { noise(0.06, 0.35); tone("sine", 1568, 1568, 0.06, 0.22, 0.05); tone("sine", 2093, 2093, 0.1, 0.2, 0.11); },
     over: function () { [392, 330, 262, 196].forEach(function (f, i) { tone("triangle", f, f * 0.98, 0.25, 0.4, i * 0.2); }); }
   };
 
@@ -905,6 +906,36 @@
   $("bigPet").addEventListener("pointerdown", petChat);
   $("bigPet").addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); petChat(); } });
   document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
+  // 📸 Save sticker (js/sticker.js): a picture card of your companion, shared on phones / downloaded on laptops
+  function masteredList() {
+    var out = [];
+    [0, 1].forEach(function (s) { ROWS.forEach(function (row) { row.kana.forEach(function (k) { if (CP.isMastered(progress.kana[k[s]])) out.push(k[s]); }); }); });
+    return out;
+  }
+  function stickerInfo() {
+    var P = CP.petById(progress.pet), si = petStage(), st = CP.STAGES[si], ks = masteredList();
+    return { petId: P.id, name: P.name, jp: P.jp, ro: romajiWord(P.jp), stage: si, stageName: st.name, stageJp: st.jp, mastered: ks.length, total: 92, kana: ks, date: new Date() };
+  }
+  var stickerBusy = false;
+  function saveSticker(opts) {
+    var S = window.KA_STICKER; opts = opts || {};
+    if (!S || stickerBusy) return Promise.resolve(null);
+    stickerBusy = true;
+    var info = stickerInfo(), c = S.make(info), name = S.fileName(info.name, info.date);
+    audio(); sfx.snap();
+    var bp = $("bigPet"); if (!calm()) { bp.classList.remove("flash"); void bp.offsetWidth; bp.classList.add("flash"); }
+    petPokeT = 1.2;
+    var done = opts.dryRun ? Promise.resolve("dry") : S.save(c, name);
+    return done.then(function (how) {
+      stickerBusy = false;
+      if (how !== "cancelled") {
+        showToast("📸 Saved " + info.name + "'s sticker!");
+        $("stickerSay").textContent = "Saved a sticker of " + info.name + ", stage " + (info.stage + 1) + ", " + info.mastered + " kana mastered.";
+      }
+      return { how: how, name: name, canvas: c, info: info };
+    }, function () { stickerBusy = false; return null; });
+  }
+  $("stickerBtn").addEventListener("click", function () { saveSticker(); });
 
   function applyGentle() {
     var b = $("gentleBtn"), on = settings.gentle;
@@ -1198,7 +1229,7 @@
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
-    toast: showToast, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
+    toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     spawnWord: function (jp) { return state === "play" && G ? spawnWord(true, jp) : false; }, wordStats: function () { return wordStats; },
