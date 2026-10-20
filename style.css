@@ -1,0 +1,62 @@
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: #07021a; overflow: hidden; overscroll-behavior: none; }
+body { font-family: "Courier New", ui-monospace, monospace; color: #e8f7ff; display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+#wrap { position: relative; width: 100vw; height: 100vh; height: 100dvh; max-width: 1000px; max-height: 800px;
+  display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#stage { position: relative; flex: 1 1 auto; min-height: 0; }
+canvas { display: block; width: 100%; height: 100%; border: 2px solid #ff2bd6; box-shadow: 0 0 18px #ff2bd6, inset 0 0 24px #2be8ff55; border-radius: 6px; touch-action: none; }
+#controls { flex: 0 0 auto; padding: 8px 6px 10px; }
+#typeBar { display: flex; justify-content: center; }
+#input { width: min(260px, 80vw); padding: 10px 12px; font: bold 26px "Courier New", monospace; text-align: center; color: #2be8ff; background: #0b0430; border: 2px solid #2be8ff;
+  border-radius: 8px; outline: none; box-shadow: 0 0 12px #2be8ff; text-transform: lowercase; -webkit-user-select: text; user-select: text; }
+#input.bad { border-color: #ff3b5c; box-shadow: 0 0 16px #ff3b5c; color: #ff3b5c; }
+#tapBar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ans { min-height: 64px; font-size: clamp(22px, 6vw, 30px); padding: 6px 0; background: #0b0430; color: #2be8ff; border: 2px solid #2be8ff; box-shadow: 0 0 10px #2be8ff88; }
+.ans:active, .ans.flash-ok { background: #2be8ff; color: #07021a; }
+.ans.flash-bad { background: #ff3b5c; color: #07021a; border-color: #ff3b5c; }
+.ans:disabled { opacity: .35; }
+@media (orientation: landscape) and (min-width: 700px) { .ans { min-height: 56px; } #tapBar { max-width: 640px; margin: 0 auto; } }
+.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: clamp(8px, 2vh, 14px);
+  background: #07021ae6; text-align: center; padding: 16px; z-index: 5; overflow-y: auto; }
+.hidden { display: none !important; }
+h1 { font-size: clamp(32px, 9vw, 56px); color: #ff2bd6; text-shadow: 0 0 8px #ff2bd6, 0 0 24px #ff2bd6; letter-spacing: 3px; line-height: 1.1; }
+h1 .jp { display: block; font-size: clamp(26px, 7vw, 40px); color: #2be8ff; text-shadow: 0 0 8px #2be8ff, 0 0 24px #2be8ff; }
+h2 { font-size: clamp(32px, 9vw, 44px); color: #ff3b5c; text-shadow: 0 0 12px #ff3b5c; }
+p { font-size: clamp(13px, 3.6vw, 16px); line-height: 1.45; max-width: 560px; color: #b9c8ff; }
+.tips { font-size: clamp(12px, 3.2vw, 14px); opacity: .85; }
+.big { font-size: clamp(18px, 5vw, 22px); color: #ffe94d; text-shadow: 0 0 8px #ffe94d; }
+button { font: bold 18px "Courier New", monospace; padding: 12px 22px; min-height: 44px; color: #07021a; background: #2be8ff; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 0 14px #2be8ff; }
+@media (hover: hover) { button:hover { filter: brightness(1.2); } }
+button.alt { background: transparent; color: #ff2bd6; border: 2px solid #ff2bd6; box-shadow: 0 0 8px #ff2bd6; }
+button.alt.on { background: #ff2bd6; color: #07021a; }
+button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 40px; background: #07021acc; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.blink { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+#hudButtons { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 3; }
+
+/* ---- companions ---- */
+#petPicker { gap: 8px; }
+.petPick { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; min-width: 92px; background: #0b0430; color: #b9c8ff; border: 2px solid #3a2a7a; box-shadow: none; font-size: 13px; }
+.petPick.on { border-color: #ffe94d; box-shadow: 0 0 12px #ffe94d; color: #ffe94d; }
+.petPick canvas { width: 64px; height: 64px; }
+.petPick small { font-size: 11px; opacity: .8; font-weight: normal; }
+.petCanvas { display: block; flex: 0 0 auto; }
+.petTitle { color: #ffe94d !important; text-shadow: 0 0 12px #ffe94d !important; }
+#petScreen { justify-content: flex-start; padding-top: max(20px, env(safe-area-inset-top)); }
+.bar { position: relative; width: min(360px, 86vw); height: 20px; background: #1b0f45; border: 2px solid #2be8ff; border-radius: 10px; overflow: hidden; flex: 0 0 auto; }
+#xpFill { height: 100%; width: 0; background: linear-gradient(90deg, #2be8ff, #ff2bd6); transition: width .4s; }
+#xpText { position: absolute; inset: 0; font-size: 12px; line-height: 16px; color: #fff; text-shadow: 0 0 3px #000; font-weight: bold; }
+#kanaGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; width: min(380px, 92vw); flex: 0 0 auto; }
+.kc { position: relative; aspect-ratio: 1 / 1; max-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; background: #0b0430; border: 1px solid #2a1f5c; color: #554a88; }
+.kc b { font-size: clamp(18px, 6vw, 26px); font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; line-height: 1; }
+.kc i { font-style: normal; font-size: 10px; }
+.kc.seen { color: #2be8ff; border-color: #2be8ff66; }
+.kc.mastered { color: #07021a; background: #ffe94d; border-color: #ffe94d; box-shadow: 0 0 8px #ffe94d88; }
+.kc.mastered::after { content: "★"; position: absolute; top: 1px; right: 3px; font-size: 10px; }
+.kc .pb { position: absolute; left: 4px; right: 4px; bottom: 3px; height: 3px; background: #2be8ff33; border-radius: 2px; }
+.kc .pb span { display: block; height: 100%; background: #2be8ff; border-radius: 2px; }
+.kc.blank { visibility: hidden; }
+.petCanvas, .petPick canvas { border: none !important; box-shadow: none !important; border-radius: 0; touch-action: manipulation; }

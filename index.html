@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07021a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kana Arcade">
+<title>Kana Arcade — かなアーケード</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="hudButtons">
+      <button id="modeToggle" class="alt small" title="Switch input: keyboard typing / tap answers">⌨ TYPE</button>
+      <button id="muteBtn" class="alt small" title="Mute / unmute">🔊</button>
+      <button id="pauseBtn" class="alt small hidden" title="Pause (Esc)">❚❚</button>
+    </div>
+  </div>
+  <div id="controls" class="hidden">
+    <div id="typeBar">
+      <input id="input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="4" placeholder="type romaji">
+    </div>
+    <div id="tapBar" class="hidden">
+      <button class="ans"></button><button class="ans"></button><button class="ans"></button><button class="ans"></button>
+    </div>
+  </div>
+
+  <div id="startScreen" class="overlay">
+    <h1>KANA ARCADE<span class="jp">かなアーケード</span></h1>
+    <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
+       Each level unlocks a new kana row and the invaders get faster. Chain hits for a combo multiplier!</p>
+    <div class="row" id="scriptRow">
+      <button class="alt modeBtn" data-script="hiragana">ひらがな</button>
+      <button class="alt modeBtn" data-script="katakana">カタカナ</button>
+      <button class="alt modeBtn" data-script="both">MIX</button>
+    </div>
+    <div class="row" id="inputRow">
+      <button class="alt inBtn" data-input="type">⌨ Type</button>
+      <button class="alt inBtn" data-input="tap">👆 Tap</button>
+    </div>
+    <div id="petPicker" class="row"></div>
+    <p class="big">HIGH SCORE: <span id="startHigh">0</span></p>
+    <div class="row">
+      <button id="startBtn">▶ START</button>
+      <button id="petBtn" class="alt">★ MY COMPANION</button>
+    </div>
+    <p class="tips" id="tips"></p>
+  </div>
+
+  <div id="pauseScreen" class="overlay hidden">
+    <h2 style="color:#2be8ff;text-shadow:0 0 12px #2be8ff">PAUSED</h2>
+    <button id="resumeBtn">▶ RESUME</button>
+    <button id="quitBtn" class="alt">QUIT TO TITLE</button>
+  </div>
+
+  <div id="overScreen" class="overlay hidden">
+    <h2>GAME OVER</h2>
+    <p class="big">SCORE: <span id="finalScore">0</span></p>
+    <p id="newHigh" class="big blink hidden" style="color:#ff2bd6">★ NEW HIGH SCORE! ★</p>
+    <p>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
+    <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
+    <p id="overPetLine" class="tips"></p>
+    <p id="toPractice" class="tips"></p>
+    <div class="row">
+      <button id="againBtn">▶ PLAY AGAIN</button>
+      <button id="overPetBtn" class="alt">★ COMPANION</button>
+      <button id="titleBtn" class="alt">TITLE</button>
+    </div>
+  </div>
+
+  <div id="petScreen" class="overlay hidden">
+    <h2 class="petTitle" id="petName">Nekomaru</h2>
+    <canvas id="bigPet" class="petCanvas" data-size="200" title="Tap to pet!"></canvas>
+    <p class="big" id="petStage">Egg · たまご</p>
+    <div class="bar"><div id="xpFill"></div><span id="xpText"></span></div>
+    <p class="tips" id="petNext"></p>
+    <div class="row">
+      <button class="alt gridTab on" data-script="hiragana">ひらがな</button>
+      <button class="alt gridTab" data-script="katakana">カタカナ</button>
+    </div>
+    <p class="tips" id="masteryCount"></p>
+    <div id="kanaGrid"></div>
+    <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. Mastered kana grow your companion!</p>
+    <button id="petBack">◀ BACK</button>
+  </div>
+</div>
+<script src="kana.js"></script>
+<script src="companion.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

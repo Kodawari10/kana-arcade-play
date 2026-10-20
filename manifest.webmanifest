@@ -1,0 +1,16 @@
+{
+  "name": "Kana Arcade — かなアーケード",
+  "short_name": "Kana Arcade",
+  "description": "Learn hiragana and katakana with a neon arcade shooter.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#07021a",
+  "theme_color": "#07021a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
