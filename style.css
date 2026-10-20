@@ -314,3 +314,8 @@ body.calm .kc .sprout { animation: none; }
 .nearLine { color: #7dffc8; }
 .nearLine b { font-size: 1.2em; color: #b6ffe0; }
 .nearLine small { font-size: .85em; opacity: .85; }
+.lookLine { color: #ffc98f; }
+.lookLine b { font-size: 1.25em; color: #ffe2bf; }
+.lookLine small { font-size: .85em; opacity: .85; }
+.lookNote { color: #ffc98f; }
+.lookNote b { color: #ffe2bf; }

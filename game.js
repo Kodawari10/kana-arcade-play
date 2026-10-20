@@ -50,6 +50,7 @@
   // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
   var KW = window.KA_WORDS;
   var NEAR = window.KA_NEAR; // 🌱 almost mastered kana
+  var LOOK = window.KA_LOOK; // 👀 look-alike kana (ぬ/め, シ/ツ…)
   var wordStats = KW ? KW.normalize(load("words", null)) : {};
   function wordStat(jp) { return wordStats[jp] || (wordStats[jp] = { c: 0, w: 0 }); }
 
@@ -128,7 +129,7 @@
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, played: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
-      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null
+      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}
     };
     if (reviewItems && REV) { // 🔁 a review round: only your trickiest kana, a calm level-2 pace, no words or level-ups
       G.review = REV.start(reviewItems); G.level = 2; G.lucky = null;
@@ -423,11 +424,24 @@
     // prefer distractors with same vowel or consonant for a real challenge
     var similar = p.filter(function (r) { return r !== correct && (r.slice(-1) === correct.slice(-1) || r[0] === correct[0]); });
     shuffle(similar);
+    // 👀 a look-alike kana in play (ぬ vs め, シ vs ツ) is always one of the choices, so you learn to tell them apart
+    if (LOOK) similar = shuffle(LOOK.partners(t.ch).map(romajiOf).filter(function (r) { return r && r !== correct && p.indexOf(r) >= 0; })).slice(0, 2).concat(similar);
     var others = shuffle(p.filter(function (r) { return r !== correct; }));
     similar.concat(others).forEach(function (r) { if (opts.length < 4 && opts.indexOf(r) < 0) opts.push(r); });
     while (opts.length < 4) opts.push(["ka", "mi", "ro", "te", "su"][opts.length]);
     shuffle(opts);
     ansBtns.forEach(function (b, i) { b.textContent = opts[i]; b.dataset.v = opts[i]; b.disabled = false; b.className = "ans"; });
+  }
+  // 👀 you picked the romaji of a look-alike (め's "me" for ぬ): name the one you picked, but don't give the answer away
+  function lookMixup(t, ro) {
+    if (!LOOK || !t || t.word) return null;
+    var other = LOOK.partnerByRomaji(t.ch, ro, romajiOf); if (!other) return null;
+    G.mixups[t.ch] = other;
+    G.texts.push({ x: t.x, y: t.y + fontSize() * 1.1, s: "👀 that's " + other + " (" + ro + ")! look again", c: "#ffb36b", t: 0, dur: 1.6, look: true });
+    return other;
+  }
+  function lookHTML(n) {
+    return "<b lang='ja'>" + n.a + "</b> <small>" + romajiOf(n.a) + "</small> vs <b lang='ja'>" + n.b + "</b> <small>" + romajiOf(n.b) + "</small>: " + n.tip.replace(/[\u3040-\u30ff]/g, "<b lang='ja'>$&</b>");
   }
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function tapAnswer(b) {
@@ -437,6 +451,7 @@
       b.classList.add("flash-ok"); kill(G.target);
     } else {
       b.classList.add("flash-bad"); b.disabled = true; wrongAnswer(G.target.word ? null : G.target.ch);
+      lookMixup(G.target, b.dataset.v);
       if (navigator.vibrate && !calm()) try { navigator.vibrate(40); } catch (er) {}
     }
   }
@@ -633,6 +648,12 @@
         var w = ctx.measureText(tx.s).width + 24, xx = Math.max(w / 2 + 4, Math.min(W - w / 2 - 4, tx.x));
         ctx.fillRect(xx - w / 2, tx.y - fs * 0.5, w, fs); ctx.strokeStyle = "#ff3b5c"; ctx.lineWidth = 2; ctx.strokeRect(xx - w / 2, tx.y - fs * 0.5, w, fs);
         ctx.fillStyle = "#ff3b5c"; ctx.shadowColor = "#ff3b5c"; ctx.shadowBlur = 10; ctx.fillText(tx.s, xx, tx.y + 2); ctx.shadowBlur = 0;
+      } else if (tx.look) { // 👀 look-alike hint: a small orange pill kept on screen
+        ctx.font = "bold " + Math.round(fs * 0.42) + "px " + JP_FONT;
+        var lw = ctx.measureText(tx.s).width + 20, lx = Math.max(lw / 2 + 4, Math.min(W - lw / 2 - 4, tx.x)), ly = Math.min(groundY() - fs * 2.2, tx.y);
+        ctx.fillStyle = "rgba(30,12,0,0.8)"; ctx.fillRect(lx - lw / 2, ly - fs * 0.33, lw, fs * 0.66);
+        ctx.strokeStyle = tx.c; ctx.lineWidth = 2; ctx.strokeRect(lx - lw / 2, ly - fs * 0.33, lw, fs * 0.66);
+        ctx.fillStyle = tx.c; ctx.fillText(tx.s, lx, ly + 1);
       } else if (tx.big) {
         neonText(tx.s, tx.x, tx.y - k * 20, Math.round(Math.min(48, W / 10) * (1 + 0.2 * Math.sin(k * 3.14))), tx.c, 20);
       } else {
@@ -892,6 +913,8 @@
     hearKana(b, "gridSay");
     var nd = +b.dataset.need; // 🌱 almost mastered: say how close it is
     if (nd && NEAR) $("gridSay").innerHTML += " · 🌱 " + NEAR.needText(nd) + " to master it!";
+    var lp = LOOK ? LOOK.partners(b.dataset.ch) : []; // 👀 looks like…
+    if (lp.length) $("gridSay").innerHTML += "<span class='lookNote'> · 👀 looks like " + lp.map(function (c) { return "<b lang='ja'>" + c + "</b> (" + romajiOf(c) + ")"; }).join(", ") + ". " + LOOK.tipFor(b.dataset.ch, lp[0]).replace(/[\u3040-\u30ff]/g, "<b lang='ja'>$&</b>") + "</span>";
   });
   $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
@@ -1123,6 +1146,10 @@
     var nearList = NEAR ? NEAR.list(progress.kana, { only: function (c) { return !!G.played[c]; }, masterCorrect: CP.MASTER_CORRECT, masterAcc: CP.MASTER_ACC, max: 5 }) : [];
     $("overNear").innerHTML = nearList.length ? "🌱 Almost mastered: " + nearList.map(function (it) { return "<b lang='ja'>" + it.ch + "</b> <small>+" + it.need + "</small>"; }).join(" · ") + " (right answers to go)" : "";
     show("overNear", nearList.length > 0);
+    // 👀 look-alikes you mixed up (or missed) this game, with how to tell them apart
+    var looks = LOOK ? LOOK.notes(G.mixups, G.missed, 2) : [];
+    $("overLook").innerHTML = looks.length ? "👀 Look-alikes <span lang='ja'>そっくり</span>: " + looks.map(lookHTML).join(" · ") : "";
+    show("overLook", looks.length > 0);
     overPetMood = isNew || G.newMastered.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
@@ -1274,5 +1301,6 @@
     missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
+    lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();
