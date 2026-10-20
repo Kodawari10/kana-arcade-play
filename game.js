@@ -45,6 +45,11 @@
     if (quest.date !== key) { quest = QUEST.normalize(quest, key, { hasMissed: hasMissed() }); save("quest", quest); }
   }
 
+  // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
+  var KW = window.KA_WORDS;
+  var wordStats = KW ? KW.normalize(load("words", null)) : {};
+  function wordStat(jp) { return wordStats[jp] || (wordStats[jp] = { c: 0, w: 0 }); }
+
   // ---------- audio ----------
   var actx = null, master = null;
   function audio() {
@@ -119,7 +124,7 @@
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
-      lucky: omikujiToday(), luckyHits: 0
+      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false
     };
     showBanner();
     input.value = ""; input.classList.remove("bad");
@@ -139,7 +144,33 @@
     G.banner = { t: 0, dur: newRow ? 2.8 : 1.6, title: "LEVEL " + G.level, row: newRow };
   }
 
+  function wordsOnScreen() { return G.enemies.filter(function (e) { return e.word; }).length; }
+  // 💬 maybe drop a word instead of a single kana (from level 3, more often as levels go up)
+  function spawnWord(force, jp) {
+    if (!KW) return false;
+    if (!force && (wordsOnScreen() >= KW.maxOnScreen(G.level, settings.gentle) || Math.random() >= KW.chance(G.level, settings.gentle))) return false;
+    var skip = {}; G.enemies.forEach(function (e) { if (e.word) skip[e.word.jp] = 1; });
+    var w = jp ? KW.info(jp, ROWS) : KW.pick(G.level, settings.script, ROWS, progress.kana, wordStats, skip);
+    if (!w) return false;
+    var fs = fontSize(), wfs = wordFont(), half = wordHalf(w, wfs), x = half + 8 + Math.random() * Math.max(1, W - (half + 8) * 2);
+    for (var i = 0; i < 6; i++) {
+      var clash = G.enemies.some(function (e) { return e.y < fs * 2 && Math.abs(e.x - x) < half + fs; });
+      if (!clash) break; x = half + 8 + Math.random() * Math.max(1, W - (half + 8) * 2);
+    }
+    G.enemies.push({ word: w, k: [w.jp, w.jp, w.ro], ch: w.jp, answers: w.answers.slice(), x: x, y: -fs * 0.6, wob: Math.random() * 6.28,
+      v: speed() * (settings.input === "tap" ? 0.85 : 0.72) * (0.9 + Math.random() * 0.2), dead: false });
+    G.words++;
+    if (!G.wordHello) { // the first word of the game gets a little hello
+      G.wordHello = true;
+      G.texts.push({ x: W / 2, y: H * 0.2, s: "💬 WORDS!", c: "#ff8fd9", t: 0, dur: 1.6, big: true });
+      petMood("cheer", 1.3, "ことば!");
+    }
+    return true;
+  }
+  function wordFont() { return Math.round(fontSize() * 0.72); }
+  function wordHalf(w, wfs) { return Math.max(wfs * 1.1, (w.jp.length * wfs * 1.02) / 2 + wfs * 0.4); }
   function spawn() {
+    if (G.level >= (KW ? KW.START : 99) && spawnWord(false)) return;
     var p = pool(), newest = unlockedRows(G.level) - 1, pick;
     var live = {}; G.enemies.forEach(function (e) { live[e.k[2]] = 1; });
     for (var tries = 0; tries < 12; tries++) {
@@ -205,15 +236,17 @@
     e.dead = true; G.hits++; G.shots++; G.combo++; G.best = Math.max(G.best, G.combo);
     var heightBonus = Math.round(10 * (1 - Math.max(0, e.y) / groundY()));
     var pts = (10 + heightBonus) * G.level * mult();
-    var lucky = OMI && OMI.isLucky(e.ch, G.lucky);
+    var lucky = !e.word && OMI && OMI.isLucky(e.ch, G.lucky);
     if (lucky) { pts *= OMI.MULT; G.luckyHits++; }
+    if (e.word) pts *= e.word.kana.length; // 💬 words are worth one kana's points per kana
     G.score += pts; G.kills++; G.levelKills++;
     var sx = W / 2, sy = groundY() + 4;
     G.lasers.push({ x1: sx, y1: sy, x2: e.x, y2: e.y, t: 0.15 });
     var cols = ["#2be8ff", "#ff2bd6", "#ffe94d"];
     burst(e.x, e.y, cols[G.combo % 3], 26, 260 + G.combo * 6);
     burst(e.x, e.y, "#ffffff", 8, 120);
-    G.texts.push({ x: e.x, y: e.y, s: "+" + pts, sub: e.answers[0], c: "#ffe94d", t: 0, dur: 0.9 });
+    if (e.word) G.texts.push(wordCard(e, false));
+    else G.texts.push({ x: e.x, y: e.y, s: "+" + pts, sub: e.answers[0], c: "#ffe94d", t: 0, dur: 0.9 });
     if (lucky) {
       burst(e.x, e.y, "#ffd36b", 18, 200);
       G.texts.push({ x: e.x, y: e.y - fontSize() * 0.9, s: "✨ LUCKY ×" + OMI.MULT, c: "#ffd36b", t: 0, dur: 1.1 });
@@ -223,26 +256,31 @@
     sfx.shoot(); setTimeout(function () { sfx.boom(G ? G.combo : 0); }, 60);
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
     gainXP(2 + Math.floor(Math.min(G.combo, 20) / 5));
-    if (lucky && G.luckyHits === 1) petMood("cheer", 1.3, "ラッキー!");
+    if (e.word) { petMood("cheer", 1.1, e.word.emoji + " " + e.word.jp + "!"); sayKana(e.word.jp, 120); }
+    else if (lucky && G.luckyHits === 1) petMood("cheer", 1.3, "ラッキー!");
     else if (G.combo > 0 && G.combo % 5 === 0) petMood("cheer", 1.2, CHEERS[Math.floor(Math.random() * CHEERS.length)]);
     else if (G.pet.mood !== "cheer") petMood("happy", 0.6, Math.random() < 0.25 ? "♪" : "");
-    var practiced = !!(progress.kana[e.ch] && progress.kana[e.ch].w > 0);
-    recordAnswer(e.ch, true);
+    var practiced = !e.word && !!(progress.kana[e.ch] && progress.kana[e.ch].w > 0);
+    if (e.word) { wordStat(e.word.jp).c++; save("words", wordStats); if (G.wordsCleared.indexOf(e.word.jp) < 0) G.wordsCleared.push(e.word.jp); }
+    else recordAnswer(e.ch, true);
     if (G.levelKills >= 8 + G.level) { G.level++; G.levelKills = 0; showBanner(); sfx.level(); gainXP(10); petMood("cheer", 2, "レベルアップ!"); }
-    questEvent({ type: "kill", kata: e.ch === e.k[1], practiced: practiced, combo: G.combo, level: G.level });
+    questEvent({ type: "kill", kata: e.word ? e.word.kata : e.ch === e.k[1], practiced: practiced, combo: G.combo, level: G.level });
     refreshTap(true);
   }
 
   function missGround(e) {
     e.dead = true; G.lives--; G.combo = 0; G.shake = 0.45;
-    G.missed[e.ch] = (G.missed[e.ch] || 0) + 1;
+    if (e.word) G.missedWords[e.word.jp] = (G.missedWords[e.word.jp] || 0) + 1;
+    else G.missed[e.ch] = (G.missed[e.ch] || 0) + 1;
     burst(e.x, groundY(), "#ff3b5c", 30, 300);
-    G.texts.push({ x: e.x, y: groundY() - fontSize() * 1.4, s: e.ch + " = " + e.answers[0], c: "#ff3b5c", t: 0, dur: 1.8, reveal: true });
+    if (e.word) G.texts.push(wordCard(e, true));
+    else G.texts.push({ x: e.x, y: groundY() - fontSize() * 1.4, s: e.ch + " = " + e.answers[0], c: "#ff3b5c", t: 0, dur: 1.8, reveal: true });
     sfx.miss();
     petMood("sad", 1.4, "うぅ…");
-    sayKana(e.ch, 380); // hear the one you missed
+    sayKana(e.ch, 380); // hear the one you missed (a whole word for words)
 
-    recordAnswer(e.ch, false);
+    if (e.word) { wordStat(e.word.jp).w++; save("words", wordStats); }
+    else recordAnswer(e.ch, false);
     if (navigator.vibrate && !calm()) try { navigator.vibrate(120); } catch (er) {}
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
     refreshTap(true);
@@ -255,6 +293,13 @@
     if (ch) recordAnswer(ch, false);
   }
 
+  // 💬 a word card: tiny romaji above each kana, the word, and its meaning (shown when cleared or missed)
+  function wordCard(e, miss) {
+    var w = e.word, units = KR ? KR.units(w.jp) : w.units.map(function (u) { return { jp: u.ch, ro: u.ro }; });
+    return { word: true, miss: miss, x: e.x, y: miss ? groundY() - fontSize() * 1.9 : Math.max(fontSize() * 1.6, e.y), jp: w.jp, units: units, en: w.en, emoji: w.emoji,
+      c: miss ? "#ff3b5c" : "#ff8fd9", t: 0, dur: miss ? 2.4 : 1.8 };
+  }
+
   // 🔊 hear the kana (js/voice.js; quietly does nothing without speech support or when muted)
   function sayKana(ch, delay) {
     if (settings.muted || !window.KA_VOICE) return;
@@ -263,6 +308,7 @@
   }
   function romajiOf(ch) {
     for (var r = 0; r < ROWS.length; r++) for (var i = 0; i < ROWS[r].kana.length; i++) { var k = ROWS[r].kana[i]; if (k[0] === ch || k[1] === ch) return k[2]; }
+    if (KW && ch && ch.length > 1) { var w = KW.info(ch, ROWS); if (w.ok) return w.ro + " (" + w.emoji + " " + w.en + ")"; }
     return "";
   }
   // tap a kana in the grid / practice list: say it out loud and show it big in the speech line
@@ -286,21 +332,24 @@
     });
     return best;
   }
-  function isLongerPrefix(str) { // could str still grow into a longer answer on screen?
-    return G.enemies.some(function (e) { return e.answers.some(function (a) { return a.length > str.length && a.indexOf(str) === 0; }); });
+  function isLongerPrefix(str, hit) { // could str still grow into a longer answer on screen? (a word's own "…nn" doesn't count)
+    return G.enemies.some(function (e) { return !(hit && hit.word && e === hit) && e.answers.some(function (a) { return a.length > str.length && a.indexOf(str) === 0; }); });
   }
+  var swallowN = 0; // after a word ending in ん fires on "n", a second "n" right away is quietly ignored
   function handleTyped() {
     if (state !== "play") return;
     var v = input.value.toLowerCase().replace(/[^a-z]/g, "");
     if (v !== input.value) input.value = v;
     if (!v) return;
     var hit = lowestMatching(v, true);
-    if (hit && !isLongerPrefix(v)) { kill(hit); input.value = ""; return; }
+    if (hit && !isLongerPrefix(v, hit)) { var nEnd = hit.word && /n$/.test(v); kill(hit); input.value = ""; if (nEnd) swallowN = Date.now(); return; }
     if (hit || lowestMatching(v, false)) { input.classList.remove("bad"); return; }
-    // not a prefix of anything: maybe the previous chars completed an answer (e.g. "n" then "k")
-    var head = v.slice(0, -1), last = v.slice(-1);
-    var prev = head && lowestMatching(head, true);
-    if (prev) { kill(prev); input.value = last; handleTyped(); return; }
+    if (v === "n" && Date.now() - swallowN < 700) { swallowN = 0; input.value = ""; return; }
+    // not a prefix of anything: maybe earlier chars completed an answer (e.g. "n" then "k", or "ne" then "ka" while ねこ falls)
+    for (var cut = v.length - 1; cut >= 1; cut--) {
+      var prev = lowestMatching(v.slice(0, cut), true);
+      if (prev) { kill(prev); input.value = v.slice(cut); handleTyped(); return; }
+    }
     wrongAnswer(); input.classList.add("bad");
     setTimeout(function () { input.value = ""; input.classList.remove("bad"); }, 220);
   }
@@ -329,6 +378,11 @@
     if (t === G.target && t) return;
     G.target = t;
     if (!t) { ansBtns.forEach(function (b) { b.textContent = "·"; b.disabled = true; b.dataset.v = ""; }); return; }
+    if (t.word) { // 💬 a word: the right romaji plus three look-alikes
+      var wo = shuffle([t.answers[0]].concat(KW.distractors(t.word, G.level, settings.script, ROWS)));
+      ansBtns.forEach(function (b, i) { b.textContent = wo[i]; b.dataset.v = wo[i]; b.disabled = false; b.className = "ans word"; });
+      return;
+    }
     var correct = t.answers[0], opts = [correct], p = pool().map(function (x) { return x.k[2]; });
     // prefer distractors with same vowel or consonant for a real challenge
     var similar = p.filter(function (r) { return r !== correct && (r.slice(-1) === correct.slice(-1) || r[0] === correct[0]); });
@@ -346,7 +400,7 @@
     if (G.target.answers.indexOf(b.dataset.v) >= 0) {
       b.classList.add("flash-ok"); kill(G.target);
     } else {
-      b.classList.add("flash-bad"); b.disabled = true; wrongAnswer(G.target.ch);
+      b.classList.add("flash-bad"); b.disabled = true; wrongAnswer(G.target.word ? null : G.target.ch);
       if (navigator.vibrate && !calm()) try { navigator.vibrate(40); } catch (er) {}
     }
   }
@@ -431,6 +485,50 @@
     ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); ctx.shadowBlur = 0;
   }
 
+  // 💬 a falling word: soft pink bubble with a little heart, the word inside (no romaji until it's cleared or missed)
+  function drawWord(e, t, gy) {
+    var danger = Math.max(0, (e.y / gy - 0.6) / 0.4), still = calm(), x = e.x + (still ? 0 : Math.sin(e.wob) * 3);
+    var wfs = wordFont(), half = wordHalf(e.word, wfs), bh = wfs * 0.78, isT = settings.input === "tap" && e === G.target;
+    ctx.fillStyle = "rgba(255,143,217," + (0.14 + danger * 0.1) + ")";
+    roundRect(x - half, e.y - bh, half * 2, bh * 2, bh * 0.7); ctx.fill();
+    ctx.strokeStyle = isT ? "#ffe94d" : (danger > 0.01 ? "#ff6b8a" : "#ff8fd9"); ctx.lineWidth = isT ? 3 : 2.5;
+    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = isT ? 18 : 12; ctx.stroke(); ctx.shadowBlur = 0;
+    // little speech-bubble tail + heart
+    ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(x - 6, e.y + bh); ctx.lineTo(x, e.y + bh + 8); ctx.lineTo(x + 6, e.y + bh); ctx.fill();
+    ctx.font = Math.round(wfs * 0.42) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.globalAlpha = still ? 1 : 0.75 + 0.25 * Math.sin(t * 4 + e.wob); ctx.fillText("💗", x + half - wfs * 0.1, e.y - bh + wfs * 0.05); ctx.globalAlpha = 1;
+    var col = danger > 0.01 ? "rgb(255," + Math.round(233 - 180 * danger) + "," + Math.round(255 - 160 * danger) + ")" : "#fff4fb";
+    ctx.font = "bold " + wfs + "px " + JP_FONT; ctx.fillStyle = col; ctx.shadowColor = isT ? "#ffe94d" : "#ff2bd6"; ctx.shadowBlur = 12;
+    ctx.fillText(e.word.jp, x, e.y + wfs * 0.04); ctx.shadowBlur = 0;
+    if (isT) { ctx.strokeStyle = "#ffe94d"; ctx.lineWidth = 2; var r = still ? 0 : Math.sin(t * 8) * 2;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) { var cx = x + c[0] * (half + 7 + r), cy = e.y + c[1] * (bh + 7 + r);
+        ctx.beginPath(); ctx.moveTo(cx, cy - c[1] * 10); ctx.lineTo(cx, cy); ctx.lineTo(cx - c[0] * 10, cy); ctx.stroke(); }); }
+  }
+  // 💬 word card: tiny romaji above each kana (like the home screen), the word, then the meaning
+  function drawWordCard(tx, k, fs) {
+    var wfs = Math.round(fs * 0.62), rfs = Math.max(11, Math.round(wfs * 0.36)), mfs = Math.max(13, Math.round(wfs * 0.42));
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "bold " + wfs + "px " + JP_FONT;
+    var widths = tx.units.map(function (u) { return ctx.measureText(u.jp).width; });
+    ctx.font = "bold " + rfs + "px 'Courier New', monospace";
+    widths = widths.map(function (wd, i) { return Math.max(wd, tx.units[i].ro === undefined ? 0 : ctx.measureText(tx.units[i].ro).width + 2); });
+    var wordW = widths.reduce(function (a, b) { return a + b; }, 0);
+    var meaning = tx.emoji + " " + tx.en;
+    ctx.font = "bold " + mfs + "px sans-serif"; var mw = ctx.measureText(meaning).width;
+    var cw = Math.max(wordW, mw) + 28, ch = rfs + wfs + mfs + 26;
+    var rise = tx.miss ? 0 : k * 26, cx = Math.max(cw / 2 + 4, Math.min(W - cw / 2 - 4, tx.x)), top = Math.max(4, tx.y - ch / 2 - rise);
+    ctx.fillStyle = tx.miss ? "rgba(40,0,16,0.85)" : "rgba(40,6,40,0.85)"; roundRect(cx - cw / 2, top, cw, ch, 14); ctx.fill();
+    ctx.strokeStyle = tx.c; ctx.lineWidth = 2.5; ctx.shadowColor = tx.c; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
+    var x0 = cx - wordW / 2, ry = top + 8 + rfs / 2, wy = ry + rfs / 2 + 4 + wfs / 2, my = wy + wfs / 2 + 6 + mfs / 2;
+    tx.units.forEach(function (u, i) {
+      var mx = x0 + widths[i] / 2;
+      if (u.ro !== undefined) { ctx.font = "bold " + rfs + "px 'Courier New', monospace"; ctx.fillStyle = "#2be8ff"; ctx.fillText(u.ro, mx, ry); }
+      ctx.font = "bold " + wfs + "px " + JP_FONT; ctx.fillStyle = "#ffffff"; ctx.shadowColor = tx.c; ctx.shadowBlur = 10; ctx.fillText(u.jp, mx, wy); ctx.shadowBlur = 0;
+      x0 += widths[i];
+    });
+    ctx.font = "bold " + mfs + "px sans-serif"; ctx.fillStyle = tx.miss ? "#ffb3c1" : "#ffe94d"; ctx.fillText(meaning, cx, my);
+  }
+
   function drawShip() {
     var x = W / 2, y = groundY() + 6, s = Math.max(10, Math.min(18, W / 40));
     ctx.fillStyle = "#2be8ff"; ctx.shadowColor = "#2be8ff"; ctx.shadowBlur = 16;
@@ -451,6 +549,7 @@
     ctx.fillStyle = grd; ctx.fillRect(0, gy - H * 0.2, W, H * 0.2);
     // enemies
     G.enemies.forEach(function (e) {
+      if (e.word) { drawWord(e, t, gy); return; }
       var danger = Math.max(0, (e.y / gy - 0.6) / 0.4);
       var col = danger > 0.01 ? "rgb(255," + Math.round(233 - 180 * danger) + "," + Math.round(255 - 160 * danger) + ")" : "#ffffff";
       var still = calm(), x = e.x + (still ? 0 : Math.sin(e.wob) * 4);
@@ -490,7 +589,9 @@
     // floating texts
     G.texts.forEach(function (tx) {
       var k = tx.t / tx.dur; ctx.globalAlpha = 1 - Math.pow(k, 3);
-      if (tx.reveal) {
+      if (tx.word) {
+        drawWordCard(tx, k, fs);
+      } else if (tx.reveal) {
         ctx.font = "bold " + Math.round(fs * 0.7) + "px " + JP_FONT; ctx.fillStyle = "rgba(20,0,10,0.75)";
         var w = ctx.measureText(tx.s).width + 24, xx = Math.max(w / 2 + 4, Math.min(W - w / 2 - 4, tx.x));
         ctx.fillRect(xx - w / 2, tx.y - fs * 0.5, w, fs); ctx.strokeStyle = "#ff3b5c"; ctx.lineWidth = 2; ctx.strokeRect(xx - w / 2, tx.y - fs * 0.5, w, fs);
@@ -576,6 +677,7 @@
     neonText(b.title, W / 2, H * 0.34, Math.min(52, W / 8), "#ff2bd6", 20);
     if (b.row) {
       neonText("NEW KANA: " + b.row.name.toUpperCase(), W / 2, H * 0.41, Math.min(18, W / 24), "#ffe94d", 8);
+      if (KW && G.level === KW.START) neonText("💬 + WORDS!", W / 2, H * 0.6, Math.min(18, W / 24), "#ff8fd9", 8);
       var n = b.row.kana.length, cw = Math.min(W / (n + 0.5), 110);
       b.row.kana.forEach(function (kk, i) {
         var x = W / 2 + (i - (n - 1) / 2) * cw;
@@ -844,7 +946,9 @@
     show("newHigh", isNew);
     var missed = Object.keys(G.missed).sort(function (a, b) { return G.missed[b] - G.missed[a]; }).slice(0, 6);
     var lookup = {}; ROWS.forEach(function (r) { r.kana.forEach(function (k) { lookup[k[0]] = k[2]; lookup[k[1]] = k[2]; }); });
-    $("toPractice").innerHTML = missed.length ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).join(" ") : "";
+    var mw = KW ? Object.keys(G.missedWords).slice(0, 3).map(function (j) { return KW.info(j, ROWS); }) : [];
+    $("toPractice").innerHTML = (missed.length || mw.length) ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).concat(mw.map(function (w) {
+      return "<button type='button' class='pk pw' data-ch='" + w.jp + "' aria-label='" + w.jp + " = " + w.ro + ", " + w.en + ", tap to hear it'><b lang='ja'>" + rubyHTML(w.jp) + "</b>=" + w.ro + " " + w.emoji + "</button>"; })).join(" ") : "";
     $("practiceSay").textContent = ""; show("practiceSay", false);
     questEvent({ type: "game" });
     var qd = QUEST.byId(quest.id);
@@ -855,6 +959,7 @@
     var ps = CP.STAGES[petStage()];
     $("overPetLine").innerHTML = CP.petById(progress.pet).name + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
       (G.newMastered.length ? " · newly mastered: <b style='color:#fff;font-size:1.2em'>" + G.newMastered.join(" ") + "</b>" : "") +
+      (G.wordsCleared.length ? " · 💬 words: <b lang='ja' style='color:#ff8fd9'>" + G.wordsCleared.slice(0, 5).join(" ") + "</b>" : "") +
       (G.luckyHits ? " · <span style='color:#ffd36b'>🎋 lucky <b lang='ja'>" + G.lucky.hira + "</b> ×" + G.luckyHits + "</span>" : "");
     overPetMood = isNew || G.newMastered.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
@@ -997,5 +1102,9 @@
     toast: showToast, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
+    spawnWord: function (jp) { return state === "play" && G ? spawnWord(true, jp) : false; }, wordStats: function () { return wordStats; },
+    killWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) kill(e); return !!e; },
+    missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
+    setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();
