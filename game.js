@@ -799,7 +799,7 @@
     if (c.width !== sz * d) { c.width = sz * d; c.height = sz * d; c.style.width = sz + "px"; c.style.height = sz + "px"; }
     var x = c.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, sz, sz); return { x: x, sz: sz };
   }
-  var petPokeT = 0;
+  var petPokeT = 0, petHearts = [], petPats = 0, petPatTimes = [];
   function drawDomPets(t) {
     if (!$("startScreen").classList.contains("hidden")) {
       document.querySelectorAll(".petPick canvas").forEach(function (c) {
@@ -814,7 +814,13 @@
     if (!$("petScreen").classList.contains("hidden")) {
       var b = prepCanvas($("bigPet")); petPokeT = Math.max(0, petPokeT - 1 / 60);
       CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, petPokeT > 0 ? "cheer" : "idle", t);
-      if (petPokeT > 0) { b.x.font = "28px sans-serif"; b.x.textAlign = "center"; b.x.fillStyle = "#ff6b9a"; b.x.globalAlpha = Math.min(1, petPokeT); b.x.fillText("♥", b.sz / 2 + 50, b.sz * 0.3 - (1 - petPokeT) * 30); b.x.globalAlpha = 1; }
+      // 💬 hearts from pats: they float up (in Gentle / reduce motion they just fade where they are)
+      petHearts = petHearts.filter(function (h) { h.t -= 1 / 60; return h.t > 0; });
+      petHearts.forEach(function (h) {
+        var age = 1.2 - h.t, rise = calm() ? 0 : age * 34;
+        b.x.font = h.size + "px sans-serif"; b.x.textAlign = "center"; b.x.fillStyle = h.color; b.x.globalAlpha = Math.min(1, h.t);
+        b.x.fillText("♥", b.sz / 2 + h.dx + (calm() ? 0 : Math.sin(age * 5 + h.dx) * 4), b.sz * 0.32 - rise); b.x.globalAlpha = 1;
+      });
     }
     if (!$("installScreen").classList.contains("hidden")) { // 📲 home screen help: your companion waves along
       var ic = prepCanvas($("installPet")), iw = !calm() && (t % 2.4) < 0.9;
@@ -850,6 +856,7 @@
     }
     var cl = costumeLine(); $("petCostume").textContent = cl; show("petCostume", !!cl);
     buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
+    $("bigPet").setAttribute("aria-label", "Pet " + P.name); $("petSay").innerHTML = "💬 Tap " + P.name + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -876,7 +883,27 @@
   $("petBack").addEventListener("click", function () { show("petScreen", false); toTitle(); });
   $("kanaGrid").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".kc[data-ch]"); if (b) hearKana(b, "gridSay"); });
   $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
-  $("bigPet").addEventListener("pointerdown", function () { petPokeT = 1.2; audio(); sfx.master(); });
+  // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
+  function petChat() {
+    var C = window.KA_CHAT, P = CP.petById(progress.pet), si = petStage(), now = Date.now();
+    petPokeT = 1.2; audio(); sfx.master();
+    var cols = ["#ff6b9a", "#ff8fb8", "#ffb3d1", "#ff4f8b"];
+    petHearts.push({ t: 1.2, dx: petHearts.length ? Math.round((Math.random() - 0.5) * 120) : 50, size: 20 + Math.round(Math.random() * 12), color: cols[petPats % cols.length] });
+    if (petHearts.length > 12) petHearts.shift();
+    if (!C) return;
+    petPatTimes.push(now); petPatTimes = petPatTimes.filter(function (t) { return now - t < 4000; });
+    var rapid = C.isRapid(petPatTimes, now);
+    var L = C.line({ n: petPats, hour: new Date().getHours(), petName: P.name, petJp: P.jp, mastered: masteredCount(),
+      nextStage: CP.STAGES[si + 1] || null, weakest: C.weakest(progress.kana, CP.isMastered), romajiOf: romajiOf, rapid: rapid });
+    if (rapid) petPatTimes = []; else petPats++;
+    var el = $("petSay");
+    el.innerHTML = "<b lang='ja'>" + rubyHTML(L.jp) + "</b> " + L.en.replace(/[<>&]/g, "");
+    el.dataset.line = L.id;
+    el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak(L.speak, { force: true });
+  }
+  $("bigPet").addEventListener("pointerdown", petChat);
+  $("bigPet").addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); petChat(); } });
   document.querySelectorAll(".gridTab").forEach(function (b) { b.addEventListener("click", function () { gridScript = b.dataset.script; buildGrid(); }); });
 
   function applyGentle() {
@@ -1170,6 +1197,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+    petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },

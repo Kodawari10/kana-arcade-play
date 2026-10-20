@@ -288,3 +288,10 @@ button.alt.review small { font-size: .75em; opacity: .85; font-weight: normal; }
 #wbGo { margin-top: 4px; }
 #overTitle.reviewClear { color: #6dffb0; text-shadow: 0 0 12px #6dffb0; }
 #overReview b { font-size: 1.2em; color: #6dffb0; }
+/* 💬 Companion chatter bubble under the big companion */
+.say.petSay { flex: none; margin: 2px auto 6px; padding-top: 14px; line-height: 1.7; max-width: min(92vw, 380px); text-align: center; min-height: 0; }
+.say.petSay::before { left: 50%; top: -10px; margin: 0 0 0 -8px; border: 8px solid transparent; border-bottom-color: #ff8fb8; border-top: 0; }
+.say.petSay b { font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; font-size: 1.25em; color: #c2185b; margin-right: 4px; }
+#bigPet { cursor: pointer; border-radius: 50% !important; }
+#bigPet:focus-visible { outline: 3px dashed #ffe94d; outline-offset: 2px; }
+.say.petSay ruby.ro rt { color: #8a2be2; text-shadow: none; font-size: max(10px, 0.42em); }
