@@ -148,6 +148,7 @@
       <label for="findInput" class="srOnly">Find a kana by romaji or kana</label>
       <input id="findInput" type="text" inputmode="text" maxlength="12" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="🔍 Find a kana: shi, tsu, し…" aria-describedby="findSay" aria-keyshortcuts="/" aria-controls="kanaGrid dakuGrid">
       <button id="findClear" class="alt small hidden" type="button" aria-label="Clear the kana search" title="Clear (Esc)">✕</button>
+      <button id="findDice" class="alt small" type="button" aria-label="Surprise me: show and say a random kana" title="🎲 Surprise me: a random kana to hear">🎲</button>
     </div>
     <p id="findSay" class="tips findLine hidden" role="status" aria-live="polite"></p>
     </div>
@@ -218,6 +219,7 @@
             <dt><kbd>/</kbd></dt><dd>🔍 Find a kana: type romaji or a kana</dd>
             <dt><kbd>Enter</kbd></dt><dd>Hear the first kana found</dd>
             <dt><kbd>Esc</kbd></dt><dd>Clear the search</dd>
+            <dt>🎲</dt><dd>Surprise me: a random kana you're still learning</dd>
           </dl></section>
       </div>
       <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd>, <kbd>B</kbd> and <kbd>T</kbd> are just letters (same in the 🔍 search box).</p>

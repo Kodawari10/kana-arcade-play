@@ -1008,6 +1008,19 @@
     window.dispatchEvent(new CustomEvent("ka:findkana", { detail: { q: r.q, kind: r.kind, found: r.matches.map(function (m) { return m.h; }) } }));
     return r;
   }
+  // 🎲 Surprise me: a random kana from the grid on screen (not-yet-mastered first) lights up, explains itself and is said aloud
+  var lastSurprise = null;
+  function surpriseKana(rand) {
+    if (!FIND || !FIND.surprise) return null;
+    var m = FIND.surprise(ROWS, progress.kana, CP.isMastered, gridScript, lastSurprise, rand); if (!m) return null;
+    lastSurprise = m.ch; $("findInput").value = m.ch;
+    var r = applyFind(true), d = $("findDice");
+    if (r) $("findSay").innerHTML = "🎲 Surprise! <b lang='ja'>" + m.h + "</b> <b lang='ja'>" + m.k + "</b> = " + m.ro + (m.mastered ? " · ★ you know this one!" : " · tap 🎲 again for another");
+    if (d && !calm()) { d.classList.remove("roll"); void d.offsetWidth; d.classList.add("roll"); }
+    var b = document.querySelector('#kanaGrid .kc.found, #dakuGrid .kc.found'); if (b) gridClick({ target: b });
+    window.dispatchEvent(new CustomEvent("ka:surprise", { detail: { ch: m.ch, h: m.h, k: m.k, ro: m.ro, mastered: m.mastered, script: gridScript } }));
+    return { ch: m.ch, h: m.h, k: m.k, ro: m.ro, mastered: m.mastered, script: gridScript };
+  }
   function clearFind(focus) { var inp = $("findInput"); inp.value = ""; applyFind(false); if (focus) inp.focus(); }
   if ($("findInput")) {
     $("findInput").addEventListener("input", function () { applyFind(true); });
@@ -1018,6 +1031,7 @@
       else if (ev.key === "Enter") { ev.preventDefault(); var b = document.querySelector("#kanaGrid .kc.found, #dakuGrid .kc.found"); if (b) gridClick({ target: b }); }
     });
     $("findClear").addEventListener("click", function () { clearFind(true); });
+    if ($("findDice")) $("findDice").addEventListener("click", function () { surpriseKana(); });
     document.addEventListener("keydown", function (ev) { // "/" jumps to the search box on the companion screen
       if (ev.key !== "/" || ev.shiftKey || ev.ctrlKey || ev.metaKey || ev.altKey || $("petScreen").classList.contains("hidden")) return;
       var t = ev.target, tag = t && t.tagName; if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
@@ -1525,6 +1539,7 @@
     isDozing: function () { return !!(doze && doze.isDozing()); }, setDozeDelay: function (ms) { if (doze) { doze.setDelay(ms); doze.reset(performance.now()); } }, dozeCount: function () { return dozeCount; },
     met: function (id) { return met[id || progress.pet] || null; }, renderSince: renderSince,
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
+    surpriseKana: function (seed) { return surpriseKana(seed == null ? undefined : function () { return seed; }); },
     findKana: function (q) { $("findInput").value = q == null ? "" : q; return applyFind(true); }, findInfo: function () { return findRes ? { q: findRes.q, kind: findRes.kind, found: Array.prototype.map.call(document.querySelectorAll(".kc.found"), function (b) { return b.dataset.ch; }), say: $("findSay").textContent, script: gridScript } : null; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },

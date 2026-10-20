@@ -29,7 +29,22 @@
     out.kind = out.matches.length ? "prefix" : "none";
     return out;
   }
-  var API = { search: search, clean: clean, MAX: MAX };
+  // 🎲 Surprise me: pick one random kana from the grid you're looking at (hiragana or katakana) to see and hear.
+  // Kana you haven't mastered in that script come first, so the dice nudges practice; once they're all mastered any
+  // kana can come up. Never the same one twice in a row.
+  //   surprise(rows, kanaStats, isMastered, script, last, rand) -> { h, k, ro, row, ch, mastered } or null
+  function surprise(rows, stats, isMastered, script, last, rand) {
+    rand = rand || Math.random; stats = stats || {}; var kata = script === "katakana", all = [], fresh = [];
+    each(rows, function (k, row) {
+      var it = item(k, row); it.ch = kata ? k[1] : k[0]; it.mastered = !!(isMastered && isMastered(stats[it.ch]));
+      all.push(it); if (!it.mastered) fresh.push(it);
+    });
+    var base = fresh.length ? fresh : all, pool = base.filter(function (m) { return m.ch !== last; });
+    if (!pool.length) pool = base;
+    if (!pool.length) return null;
+    return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];
+  }
+  var API = { search: search, clean: clean, surprise: surprise, MAX: MAX };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.KA_FIND = API;
 })(this);

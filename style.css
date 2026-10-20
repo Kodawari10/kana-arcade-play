@@ -384,6 +384,11 @@ body.calm button.nickBtn.pop { animation: none !important; }
 #findInput::placeholder { color: #8f86c4; }
 #findInput:focus { outline: none; border-color: #ff8fd9; box-shadow: 0 0 10px #ff8fd966; }
 #findClear { flex: 0 0 auto; min-width: 40px; min-height: 40px; }
+#findDice { flex: 0 0 auto; min-width: 44px; min-height: 40px; font-size: 20px; line-height: 1; padding: 4px 8px; }
+#findDice.roll { animation: diceRoll .45s ease-out; }
+@keyframes diceRoll { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(200deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { #findDice.roll { animation: none; } }
+body.calm #findDice.roll { animation: none !important; }
 .findLine { min-height: 1.4em; color: #bff7ff; max-width: min(380px, 92vw); }
 .findLine b[lang] { font-size: 1.35em; color: #fff; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; vertical-align: -2px; }
 #petScreen.finding .kc[data-ch]:not(.found) { opacity: .28; }
