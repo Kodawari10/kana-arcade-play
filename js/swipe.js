@@ -12,7 +12,8 @@
     { id: "omikujiScreen", close: "omikujiBack" },
     { id: "keysScreen", panel: "keysSheet", close: "keysClose" },
     { id: "installScreen", panel: "installSheet", close: "installClose" },
-    { id: "skyScreen", panel: "skySheet", close: "skyClose" }
+    { id: "skyScreen", panel: "skySheet", close: "skyClose" },
+    { id: "statsScreen", panel: "statsSheet", close: "statsClose" }
   ];
   function ka() { return window.__kanaArcade || {}; }
   function calm() { return !!(ka().isCalm && ka().isCalm()); }

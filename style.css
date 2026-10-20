@@ -396,3 +396,37 @@ body.calm #findDice.roll { animation: none !important; }
 @keyframes kanaFound { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { #petScreen.finding .kc.found { animation: none; } }
 body.calm #petScreen.finding .kc.found { animation: none !important; }
+
+/* ---- 📊 my stats ---- */
+#statsScreen { z-index: 30; background: #07021acc; }
+#statsSheet { position: relative; width: min(600px, 100%); max-height: 100%; overflow-y: auto; background: #10063a; border: 2px solid #2be8ff; border-radius: 14px; box-shadow: 0 0 22px #2be8ff88;
+  padding: 18px 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#statsSheet > * { flex-shrink: 0; }
+#statsTitle { font-size: clamp(24px, 6vw, 32px); color: #8ff3ff; text-shadow: 0 0 10px #2be8ff; }
+#statsTitle .rubyJp { font-size: .62em; color: #ffd0e6; text-shadow: 0 0 8px #ff8fb8; }
+#statsClose { position: absolute; top: 8px; right: 8px; }
+#statsGrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; }
+@media (max-width: 560px) { #statsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
+.statTile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 8px 4px; border-radius: 12px; background: #0b0430; border: 2px solid #3a2a7a; text-align: center; min-width: 0; }
+.statTile .stIcon { font-size: 20px; line-height: 1.1; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.statTile .stVal { font-size: 19px; color: #fff; line-height: 1.15; white-space: nowrap; }
+.statTile .stLbl { font-size: 11px; color: #c9b8ff; line-height: 1.2; }
+.statTile .stSub { font-size: 10px; color: #9a8acb; }
+.st-mastered, .st-hira, .st-kata { border-color: #ff8fd9; background: #2a0a3a; }
+.st-right, .st-acc, .st-seen { border-color: #6dffb0; background: #062a1e; }
+.st-high, .st-words { border-color: #ffe94d; background: #2a2406; }
+.st-pets, .st-badges { border-color: #ffb347; background: #2a1406; }
+.st-streak, .st-nicks { border-color: #2be8ff; background: #06202a; }
+#statKana { gap: 10px; width: 100%; justify-content: center; }
+.statKana { flex: 1 1 0; max-width: 240px; display: grid; grid-template-columns: auto 1fr; grid-template-areas: "h h" "k r" "k l"; align-items: center; column-gap: 10px; text-align: left;
+  padding: 8px 12px; min-height: 44px; border-radius: 12px; font-size: 13px; box-shadow: none; }
+.statKana.best { background: linear-gradient(180deg, #4a3a06, #2a2006); border: 2px solid #ffe94d; color: #fff5c0; box-shadow: 0 0 12px #ffe94d66; }
+.statKana.tricky { background: #2a0616; border: 2px solid #ff6b9a; color: #ffd0e0; }
+.statKana .sbHead { grid-area: h; font-size: 12px; opacity: .9; }
+.statKana .sbKana { grid-area: k; font-size: 38px; line-height: 1; color: #fff; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.statKana .sbRo { grid-area: r; font-size: 16px; }
+.statKana .sbLine { grid-area: l; font-weight: normal; font-size: 11px; opacity: .85; }
+.statKana.hear { animation: kanaHear .35s ease-out; }
+.statKana:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
+#statsSay { min-height: 1.4em; }
+@media (max-height: 700px) { #statsSheet { gap: 6px; padding-top: 12px; } .statTile { padding: 5px 3px; } }

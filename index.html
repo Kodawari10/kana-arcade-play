@@ -63,6 +63,7 @@
       <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
       <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
       <button id="skyBtn" class="alt small" type="button" aria-haspopup="dialog" title="Choose the playfield sky">🌌 Sky: 🌃</button>
+      <button id="statsBtn" class="alt small" type="button" aria-haspopup="dialog" title="See how your kana learning is going">📊 Stats</button>
       <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
     </div>
     <p class="tips" id="gentleNote"></p>
@@ -201,7 +202,7 @@
             <dt><kbd>B</kbd></dt><dd>🎵 Music on / off</dd>
             <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
             <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
-            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, 🌌 sky picker, welcome card or home screen help</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, 🌌 sky picker, 📊 stats, welcome card or home screen help</dd>
           </dl></section>
         <section aria-labelledby="kPlay"><h3 id="kPlay">In a game</h3>
           <dl>
@@ -251,6 +252,22 @@
       <button id="skyBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
+  <div id="statsScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+    <div id="statsSheet">
+      <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="statsTitle">📊 MY STATS <span class="rubyJp" lang="ja" aria-label="きろく, kiroku">きろく</span></h2>
+      <p class="tips" id="statsSub"></p>
+      <ul id="statsGrid" aria-label="Your stats"></ul>
+      <div id="statKana" class="row">
+        <button id="statBest" type="button" class="statKana best"></button>
+        <button id="statTricky" type="button" class="statKana tricky"></button>
+      </div>
+      <p id="statsSay" class="tips hearLine" role="status" aria-live="polite"></p>
+      <p id="statsSince" class="sincePill hidden"></p>
+      <p id="statsSr" class="sr" role="status" aria-live="polite"></p>
+      <button id="statsBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
@@ -274,6 +291,7 @@
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/skies.js"></script>
+<script src="js/stats.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/install.js"></script>
 <script src="js/swipe.js"></script>
