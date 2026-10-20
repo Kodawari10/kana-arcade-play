@@ -368,3 +368,9 @@ body.calm button.nickBtn.pop { animation: none !important; }
 .dakuTip { margin-top: -4px; }
 .dakuHead [lang="ja"], .dakuTip [lang="ja"], .dakuNote [lang="ja"] { font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
 .dakuNote b { color: #ff8fd9; }
+
+/* 📅 Together since */
+.sincePill { display: inline-block; margin: 0 auto 4px; padding: 3px 12px; border: 2px dashed #ffb3d1; border-radius: 999px; background: rgba(255, 143, 184, 0.12); color: #ffd6e7; font-size: 13px; line-height: 1.4; }
+.sincePill.today { border-color: #ffe94d; color: #fff3a8; background: rgba(255, 233, 77, 0.12); }
+.sincePill.old { border-color: #ffd36b; color: #ffe2a0; }
+.sincePill.hidden { display: none; }

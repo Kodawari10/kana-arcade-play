@@ -44,6 +44,21 @@
   function nickOf(id) { return nicks[id] || ""; }
   function callName(P) { return nickOf(P.id) || P.name; }
   function escHTML(t) { return NICK ? NICK.escapeHTML(t) : String(t).replace(/[&<>"']/g, ""); }
+  // 📅 Together since (js/since.js): { petId: "2026-10-20" | "old" }, the day each companion became yours; on this device only
+  var SINCE = window.KA_SINCE, met = SINCE ? SINCE.sanitize(load("met", {}), CP.PETS) : {};
+  function stampMet(id) {
+    if (!SINCE || met[id]) return;
+    met = SINCE.stamp(met, id, (progress.pets[id] && progress.pets[id].xp) > 0); save("met", met);
+  }
+  function renderSince() {
+    var el = $("petSince"); if (!el) return;
+    var P = CP.petById(progress.pet), L = SINCE ? SINCE.label(met[P.id], callName(P)) : null;
+    if (!L) { el.classList.add("hidden"); return; }
+    el.innerHTML = '<span aria-hidden="true">' + L.emoji + "</span> " + escHTML(L.text);
+    el.setAttribute("aria-label", L.aria); el.classList.remove("hidden");
+    el.classList.toggle("today", L.days === 0); el.classList.toggle("old", L.days === null);
+  }
+  stampMet(progress.pet);
   function petXP() { return progress.pets[progress.pet].xp; }
   function masteredCount() { return CP.countMastered(progress.kana); }
   function petStage() { return CP.stageFor(petXP(), masteredCount()); }
@@ -880,7 +895,7 @@
       var b = document.createElement("button"); b.className = "petPick" + (P.id === progress.pet ? " on" : "");
       var st = CP.STAGES[CP.stageFor(progress.pets[P.id].xp, masteredCount())];
       b.innerHTML = '<canvas data-size="64" data-pet="' + P.id + '"></canvas>' + P.name + (nickOf(P.id) ? '<em class="nickTag">\u201c' + escHTML(nickOf(P.id)) + '\u201d</em>' : "") + '<small><span lang="ja" aria-label="' + P.jp + ", " + romajiWord(P.jp) + '">' + rubyHTML(P.jp) + "</span> · " + st.name + "</small>";
-      b.addEventListener("click", function () { progress.pet = P.id; saveProgress(); buildPicker(); });
+      b.addEventListener("click", function () { progress.pet = P.id; saveProgress(); stampMet(P.id); buildPicker(); });
       box.appendChild(b);
     });
   }
@@ -900,7 +915,7 @@
     var cl = costumeLine(); $("petCostume").textContent = cl; show("petCostume", !!cl);
     buildGrid(); $("gridSay").innerHTML = "🔊 Tap any kana to hear it in Japanese";
     $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); $("petSay").innerHTML = "💬 Tap " + escHTML(callName(P)) + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
-    closeNick(false); renderNick();
+    closeNick(false); renderNick(); stampMet(P.id); renderSince();
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -993,7 +1008,7 @@
   }
   function saveNick() {
     var P = CP.petById(progress.pet), before = nickOf(P.id), n = setNick(P.id, $("nickInput").value), el = $("petSay");
-    closeNick(true); renderNick();
+    closeNick(true); renderNick(); renderSince();
     $("bigPet").setAttribute("aria-label", "Pet " + P.name + (n ? ", nicknamed " + n : ""));
     if (n && n !== before) {
       el.innerHTML = "<b lang='ja'>" + rubyHTML("うれしい!") + "</b> " + escHTML(P.name) + " loves being called <b class='nickSay'>\u201c" + escHTML(n) + "\u201d</b> 💕";
@@ -1387,6 +1402,7 @@
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
     sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount, dakuOf: function (ch) { return DAKU_OF[ch] || null; }, pool: function () { return G ? pool().map(function (x) { return x.k[0]; }) : []; },
     showBanner: function () { if (G) showBanner(); return G && G.banner ? { title: G.banner.title, row: G.banner.row ? G.banner.row.name : null } : null; },
+    met: function (id) { return met[id || progress.pet] || null; }, renderSince: renderSince,
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },
