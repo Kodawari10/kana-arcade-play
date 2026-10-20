@@ -37,6 +37,9 @@
   function hasMissed() { return Object.keys(progress.kana).some(function (k) { return (progress.kana[k].w || 0) > 0; }); }
   var quest = QUEST.normalize(load("quest", null), QUEST.dayKey(), { hasMissed: hasMissed() });
   save("quest", quest);
+  // 🎋 omikuji (own save key { date }): once drawn today, the lucky kana sparkles gold in games for ×2 points
+  var OMI = window.KA_OMIKUJI;
+  function omikujiToday() { var key = QUEST.dayKey(); return OMI && OMI.drawnOn(load("omikuji", null), key) ? OMI.draw(key, ROWS) : null; }
   function questDay() { // a new day while the game is open → a new quest
     var key = QUEST.dayKey();
     if (quest.date !== key) { quest = QUEST.normalize(quest, key, { hasMissed: hasMissed() }); save("quest", quest); }
@@ -114,7 +117,8 @@
       level: DEMO ? 3 : 1, score: 0, lives: 5, combo: 0, best: 0, kills: 0, levelKills: 0, shots: 0, hits: 0,
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, target: null, demoT: 0, demoN: 0,
-      pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null
+      pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
+      lucky: omikujiToday(), luckyHits: 0
     };
     showBanner();
     input.value = ""; input.classList.remove("bad");
@@ -142,6 +146,10 @@
       var cand = (G.level <= ROWS.length && Math.random() < 0.45) ? p.filter(function (x) { return x.row === newest; }) : p;
       pick = cand[Math.floor(Math.random() * cand.length)];
       if (!live[pick.k[2]]) break;
+    }
+    if (G.lucky && Math.random() < 0.12) { // 🎋 the lucky kana drops by a bit more often (once its row is unlocked)
+      var lk = p.filter(function (x) { return x.k[2] === G.lucky.romaji; })[0];
+      if (lk && !live[lk.k[2]]) pick = lk;
     }
     var fs = fontSize(), margin = fs * 0.8;
     var x = margin + Math.random() * (W - margin * 2);
@@ -196,6 +204,8 @@
     e.dead = true; G.hits++; G.shots++; G.combo++; G.best = Math.max(G.best, G.combo);
     var heightBonus = Math.round(10 * (1 - Math.max(0, e.y) / groundY()));
     var pts = (10 + heightBonus) * G.level * mult();
+    var lucky = OMI && OMI.isLucky(e.ch, G.lucky);
+    if (lucky) { pts *= OMI.MULT; G.luckyHits++; }
     G.score += pts; G.kills++; G.levelKills++;
     var sx = W / 2, sy = groundY() + 4;
     G.lasers.push({ x1: sx, y1: sy, x2: e.x, y2: e.y, t: 0.15 });
@@ -203,12 +213,17 @@
     burst(e.x, e.y, cols[G.combo % 3], 26, 260 + G.combo * 6);
     burst(e.x, e.y, "#ffffff", 8, 120);
     G.texts.push({ x: e.x, y: e.y, s: "+" + pts, sub: e.answers[0], c: "#ffe94d", t: 0, dur: 0.9 });
+    if (lucky) {
+      burst(e.x, e.y, "#ffd36b", 18, 200);
+      G.texts.push({ x: e.x, y: e.y - fontSize() * 0.9, s: "✨ LUCKY ×" + OMI.MULT, c: "#ffd36b", t: 0, dur: 1.1 });
+    }
     if (G.combo > 0 && G.combo % 5 === 0) G.texts.push({ x: W / 2, y: H * 0.42, s: "COMBO x" + mult() + "!", c: "#ff2bd6", t: 0, dur: 1.1, big: true });
     G.flash = 0.06;
     sfx.shoot(); setTimeout(function () { sfx.boom(G ? G.combo : 0); }, 60);
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
     gainXP(2 + Math.floor(Math.min(G.combo, 20) / 5));
-    if (G.combo > 0 && G.combo % 5 === 0) petMood("cheer", 1.2, CHEERS[Math.floor(Math.random() * CHEERS.length)]);
+    if (lucky && G.luckyHits === 1) petMood("cheer", 1.3, "ラッキー!");
+    else if (G.combo > 0 && G.combo % 5 === 0) petMood("cheer", 1.2, CHEERS[Math.floor(Math.random() * CHEERS.length)]);
     else if (G.pet.mood !== "cheer") petMood("happy", 0.6, Math.random() < 0.25 ? "♪" : "");
     var practiced = !!(progress.kana[e.ch] && progress.kana[e.ch].w > 0);
     recordAnswer(e.ch, true);
@@ -340,7 +355,8 @@
   // keyboard shortcuts 1-4 for tap mode on desktop
   document.addEventListener("keydown", function (ev) {
     var onBtn = document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "startBtn";
-    if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
+    if (!$("omikujiScreen").classList.contains("hidden")) { if (ev.key === "Escape") { ev.preventDefault(); closeOmikuji(); } return; }
+    if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden") && !$("startScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
     if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
     if (ev.key === "Escape") { if (state === "play") pause(); else if (state === "pause") resume(); return; }
     if (state === "play" && settings.input === "tap" && /^[1-4]$/.test(ev.key)) tapAnswer(ansBtns[+ev.key - 1]);
@@ -436,10 +452,10 @@
       var danger = Math.max(0, (e.y / gy - 0.6) / 0.4);
       var col = danger > 0.01 ? "rgb(255," + Math.round(233 - 180 * danger) + "," + Math.round(255 - 160 * danger) + ")" : "#ffffff";
       var still = calm(), x = e.x + (still ? 0 : Math.sin(e.wob) * 4);
-      var isT = settings.input === "tap" && e === G.target;
-      // pixel-style invader box
-      ctx.strokeStyle = isT ? "#ffe94d" : "rgba(43,232,255,0.55)"; ctx.lineWidth = isT ? 3 : 2;
-      ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = isT ? 18 : 8;
+      var isT = settings.input === "tap" && e === G.target, isL = OMI && OMI.isLucky(e.ch, G.lucky);
+      // pixel-style invader box (🎋 lucky kana: warm gold box with little sparkles)
+      ctx.strokeStyle = isT ? "#ffe94d" : (isL ? "#ffb347" : "rgba(43,232,255,0.55)"); ctx.lineWidth = isT || isL ? 3 : 2;
+      ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = isT || isL ? 18 : 8;
       var b = fs * 0.62; ctx.strokeRect(x - b, e.y - b, b * 2, b * 2); ctx.shadowBlur = 0;
       if (isT) { // target reticle corners
         ctx.strokeStyle = "#ffe94d"; ctx.lineWidth = 2; var r = b + 8 + (still ? 0 : Math.sin(t * 8) * 2);
@@ -447,7 +463,15 @@
           ctx.beginPath(); ctx.moveTo(x + c[0] * r, e.y + c[1] * (r - 10)); ctx.lineTo(x + c[0] * r, e.y + c[1] * r); ctx.lineTo(x + c[0] * (r - 10), e.y + c[1] * r); ctx.stroke();
         });
       }
-      ctx.font = "bold " + fs + "px " + JP_FONT; ctx.fillStyle = col; ctx.shadowColor = isT ? "#ffe94d" : "#ff2bd6"; ctx.shadowBlur = 14;
+      if (isL) {
+        ctx.fillStyle = "rgba(255,179,71,0.16)"; ctx.fillRect(x - b, e.y - b, b * 2, b * 2);
+        ctx.font = Math.round(fs * 0.42) + "px sans-serif"; ctx.fillStyle = "#ffd36b";
+        var tw = still ? 0 : t * 3;
+        ctx.globalAlpha = still ? 0.9 : 0.55 + 0.45 * Math.sin(tw); ctx.fillText("✦", x + b + 2, e.y - b - 2);
+        ctx.globalAlpha = still ? 0.9 : 0.55 + 0.45 * Math.sin(tw + 2.1); ctx.fillText("✦", x - b - 2, e.y + b * 0.6);
+        ctx.globalAlpha = 1;
+      }
+      ctx.font = "bold " + fs + "px " + JP_FONT; ctx.fillStyle = isL && danger <= 0.01 ? "#ffe9a8" : col; ctx.shadowColor = isT ? "#ffe94d" : (isL ? "#ffb347" : "#ff2bd6"); ctx.shadowBlur = 14;
       ctx.fillText(e.ch, x, e.y + fs * 0.04); ctx.shadowBlur = 0;
       // thruster
       ctx.fillStyle = "rgba(255,43,214," + (still ? 0.6 : 0.4 + Math.random() * 0.4) + ")"; ctx.fillRect(x - 3, e.y - b - 6 - (still ? 3 : Math.random() * 6), 6, 6);
@@ -782,13 +806,14 @@
     saveProgress();
     var ps = CP.STAGES[petStage()];
     $("overPetLine").innerHTML = CP.petById(progress.pet).name + " (" + ps.name + ") gained <b style='color:#ffe94d'>+" + G.xpGained + " XP</b>" +
-      (G.newMastered.length ? " · newly mastered: <b style='color:#fff;font-size:1.2em'>" + G.newMastered.join(" ") + "</b>" : "");
+      (G.newMastered.length ? " · newly mastered: <b style='color:#fff;font-size:1.2em'>" + G.newMastered.join(" ") + "</b>" : "") +
+      (G.luckyHits ? " · <span style='color:#ffd36b'>🎋 lucky <b lang='ja'>" + G.lucky.hira + "</b> ×" + G.luckyHits + "</span>" : "");
     overPetMood = isNew || G.newMastered.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
   function pause() { if (state !== "play") return; state = "pause"; show("pauseScreen", true); input.blur(); }
   function resume() { if (state !== "pause") return; state = "play"; show("pauseScreen", false); if (settings.input === "type" && !isTouch) input.focus(); }
-  function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); requestAnimationFrame(resize); }
+  function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); applyOmikujiBtn(); requestAnimationFrame(resize); }
 
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);
@@ -816,8 +841,60 @@
     });
   }
 
+  // ---------- 🎋 omikuji screen ----------
+  function applyOmikujiBtn() {
+    var o = omikujiToday(), b = $("omikujiBtn");
+    b.classList.toggle("fresh", !o);
+    b.innerHTML = o ? '🎋 LUCKY <span lang="ja">' + rubyHTML(o.hira) + "</span>" : "🎋 OMIKUJI";
+    b.setAttribute("aria-label", o ? "Omikuji: today's lucky kana is " + o.hira + ", " + o.romaji : "Omikuji: draw today's fortune");
+  }
+  function renderSlip(o) {
+    $("okFortune").textContent = o.fortune.jp;
+    $("okReading").innerHTML = rubyHTML(o.fortune.kana); $("okReading").setAttribute("aria-label", o.fortune.kana + ", " + romajiWord(o.fortune.kana));
+    $("okEn").textContent = o.fortune.en;
+    var lk = $("okLucky"); lk.dataset.ch = o.hira;
+    lk.innerHTML = '<i aria-hidden="true">' + o.romaji + '</i><b lang="ja">' + o.hira + '</b><b lang="ja" class="okKata">' + o.kata + "</b>";
+    lk.setAttribute("aria-label", "Lucky kana " + o.hira + " and " + o.kata + ", " + o.romaji + ". Tap to hear it.");
+    $("okTip").textContent = "💡 " + o.tip;
+    $("okBonus").innerHTML = "In today's games <b lang='ja'>" + o.hira + "</b> / <b lang='ja'>" + o.kata + "</b> fall with a gold glow ✦ Shoot them for <b>×" + OMI.MULT + " points</b>!";
+    $("omikujiSub").textContent = CP.petById(progress.pet).name + ": " + o.cheer;
+    show("omikujiBox", false); show("omikujiSlip", true);
+    $("okSay").innerHTML = "🔊 Tap the lucky kana to hear it";
+  }
+  function openOmikuji() {
+    var o = omikujiToday();
+    show("startScreen", false); show("omikujiScreen", true);
+    $("omikujiSlip").classList.remove("reveal");
+    if (o) { renderSlip(o); $("okLucky").focus(); }
+    else {
+      $("omikujiSub").textContent = "Shake the box for today's fortune and your lucky kana!"; $("okSay").textContent = "";
+      show("omikujiSlip", false); show("omikujiBox", true); $("omikujiBox").disabled = false; $("omikujiBox").focus();
+    }
+  }
+  function closeOmikuji() { show("omikujiScreen", false); toTitle(); applyOmikujiBtn(); $("omikujiBtn").focus(); }
+  function drawOmikuji() {
+    var box = $("omikujiBox"); if (box.disabled) return;
+    box.disabled = true; audio();
+    var still = calm();
+    if (!still) { box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); }
+    [0, 0.12, 0.24, 0.36].forEach(function (d, i) { tone("triangle", 660 + i * 90, 520, 0.07, 0.25, d); });
+    setTimeout(function () {
+      box.classList.remove("shake");
+      save("omikuji", { date: QUEST.dayKey() });
+      var o = omikujiToday(); renderSlip(o);
+      if (!still) $("omikujiSlip").classList.add("reveal");
+      sfx.master(); sayKana(o.hira, 250);
+      showToast("🎋 " + o.fortune.jp + " · lucky kana " + o.hira + " (" + o.romaji + ")");
+      applyOmikujiBtn(); $("okLucky").focus();
+    }, still ? 120 : 750);
+  }
+  $("omikujiBtn").addEventListener("click", openOmikuji);
+  $("omikujiBox").addEventListener("click", drawOmikuji);
+  $("omikujiBack").addEventListener("click", closeOmikuji);
+  $("okLucky").addEventListener("click", function () { hearKana($("okLucky"), "okSay"); });
+
   // ---------- boot ----------
-  applyHomeRomaji(); buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -826,7 +903,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
-    setGentle: setGentle, setVoice: setVoice, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+    setGentle: setGentle, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

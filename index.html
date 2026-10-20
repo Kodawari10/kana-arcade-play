@@ -63,6 +63,7 @@
       <button id="startBtn">▶ START</button>
       <button id="petBtn" class="alt">★ MY COMPANION</button>
       <button id="badgeBtn" class="alt">🏅 BADGES</button>
+      <button id="omikujiBtn" class="alt" aria-haspopup="dialog">🎋 OMIKUJI</button>
     </div>
     <p class="tips" id="tips"></p>
   </div>
@@ -120,12 +121,30 @@
     <div id="chainBox" class="hidden"></div>
     <button id="badgeBack">◀ BACK</button>
   </div>
+  <div id="omikujiScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="omikujiTitle">
+    <h2 class="petTitle" id="omikujiTitle">🎋 OMIKUJI <span class="rubyJp" lang="ja" aria-label="おみくじ, omikuji">おみくじ</span></h2>
+    <p class="tips" id="omikujiSub">Shake the box for today's fortune and your lucky kana!</p>
+    <button id="omikujiBox" type="button" aria-label="Shake the omikuji box to draw today's fortune"><span class="okBox" aria-hidden="true">🎋</span><span class="okLbl">TAP TO SHAKE</span></button>
+    <div id="omikujiSlip" class="hidden" aria-live="polite">
+      <div class="okTop">今日の運勢 <small>today's fortune</small></div>
+      <div class="okFortune" lang="ja" id="okFortune"></div>
+      <div class="okReading" lang="ja" id="okReading"></div>
+      <div class="okEn" id="okEn"></div>
+      <div class="okLuckyLbl">✨ LUCKY KANA ✨</div>
+      <button type="button" id="okLucky" class="okLucky"></button>
+      <p class="okTip" id="okTip"></p>
+      <p class="okBonus" id="okBonus"></p>
+    </div>
+    <p id="okSay" class="tips hearLine" role="status" aria-live="polite"></p>
+    <button id="omikujiBack">◀ BACK</button>
+  </div>
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
 <script src="js/romaji.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/quest.js"></script>
+<script src="js/omikuji.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/badges.js"></script>

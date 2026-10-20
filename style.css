@@ -170,3 +170,40 @@ h1 .jp ruby.ro rt { font-size: max(10px, 0.34em); }
 .petPick small ruby.ro rt { font-size: 8px; opacity: .9; }
 .kc i { order: -1; color: #ffe94d; opacity: .8; line-height: 1.1; margin-bottom: 1px; }
 .kc.mastered i { color: #5a3d00; opacity: 1; }
+
+/* ---- 🎋 omikuji (daily fortune + lucky kana) ---- */
+#omikujiBtn.fresh { position: relative; }
+#omikujiBtn.fresh::after { content: ""; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: #ffb347; box-shadow: 0 0 8px #ffb347; }
+#omikujiBtn ruby.ro rt { font-size: max(8px, 0.5em); color: inherit; text-shadow: none; }
+#omikujiTitle .rubyJp { font-size: .6em; color: #ffd0e6; text-shadow: 0 0 8px #ff8fb8; }
+#omikujiScreen { justify-content: safe center; }
+#omikujiBox { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 28px; background: linear-gradient(180deg, #c8102e, #8f0a20); color: #fff5d6;
+  border: 3px solid #ffd36b; border-radius: 16px; box-shadow: 0 0 18px #ffb34788; flex: 0 0 auto; }
+#omikujiBox .okBox { font-size: 64px; line-height: 1; }
+#omikujiBox .okLbl { font-size: 14px; letter-spacing: 2px; }
+#omikujiBox.shake { animation: okShake .75s ease-in-out; }
+@keyframes okShake { 0%,100% { transform: rotate(0); } 15% { transform: rotate(-14deg); } 30% { transform: rotate(12deg); } 45% { transform: rotate(-10deg); } 60% { transform: rotate(8deg); } 75% { transform: rotate(-4deg); } }
+#omikujiSlip { width: min(320px, 88vw); flex: 0 0 auto; background: #fffaf0; color: #2a1530; border-radius: 6px; padding: 12px 16px 14px; border-top: 10px solid #c8102e; border-bottom: 10px solid #c8102e;
+  box-shadow: 0 0 22px #ffd36b88; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP', "Courier New", sans-serif; }
+#omikujiSlip.reveal { animation: okReveal .5s ease-out; }
+@keyframes okReveal { 0% { transform: translateY(30px) scaleY(.2); opacity: 0; } 70% { transform: translateY(-4px) scaleY(1.03); opacity: 1; } 100% { transform: none; } }
+.okTop { font-size: 13px; color: #c8102e; letter-spacing: 2px; } .okTop small { font-family: "Courier New", monospace; font-size: 10px; letter-spacing: 0; color: #8a6b70; }
+.okFortune { font-size: clamp(48px, 15vw, 64px); line-height: 1.05; color: #c8102e; font-weight: bold; }
+.okReading { font-size: 16px; color: #5a3040; }
+.okReading ruby.ro rt { color: #b07a00; text-shadow: none; font-size: max(9px, .6em); }
+.okEn { font-family: "Courier New", monospace; font-weight: bold; font-size: 15px; color: #2a1530; margin-bottom: 4px; }
+.okLuckyLbl { font-family: "Courier New", monospace; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #a86400; margin-bottom: 6px; }
+.okLucky { display: flex; align-items: baseline; gap: 10px; padding: 4px 18px 8px; min-height: 0; background: radial-gradient(circle at 35% 30%, #fff8c9, #ffd36b 65%, #f0a800); color: #2a1530;
+  border: 2px solid #fff3a0; border-radius: 14px; box-shadow: 0 0 12px #ffb347aa; position: relative; margin-bottom: 6px; }
+.okLucky i { position: absolute; top: 2px; left: 0; right: 0; font-style: normal; font-size: 12px; color: #6b4a00; }
+.okLucky b { font-size: 44px; line-height: 1.1; padding-top: 12px; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.okLucky .okKata { font-size: 30px; opacity: .75; }
+.okLucky:focus-visible { outline: 3px solid #2be8ff; outline-offset: 3px; }
+.okLucky.hear { animation: kanaHear .45s ease-out; }
+#omikujiSlip p { color: #4a2a3a; font-family: "Courier New", 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP', monospace; font-size: 13px; line-height: 1.4; }
+.okBonus { color: #8a4b00 !important; }
+#okSay { min-height: 1.4em; }
+@media (prefers-reduced-motion: reduce) { #omikujiBox.shake, #omikujiSlip.reveal, .okLucky.hear { animation: none; } }
+body.calm #omikujiBox.shake, body.calm #omikujiSlip.reveal, body.calm .okLucky.hear { animation: none !important; }
+@media (max-height: 700px) { .okFortune { font-size: 44px; } .okLucky b { font-size: 36px; } #omikujiSlip { gap: 2px; padding: 8px 14px 10px; } }
