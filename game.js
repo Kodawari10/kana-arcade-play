@@ -525,6 +525,8 @@
   var JP_FONT = "'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP','Noto Sans JP','Noto Serif CJK JP',sans-serif";
 
   function drawBackground(t) {
+    var SKY = window.KA_SKY; // 🌌 arcade skies (js/skies.js): the playfield background you picked
+    if (SKY && SKY.current) { SKY.draw(ctx, SKY.current(), { W: W, H: H, gy: groundY(), t: t, stars: stars, calm: calm() }); return; }
     ctx.fillStyle = "#07021a"; ctx.fillRect(-20, -20, W + 40, H + 40);
     stars.forEach(function (s) { ctx.fillStyle = "rgba(200,220,255," + (s.z * 0.8) + ")"; ctx.fillRect(s.x, s.y, s.z * 2.5, s.z * 2.5); });
     // perspective grid floor
@@ -1150,7 +1152,11 @@
     var looks = LOOK ? LOOK.notes(G.mixups, G.missed, 2) : [];
     $("overLook").innerHTML = looks.length ? "👀 Look-alikes <span lang='ja'>そっくり</span>: " + looks.map(lookHTML).join(" · ") : "";
     show("overLook", looks.length > 0);
-    overPetMood = isNew || G.newMastered.length ? "cheer" : "happy";
+    // 🌌 a new playfield sky opens up when your mastered kana reach 5 / 15 / 30 / 50 / 75
+    var SKY = window.KA_SKY, skyNew = SKY && SKY.note ? SKY.note(masteredCount()) : [];
+    $("overSky").innerHTML = skyNew.length ? "🌌 New sky unlocked: " + skyNew.map(function (k) { return "<b>" + k.icon + " " + k.name + "</b>"; }).join(" · ") + "! Pick it with 🌌 Sky on the title screen." : "";
+    show("overSky", skyNew.length > 0);
+    overPetMood = isNew || G.newMastered.length || skyNew.length ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
   function pause() { if (state !== "play") return; state = "pause"; show("pauseScreen", true); input.blur(); }
@@ -1300,6 +1306,7 @@
     killWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) kill(e); return !!e; },
     missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
     startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
+    sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount,
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     lookMixup: function (ro) { return state === "play" && G && G.target ? lookMixup(G.target, ro) : null; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };

@@ -11,7 +11,8 @@
     { id: "badgeScreen", close: "badgeBack" },
     { id: "omikujiScreen", close: "omikujiBack" },
     { id: "keysScreen", panel: "keysSheet", close: "keysClose" },
-    { id: "installScreen", panel: "installSheet", close: "installClose" }
+    { id: "installScreen", panel: "installSheet", close: "installClose" },
+    { id: "skyScreen", panel: "skySheet", close: "skyClose" }
   ];
   function ka() { return window.__kanaArcade || {}; }
   function calm() { return !!(ka().isCalm && ka().isCalm()); }

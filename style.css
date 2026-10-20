@@ -319,3 +319,31 @@ body.calm .kc .sprout { animation: none; }
 .lookLine small { font-size: .85em; opacity: .85; }
 .lookNote { color: #ffc98f; }
 .lookNote b { color: #ffe2bf; }
+
+/* ---- 🌌 arcade skies ---- */
+#skyScreen { z-index: 30; background: #07021acc; }
+#skySheet { position: relative; width: min(560px, 100%); background: #10063a; border: 2px solid #b98cff; border-radius: 14px; box-shadow: 0 0 22px #b98cff88;
+  padding: 18px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#skySheet > * { flex-shrink: 0; }
+#skyTitle { font-size: clamp(24px, 6vw, 32px); color: #c9a8ff; text-shadow: 0 0 10px #b98cff; }
+#skyTitle .rubyJp { font-size: .62em; color: #ffd0e6; text-shadow: 0 0 8px #ff8fb8; }
+#skyClose { position: absolute; top: 8px; right: 8px; }
+#skyList { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+@media (max-width: 520px) { #skyList { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.skyOpt { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 6px 7px; min-height: 0; font-size: 13px;
+  background: #0b0430; color: #e8f7ff; border: 2px solid #3a2a7a; box-shadow: none; border-radius: 10px; }
+.skyOpt canvas { width: 100%; max-width: 132px; aspect-ratio: 132 / 78; height: auto; border: 1px solid #ffffff22; border-radius: 6px; box-shadow: none; }
+.skyOpt .skyName { font-size: 13px; line-height: 1.2; }
+.skyOpt .skyJp { font-weight: normal; font-size: 13px; color: #ffd0e6; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.skyOpt .skyJp ruby.ro rt { font-size: 9px; }
+.skyOpt .skyLock { font-weight: normal; font-size: 11px; color: #9a8acb; }
+.skyOpt.on { border-color: #ffe94d; box-shadow: 0 0 12px #ffe94d88; }
+.skyOpt.on .skyLock { color: #ffe94d; }
+.skyOpt.locked canvas { filter: grayscale(.85) brightness(.55); }
+.skyOpt.locked .skyName, .skyOpt.locked .skyJp { opacity: .6; }
+.skyOpt:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
+@media (hover: hover) { .skyOpt.locked:hover { filter: none; } }
+#skySay { min-height: 1.4em; }
+.skyLine { color: #c9a8ff; }
+.skyLine b { color: #fff; }
+@media (max-height: 700px) { #skySheet { gap: 6px; padding-top: 12px; } .skyHow { display: none; } }

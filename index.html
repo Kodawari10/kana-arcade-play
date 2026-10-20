@@ -62,6 +62,7 @@
       <button id="musicBtn" class="alt small" type="button" aria-pressed="false" aria-keyshortcuts="B" title="Soft arcade music (B)">🎵 Music: OFF</button>
       <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
       <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
+      <button id="skyBtn" class="alt small" type="button" aria-haspopup="dialog" title="Choose the playfield sky">🌌 Sky: 🌃</button>
       <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
     </div>
     <p class="tips" id="gentleNote"></p>
@@ -107,6 +108,7 @@
     <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
     <p id="overQuest" class="tips"></p>
     <p id="overBadges" class="tips hidden" role="status"></p>
+    <p id="overSky" class="tips skyLine hidden" role="status"></p>
     <div class="row">
       <button id="againBtn">▶ PLAY AGAIN</button>
       <button id="overPetBtn" class="alt">★ COMPANION</button>
@@ -176,7 +178,7 @@
             <dt><kbd>B</kbd></dt><dd>🎵 Music on / off</dd>
             <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
             <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
-            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, welcome card or home screen help</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, 🌌 sky picker, welcome card or home screen help</dd>
           </dl></section>
         <section aria-labelledby="kPlay"><h3 id="kPlay">In a game</h3>
           <dl>
@@ -208,6 +210,17 @@
       <button id="installDone" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
+  <div id="skyScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="skyTitle">
+    <div id="skySheet">
+      <button id="skyClose" type="button" class="wbClose" aria-label="Close sky picker" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="skyTitle">🌌 SKY <span class="rubyJp" lang="ja" aria-label="そら, sora">そら</span></h2>
+      <p class="tips" id="skySub"></p>
+      <div id="skyList" role="group" aria-label="Playfield skies"></div>
+      <p id="skySay" class="tips hearLine" role="status" aria-live="polite"></p>
+      <p class="tips skyHow">Master kana (★ 8+ right, 80%+ accuracy) to open new skies. Your sky stays yours once you've earned it.</p>
+      <button id="skyBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
   <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
 </div>
 <script src="kana.js"></script>
@@ -226,6 +239,7 @@
 <script src="js/lookalike.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
+<script src="js/skies.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/install.js"></script>
 <script src="js/swipe.js"></script>
