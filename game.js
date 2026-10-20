@@ -725,6 +725,34 @@
 
   function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; }
 
+  // 👩/👨 kana voice (choice saved by js/voice.js in its own key; default female)
+  var voiceNotes = load("voiceNotes", {}); if (!voiceNotes || typeof voiceNotes !== "object") voiceNotes = {};
+  function applyVoice() {
+    var V = window.KA_VOICE, g = V ? V.gender : "female";
+    document.querySelectorAll(".voiceRow").forEach(function (r) { r.classList.toggle("hidden", !(V && V.supported)); });
+    document.querySelectorAll(".voiceBtn").forEach(function (b) {
+      var on = b.dataset.gender === g; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+  function setVoice(g, btn) {
+    var V = window.KA_VOICE; if (!V || !V.supported) return;
+    var inf = V.setGender(g); applyVoice();
+    if (btn && !calm()) { btn.classList.remove("hear"); void btn.offsetWidth; btn.classList.add("hear"); }
+    var name = inf.gender === "male" ? "👨 Male voice" : "👩 Female voice", msg;
+    if (settings.muted) msg = name + " · sound is off, tap 🔇 to hear it";
+    else {
+      V.speak("あ", { force: true });
+      msg = name + " · あ";
+      if (inf.hasJapaneseVoice && !inf.exact && !voiceNotes[inf.gender]) {
+        msg = "No " + inf.gender + " Japanese voice on this device, so I made it " + (inf.gender === "male" ? "deeper" : "higher") + " 🎵";
+        voiceNotes[inf.gender] = true; save("voiceNotes", voiceNotes);
+      }
+    }
+    showToast(msg);
+    if (!$("petScreen").classList.contains("hidden")) $("gridSay").innerHTML = (settings.muted ? "" : "🔊 <b lang='ja'>あ</b> = a · ") + name;
+  }
+  document.querySelectorAll(".voiceBtn").forEach(function (b) { b.addEventListener("click", function () { setVoice(b.dataset.gender, b); }); });
+
   function startGame() {
     audio(); newGame(); state = "play";
     show("startScreen", false); show("overScreen", false); show("pauseScreen", false); show("petScreen", false);
@@ -778,7 +806,7 @@
   canvas.addEventListener("pointerdown", function () { if (state === "play" && settings.input === "type") input.focus(); });
 
   // ---------- boot ----------
-  buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyInputMode(); resize();
+  buildPicker(); renderQuest(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); resize();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
   if (DEMO) startGame();
@@ -787,7 +815,7 @@
   }
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
-    setGentle: setGentle, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
+    setGentle: setGentle, setVoice: setVoice, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

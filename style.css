@@ -147,3 +147,14 @@ body.calm #xpFill { transition: none; }
 body.calm #questFill { transition: none; }
 @media (max-height: 700px) { #questCard { padding: 5px 10px; gap: 3px; } #questStreak { display: none; } }
 #kaToast.sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; box-shadow: none; }
+
+/* ---- 👩/👨 kana voice ---- */
+.voiceRow { display: inline-flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+.voiceRow.hidden { display: none; }
+.voiceLbl { font-size: 11px; letter-spacing: 1px; color: #ffd0e6; opacity: .85; margin-right: 2px; }
+.voiceBtn { font-size: 13px; padding: 6px 9px; }
+.voiceBtn.on { background: #ff8fb8; color: #07021a; border-color: #ff8fb8; box-shadow: 0 0 10px #ff8fb888; }
+.voiceBtn.hear { animation: kanaHear .45s ease-out; }
+@media (prefers-reduced-motion: reduce) { .voiceBtn.hear { animation: none; } }
+body.calm .voiceBtn.hear { animation: none !important; }
+#kaToast { pointer-events: none; } /* toasts never block a tap */
