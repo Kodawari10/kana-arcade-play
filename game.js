@@ -109,8 +109,8 @@
 
   function unlockedRows(level) { return Math.min(level, ROWS.length); }
   function pool() {
-    var out = [];
-    for (var r = 0; r < unlockedRows(G.level); r++) ROWS[r].kana.forEach(function (k) { out.push({ k: k, row: r }); });
+    var out = [], n = G.review ? G.review.rows : unlockedRows(G.level); // 🔁 review: look-alikes come from the rows you're reviewing
+    for (var r = 0; r < n; r++) ROWS[r].kana.forEach(function (k) { out.push({ k: k, row: r }); });
     return out;
   }
   function charFor(k) {
@@ -118,14 +118,17 @@
     return s === "katakana" ? k[1] : k[0];
   }
 
-  function newGame() {
+  function newGame(reviewItems) {
     G = {
       level: DEMO ? 3 : 1, score: 0, lives: 5, combo: 0, best: 0, kills: 0, levelKills: 0, shots: 0, hits: 0,
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
-      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false
+      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null
     };
+    if (reviewItems && REV) { // 🔁 a review round: only your trickiest kana, a calm level-2 pace, no words or level-ups
+      G.review = REV.start(reviewItems); G.level = 2; G.lucky = null;
+    }
     showBanner();
     input.value = ""; input.classList.remove("bad");
   }
@@ -140,6 +143,7 @@
   }
 
   function showBanner() {
+    if (G.review) { G.banner = { t: 0, dur: 2.8, title: "🔁 REVIEW", review: G.review.items }; return; }
     var r = unlockedRows(G.level) - 1, newRow = (G.level <= ROWS.length) ? ROWS[r] : null;
     G.banner = { t: 0, dur: newRow ? 2.8 : 1.6, title: "LEVEL " + G.level, row: newRow };
   }
@@ -170,6 +174,7 @@
   function wordFont() { return Math.round(fontSize() * 0.72); }
   function wordHalf(w, wfs) { return Math.max(wfs * 1.1, (w.jp.length * wfs * 1.02) / 2 + wfs * 0.4); }
   function spawn() {
+    if (G.review) return spawnReview();
     if (G.level >= (KW ? KW.START : 99) && spawnWord(false)) return;
     var p = pool(), newest = unlockedRows(G.level) - 1, pick;
     var live = {}; G.enemies.forEach(function (e) { live[e.k[2]] = 1; });
@@ -192,6 +197,26 @@
     }
     G.enemies.push({ k: pick.k, ch: charFor(pick.k), answers: pick.k.slice(2), x: x, y: -fs * 0.6, wob: Math.random() * 6.28,
       v: speed() * (0.85 + Math.random() * 0.3), dead: false });
+  }
+
+  // 🔁 review: drop one of the kana still needed (the exact hiragana or katakana you missed)
+  function spawnReview() {
+    var live = {}; G.enemies.forEach(function (e) { live[e.ch] = 1; });
+    var it = REV.next(G.review, live); if (!it) return;
+    var fs = fontSize(), margin = fs * 0.8, x = margin + Math.random() * (W - margin * 2);
+    for (var i = 0; i < 6; i++) {
+      var clash = G.enemies.some(function (e) { return e.y < fs * 2 && Math.abs(e.x - x) < fs * 1.3; });
+      if (!clash) break; x = margin + Math.random() * (W - margin * 2);
+    }
+    G.enemies.push({ k: it.k, ch: it.ch, answers: it.answers.slice(), x: x, y: -fs * 0.6, wob: Math.random() * 6.28,
+      v: speed() * (0.85 + Math.random() * 0.3), dead: false });
+  }
+  function reviewDone() {
+    if (!G || !G.review || G.reviewDone) return;
+    G.reviewDone = true; gainXP(REVIEW_XP);
+    G.texts.push({ x: W / 2, y: H * 0.3, s: "🔁 REVIEW CLEAR! +" + REVIEW_XP + " XP", c: "#6dffb0", t: 0, dur: 1.6, big: true });
+    petMood("cheer", 1.6, "ばっちり!"); sfx.level();
+    setTimeout(function () { if (state === "play" && G && G.reviewDone) gameOver(); }, 900);
   }
 
   function burst(x, y, color, n, power) {
@@ -263,7 +288,12 @@
     var practiced = !e.word && !!(progress.kana[e.ch] && progress.kana[e.ch].w > 0);
     if (e.word) { wordStat(e.word.jp).c++; save("words", wordStats); if (G.wordsCleared.indexOf(e.word.jp) < 0) G.wordsCleared.push(e.word.jp); }
     else recordAnswer(e.ch, true);
-    if (G.levelKills >= 8 + G.level) { G.level++; G.levelKills = 0; showBanner(); sfx.level(); gainXP(10); petMood("cheer", 2, "レベルアップ!"); }
+    if (G.review && !e.word) {
+      var got = REV.hit(G.review, e.ch);
+      if (got) G.texts.push({ x: e.x, y: e.y - fontSize() * 0.9, s: "✓ " + e.ch + " = " + e.answers[0], c: "#6dffb0", t: 0, dur: 1.1 });
+      if (REV.finished(G.review) && !G.enemies.length) reviewDone();
+    }
+    if (!G.review && G.levelKills >= 8 + G.level) { G.level++; G.levelKills = 0; showBanner(); sfx.level(); gainXP(10); petMood("cheer", 2, "レベルアップ!"); }
     questEvent({ type: "kill", kata: e.word ? e.word.kata : e.ch === e.k[1], practiced: practiced, combo: G.combo, level: G.level });
     refreshTap(true);
   }
@@ -281,6 +311,7 @@
 
     if (e.word) { wordStat(e.word.jp).w++; save("words", wordStats); }
     else recordAnswer(e.ch, false);
+    if (G.review && !e.word) REV.miss(G.review, e.ch); // 🔁 a miss asks for one more clear of that kana
     if (navigator.vibrate && !calm()) try { navigator.vibrate(120); } catch (er) {}
     G.enemies = G.enemies.filter(function (x) { return x !== e; });
     refreshTap(true);
@@ -411,8 +442,8 @@
   document.addEventListener("keydown", function (ev) {
     var onBtn = document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "startBtn";
     if (!$("omikujiScreen").classList.contains("hidden")) { if (ev.key === "Escape") { ev.preventDefault(); closeOmikuji(); } return; }
-    if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden") && !$("startScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
-    if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); startGame(); return; }
+    if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden") && !$("startScreen").classList.contains("hidden")) { ev.preventDefault(); startNormal(); return; }
+    if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); playAgain(); return; }
     if (ev.key === "Escape" && state === "title" && welcomeOn) { ev.preventDefault(); hideWelcome(true); return; }
     if (ev.key === "Escape") { if (state === "play") pause(); else if (state === "pause") resume(); return; }
     if (state === "play" && settings.input === "tap" && /^[1-4]$/.test(ev.key)) tapAnswer(ansBtns[+ev.key - 1]);
@@ -444,6 +475,7 @@
       e.wob += dt * 3; e.y += e.v * H * dt * slow;
       if (e.y + fontSize() * 0.35 >= gy && !e.dead) missGround(e);
     });
+    if (G.review && !G.reviewDone && REV.finished(G.review) && !G.enemies.length) reviewDone();
     if (settings.input === "tap") refreshTap(false);
     G.particles = G.particles.filter(function (p) {
       p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 400 * dt; p.vx *= 0.98; return p.life > 0;
@@ -657,7 +689,7 @@
     var sz = Math.max(14, Math.min(22, W / 26));
     ctx.textAlign = "left"; ctx.textBaseline = "top";
     neonText("SCORE " + G.score, 12, 12, sz, "#ffe94d", 8);
-    neonText("LV " + G.level, 12, 14 + sz * 1.2, sz * 0.85, "#2be8ff", 8);
+    neonText(G.review ? "🔁 REVIEW · " + REV.left(G.review) + " LEFT" : "LV " + G.level, 12, 14 + sz * 1.2, sz * 0.85, G.review ? "#6dffb0" : "#2be8ff", 8);
     var hearts = ""; for (var i = 0; i < 5; i++) hearts += i < G.lives ? "♥" : "·";
     neonText(hearts, 12, 16 + sz * 2.2, sz, "#ff3b5c", 8);
     if (G.combo >= 2) {
@@ -665,17 +697,27 @@
       neonText(G.combo + " COMBO  x" + mult(), W - 12, 56, sz * 0.9, "#ff2bd6", 10);
     }
     // level progress bar
-    var need = 8 + G.level, pw = Math.min(160, W * 0.3);
-    ctx.fillStyle = "rgba(43,232,255,0.2)"; ctx.fillRect(12, 20 + sz * 3.2, pw, 5);
-    ctx.fillStyle = "#2be8ff"; ctx.fillRect(12, 20 + sz * 3.2, pw * G.levelKills / need, 5);
+    var need = 8 + G.level, pw = Math.min(160, W * 0.3), done = G.levelKills / need;
+    if (G.review) done = G.review.total ? G.review.cleared / G.review.total : 1;
+    ctx.fillStyle = G.review ? "rgba(109,255,176,0.2)" : "rgba(43,232,255,0.2)"; ctx.fillRect(12, 20 + sz * 3.2, pw, 5);
+    ctx.fillStyle = G.review ? "#6dffb0" : "#2be8ff"; ctx.fillRect(12, 20 + sz * 3.2, pw * Math.min(1, done), 5);
   }
 
   function drawBanner() {
     var b = G.banner, k = b.t / b.dur, a = k < 0.15 ? k / 0.15 : (k > 0.85 ? (1 - k) / 0.15 : 1);
     ctx.globalAlpha = a; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "rgba(7,2,26,0.7)"; ctx.fillRect(0, H * 0.28, W, H * 0.34);
-    neonText(b.title, W / 2, H * 0.34, Math.min(52, W / 8), "#ff2bd6", 20);
-    if (b.row) {
+    neonText(b.title, W / 2, H * 0.34, Math.min(52, W / 8), b.review ? "#6dffb0" : "#ff2bd6", 20);
+    if (b.review) { // 🔁 the kana you'll review, each with its romaji
+      neonText("YOUR TRICKY KANA · CLEAR EACH " + REV.NEED + "×", W / 2, H * 0.41, Math.min(18, W / 26), "#ffe94d", 8);
+      var rn = b.review.length, rw = Math.min(W / (rn + 0.5), 100);
+      b.review.forEach(function (it, i) {
+        var x = W / 2 + (i - (rn - 1) / 2) * rw;
+        ctx.font = "bold " + Math.round(Math.min(44, rw * 0.5)) + "px " + JP_FONT;
+        ctx.fillStyle = "#fff"; ctx.shadowColor = "#6dffb0"; ctx.shadowBlur = 12; ctx.fillText(it.ch, x, H * 0.49); ctx.shadowBlur = 0;
+        neonText(it.romaji, x, H * 0.565, Math.min(20, rw * 0.28), "#6dffb0", 6);
+      });
+    } else if (b.row) {
       neonText("NEW KANA: " + b.row.name.toUpperCase(), W / 2, H * 0.41, Math.min(18, W / 24), "#ffe94d", 8);
       if (KW && G.level === KW.START) neonText("💬 + WORDS!", W / 2, H * 0.6, Math.min(18, W / 24), "#ff8fd9", 8);
       var n = b.row.kana.length, cw = Math.min(W / (n + 0.5), 110);
@@ -927,19 +969,44 @@
   }
   document.querySelectorAll(".voiceBtn").forEach(function (b) { b.addEventListener("click", function () { setVoice(b.dataset.gender, b); }); });
 
-  function startGame() {
-    hideWelcome(); audio(); newGame(); state = "play";
+  function startGame(reviewItems) {
+    hideWelcome(); audio(); newGame(reviewItems && reviewItems.length ? reviewItems : null); state = "play";
     show("startScreen", false); show("overScreen", false); show("pauseScreen", false); show("petScreen", false);
     show("controls", true); show("pauseBtn", true);
     applyInputMode();
     if (settings.input === "type" && !isTouch) setTimeout(function () { input.focus(); }, 50);
   }
+  // 🔁 review rounds (js/review.js): no save keys, they read your kana stats
+  var REV = window.KA_REVIEW, REVIEW_XP = 15, lastReview = false;
+  function reviewList() { return REV ? REV.pick(progress.kana, ROWS, REV.MAX, CP.isMastered) : []; }
+  function startReview() { var list = reviewList(); if (!list.length) return false; lastReview = true; startGame(list); return true; }
+  function startNormal() { lastReview = false; startGame(); }
+  function playAgain() { if (lastReview && startReview()) return; startNormal(); }
+  function applyReviewBtn() {
+    var n = reviewList().length, b = $("reviewBtn"); if (!b) return;
+    show("reviewBtn", n > 0);
+    b.innerHTML = "🔁 REVIEW <small>(" + n + ")</small>";
+    b.setAttribute("aria-label", "Review round: " + n + " kana you miss most");
+  }
   var overAt = 0, overPetMood = "happy";
   function gameOver() {
-    state = "over"; overAt = Date.now(); sfx.over(); input.blur();
-    var hi = load(highKey(), 0), isNew = G.score > hi;
+    state = "over"; overAt = Date.now(); input.blur();
+    var rv = G.review, cleared = !!(rv && G.reviewDone);
+    if (cleared) sfx.level(); else sfx.over();
+    var hi = load(highKey(), 0), isNew = !rv && G.score > hi; // review rounds never touch high scores
     if (isNew) save(highKey(), G.score);
-    $("finalScore").textContent = G.score; $("overHigh").textContent = Math.max(hi, G.score);
+    $("overTitle").textContent = cleared ? "REVIEW CLEAR!" : rv ? "REVIEW OVER" : "GAME OVER";
+    $("overTitle").classList.toggle("reviewClear", cleared);
+    if (rv) {
+      var tr = REV.tricky(rv), left = reviewList().length;
+      $("overReview").innerHTML = (cleared ? "🔁 You cleared all " + rv.items.length + " tricky kana: " : "🔁 Reviewed: ") +
+        "<b lang='ja'>" + rv.items.map(function (it) { return it.ch; }).join(" ") + "</b>" +
+        (tr.length ? " · still tricky: <b lang='ja' style='color:#ff8fb8'>" + tr.map(function (it) { return it.ch; }).join(" ") + "</b>" : cleared ? " · no misses! ✨" : "") +
+        (cleared ? " · +" + REVIEW_XP + " XP" : "");
+      $("againBtn").textContent = left ? "▶ REVIEW AGAIN" : "▶ PLAY";
+    } else $("againBtn").textContent = "▶ PLAY AGAIN";
+    show("overReview", !!rv);
+    $("finalScore").textContent = G.score; $("overHigh").textContent = rv ? hi : Math.max(hi, G.score);
     show("overGentle", settings.gentle);
     $("finalLevel").textContent = G.level; $("finalCombo").textContent = G.best;
     $("finalAcc").textContent = G.shots ? Math.round(100 * G.hits / G.shots) : 0;
@@ -966,10 +1033,11 @@
   }
   function pause() { if (state !== "play") return; state = "pause"; show("pauseScreen", true); input.blur(); }
   function resume() { if (state !== "pause") return; state = "play"; show("pauseScreen", false); if (settings.input === "type" && !isTouch) input.focus(); }
-  function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); applyOmikujiBtn(); requestAnimationFrame(resize); }
+  function toTitle() { state = "title"; G = null; buildPicker(); renderQuest(); applyReviewBtn(); show("petScreen", false); show("pauseScreen", false); show("overScreen", false); show("controls", false); show("pauseBtn", false); show("startScreen", true); applyScript(); applyOmikujiBtn(); requestAnimationFrame(resize); }
 
-  $("startBtn").addEventListener("click", startGame);
-  $("againBtn").addEventListener("click", startGame);
+  $("startBtn").addEventListener("click", startNormal);
+  $("reviewBtn").addEventListener("click", startReview);
+  $("againBtn").addEventListener("click", playAgain);
   $("titleBtn").addEventListener("click", toTitle);
   $("quitBtn").addEventListener("click", toTitle);
   $("resumeBtn").addEventListener("click", resume);
@@ -1053,7 +1121,7 @@
     if (rev.length) {
       $("wbReview").innerHTML = "Warm up with kana you missed (tap to hear): " + rev.map(function (r) {
         return "<button type='button' class='pk' data-ch='" + r.ch + "' aria-label='" + r.ch + " = " + r.romaji + ", tap to hear it'><b lang='ja'>" + r.ch + "</b>=" + r.romaji + "</button>";
-      }).join(" ");
+      }).join(" ") + (REV ? " <button type='button' id='wbGo' class='alt small review'>🔁 Review them</button>" : "");
       return;
     }
     questDay(); var qd = QUEST.byId(quest.id);
@@ -1084,16 +1152,19 @@
   }
   function seenNow() { if (WB) save("lastSeen", Date.now()); }
   $("wbClose").addEventListener("click", function () { hideWelcome(true); });
-  $("wbReview").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "wbSay"); });
+  $("wbReview").addEventListener("click", function (ev) {
+    if (ev.target.closest && ev.target.closest("#wbGo")) { hideWelcome(); startReview(); return; } // 🔁 straight into a review round
+    var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "wbSay");
+  });
   setInterval(function () { if (!document.hidden) seenNow(); }, 60000);
   document.addEventListener("visibilitychange", function () { if (document.hidden) seenNow(); else checkWelcome(); });
   window.addEventListener("pagehide", seenNow);
 
   // ---------- boot ----------
-  applyHomeRomaji(); buildPicker(); renderQuest(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); applyCostumes(); resize(); checkWelcome(); costumeHello();
+  applyHomeRomaji(); buildPicker(); renderQuest(); applyReviewBtn(); applyOmikujiBtn(); applyScript(); applyGentle(); applyMute(); applyVoice(); applyInputMode(); applyCostumes(); resize(); checkWelcome(); costumeHello();
   if (params.get("screen") === "pet") openPetScreen();
   requestAnimationFrame(loop);
-  if (DEMO) startGame();
+  if (DEMO) { if (params.get("review") === "1") startReview() || startNormal(); else startNormal(); }
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
@@ -1105,6 +1176,7 @@
     spawnWord: function (jp) { return state === "play" && G ? spawnWord(true, jp) : false; }, wordStats: function () { return wordStats; },
     killWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) kill(e); return !!e; },
     missWord: function () { var e = G && G.enemies.filter(function (x) { return x.word; })[0]; if (e) missGround(e); return !!e; },
+    startReview: startReview, reviewList: reviewList, get review() { return G && G.review; },
     setLevel: function (n) { if (G) { G.level = n; G.banner = null; } },
     missFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } e.ch = ch; e.answers = [romajiOf(ch)]; missGround(e); } } };
 })();

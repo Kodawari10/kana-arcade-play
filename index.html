@@ -74,6 +74,7 @@
     <p class="big"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
     <div class="row">
       <button id="startBtn">▶ START</button>
+      <button id="reviewBtn" class="alt review hidden" type="button" title="A short round with only the kana you miss most">🔁 REVIEW</button>
       <button id="petBtn" class="alt">★ MY COMPANION</button>
       <button id="badgeBtn" class="alt">🏅 BADGES</button>
       <button id="omikujiBtn" class="alt" aria-haspopup="dialog">🎋 OMIKUJI</button>
@@ -92,9 +93,10 @@
   </div>
 
   <div id="overScreen" class="overlay hidden">
-    <h2>GAME OVER</h2>
+    <h2 id="overTitle">GAME OVER</h2>
     <p class="big">SCORE: <span id="finalScore">0</span></p>
     <p id="newHigh" class="big blink hidden" style="color:#ff2bd6">★ NEW HIGH SCORE! ★</p>
+    <p id="overReview" class="tips hidden" role="status"></p>
     <p><span id="overGentle" class="gentleTag hidden">🫧 GENTLE · </span>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
@@ -209,6 +211,7 @@
 <script src="js/welcome.js"></script>
 <script src="js/costumes.js"></script>
 <script src="js/words.js"></script>
+<script src="js/review.js"></script>
 <script src="companion.js"></script>
 <script src="game.js"></script>
 <script src="js/keys.js"></script>
