@@ -1065,6 +1065,42 @@
     }, function () { stickerBusy = false; return null; });
   }
   $("stickerBtn").addEventListener("click", function () { saveSticker(); });
+  // 📸 Group photo (js/sticker.js makeGroup): all your companions together; ones you haven't played with are "?" silhouettes
+  function groupInfo() {
+    var mc = masteredCount();
+    var friends = CP.PETS.map(function (P) {
+      var xp = (progress.pets[P.id] && progress.pets[P.id].xp) || 0, si = CP.stageFor(xp, mc), st = CP.STAGES[si];
+      return { petId: P.id, name: P.name, nick: nickOf(P.id), jp: P.jp, stage: si, stageName: st.name, stageJp: st.jp, met: P.id === progress.pet || xp > 0 || !!met[P.id] };
+    });
+    return { friends: friends, current: progress.pet, mastered: mc, total: KANA_TOTAL, date: new Date() };
+  }
+  function groupSentence(info) {
+    var names = info.friends.filter(function (f) { return f.met; }).map(function (f) { return (f.nick ? f.nick + " the " : "") + f.name + " (stage " + (f.stage + 1) + ")"; });
+    var waiting = info.friends.filter(function (f) { return !f.met; }).map(function (f) { return f.name; });
+    var t = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+    return "Saved a group photo of " + t + "." + (waiting.length ? " Still waiting to meet: " + waiting.join(" and ") + "." : "");
+  }
+  var groupBusy = false;
+  function saveGroupPhoto(opts) {
+    var S = window.KA_STICKER; opts = opts || {};
+    if (!S || !S.makeGroup || groupBusy) return Promise.resolve(null);
+    groupBusy = true;
+    var info = groupInfo(), c = S.makeGroup(info), name = S.groupFileName(info.date);
+    audio(); sfx.snap();
+    var bp = $("bigPet"); if (!calm()) { bp.classList.remove("flash"); void bp.offsetWidth; bp.classList.add("flash"); }
+    petPokeT = 1.2;
+    var done = opts.dryRun ? Promise.resolve("dry") : S.save(c, name, "Kana Arcade group photo");
+    return done.then(function (how) {
+      groupBusy = false;
+      if (how !== "cancelled") {
+        var n = info.friends.filter(function (f) { return f.met; }).length;
+        showToast("📸 はい、チーズ! Saved a group photo" + (n > 1 ? " of " + n + " friends" : "") + "!");
+        $("stickerSay").textContent = groupSentence(info);
+      }
+      return { how: how, name: name, canvas: c, info: info, say: groupSentence(info) };
+    }, function () { groupBusy = false; return null; });
+  }
+  $("groupBtn").addEventListener("click", function () { saveGroupPhoto(); });
 
   function applyGentle() {
     var b = $("gentleBtn"), on = settings.gentle;
@@ -1393,7 +1429,7 @@
   // test hook
   window.__kanaArcade = { get state() { return state; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
-    toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
+    toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, saveGroupPhoto: saveGroupPhoto, groupInfo: groupInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
  speed: function () { return G ? speed() : 0; }, maxOnScreen: function () { return G ? maxOnScreen() : 0; },
     spawnWord: function (jp) { return state === "play" && G ? spawnWord(true, jp) : false; }, wordStats: function () { return wordStats; },
