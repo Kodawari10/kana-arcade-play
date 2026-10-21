@@ -65,6 +65,7 @@
     SPONSORSHIP_UNAVAILABLE: { msg: 'Free stamping isn’t available right now.', recovery: 'user_pays' },
     CHAIN_MISMATCH: { msg: `Wrong network. Kana Arcade badges use ${C.networkName || C.network}.`, recovery: 'switch_network' },
     POPUP_BLOCKED: { msg: 'Cartridge needs a popup. Please allow popups for this site ♡', recovery: 'allow_popup' },
+    INSUFFICIENT_FUNDS: { msg: `Your wallet needs a little ${C.faucetUrl ? 'test ' : ''}STRK to pay the stamp fee.`, recovery: 'top_up' },
     UNKNOWN: { msg: 'Something went wrong', recovery: 'none' },
   };
   function classifyError(err) {
@@ -73,6 +74,7 @@
     let code = 'UNKNOWN';
     if (/reject|cancel|abort(ed)? by user|denied by user|user (closed|dismissed)|closed the (popup|window)/i.test(m)) code = 'USER_CANCELLED';
     else if (/popup.*block|blocked.*popup/i.test(m)) code = 'POPUP_BLOCKED';
+    else if (/insufficient (max.?fee|balance|funds|account balance|fee token)|balance is (smaller|lower|less) than|exceeds? (the )?(account |fee token )?balance|u256_sub overflow|not enough (funds|balance|STRK|ETH)/i.test(m)) code = 'INSUFFICIENT_FUNDS';
     else if (/not deployed|undeployed|contract not found.*account/i.test(m)) code = 'UNDEPLOYED_ACCOUNT';
     else if (/SNIP-9|not compatible with SNIP|paymaster|sponsor|gasless|outside.?execution/i.test(m)) code = 'SPONSORSHIP_UNAVAILABLE';
     else if (/chain.?id|chain mismatch|wrong network|network mismatch/i.test(m)) code = 'CHAIN_MISMATCH';
@@ -91,6 +93,12 @@
       return `${k.msg}${why ? ': ' + esc(why) : ''}`;
     }
     return esc(k.msg);
+  }
+
+  // Out of test STRK? A cute link to the free Sepolia faucet (only when faucetUrl is an https link)
+  function faucetLink() {
+    if (!C.faucetUrl || !/^https:\/\//.test(C.faucetUrl)) return '';
+    return `<a class="faucet-link" href="${esc(C.faucetUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Get free test STRK from the Starknet faucet (opens in a new tab)">🚰 Get free test STRK ↗</a>`;
   }
 
   // ---------- RPC (read-only views): 8s timeout, retry only transient failures with backoff ----------
@@ -351,7 +359,9 @@
       lastError = null;
     } catch (e) {
       const k = classifyError(e); lastError = { code: k.code, recovery: k.recovery, detail: String(k.detail || '').slice(0, 200) };
-      setStatus(k.code === 'USER_CANCELLED' ? 'Cancelled, no worries ♡' : 'Stamping failed: ' + friendly(e));
+      const topUp = k.code === 'INSUFFICIENT_FUNDS' && faucetLink() ? ` ${faucetLink()} then tap Stamp again ♡` : '';
+      setStatus(k.code === 'USER_CANCELLED' ? 'Cancelled, no worries ♡' : 'Stamping failed: ' + friendly(e) + topUp);
+      if (topUp) BOOK.say('Oops, your wallet is out of test STRK! Grab some free from the faucet and we can stamp again ♡');
     } finally { busy = false; render(); loadBoard(); }
   }
 
@@ -367,12 +377,16 @@
       $('chainConnect').onclick = renderPicker;
       return;
     }
+    const paysFee = walletKind === 'extension' || (walletKind === 'cartridge' && (feeFallbackUsed || !isSponsoredMode(feeMode)));
+    const fuelNote = configured && paysFee && faucetLink()
+      ? `<p class="note fuel-note" id="fuelNote">⛽ Stamping uses a tiny bit of test STRK for the fee. Running low? ${faucetLink()}</p>` : '';
     const todo = plan().length, via = walletKind === 'cartridge' ? ' · via Cartridge' : '';
     box.innerHTML = `<h3>✦ Starknet</h3>
       <p class="pill ${chainOk ? '' : 'bad'}">${chainOk ? '●' : '▲'} ${esc(C.networkName)}${via}${chainOk ? '' : ': please switch network in your wallet'}</p>
       <p class="addr" title="${esc(address)}">${esc(short(address))}</p>
       ${configured ? '' : '<p class="note">The badge contract isn’t deployed yet, so stamping is off. Your badges are safe on this device.</p>'}
       ${walletKind === 'cartridge' ? `<p class="note">${feeFallbackUsed ? 'Fees: your wallet pays (sponsorship unavailable).' : 'Fees: sponsored when the Cartridge paymaster is available ✦'}<br>🔒 Session can only claim Kana Arcade badges · every stamp is checked first (preflight)</p>` : ''}
+      ${fuelNote}
       <div class="stats"><div><b>${minted.size}</b><span>on Starknet</span></div><div><b>${BOOK.earned().length}</b><span>earned here</span></div></div>
       <button type="button" id="chainMint" ${configured && todo && !busy ? '' : 'disabled'}>✦ STAMP MY BADGES${todo ? ` (${todo} new)` : ''}</button>
       <p id="chainStatus" class="small" role="status" aria-live="polite">${statusHtml}</p>

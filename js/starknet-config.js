@@ -14,6 +14,7 @@ window.KA_STARKNET_CONFIG = {
   chainId: '0x534e5f5345504f4c4941',           // SN_SEPOLIA
   rpcUrl: 'https://starknet-sepolia.drpc.org',  // any Starknet JSON-RPC (v0.8+) endpoint for Sepolia
   contractAddress: '0x0739e622caca98cc9ab52d12b40ef9097aaf619e68a70856eecf90d3b4e51430', // KanaBadges on Sepolia (deployed 2026-10-20)
+  faucetUrl: 'https://starknet-faucet.vercel.app/',      // free Sepolia test STRK for stamp fees (Starknet Foundation). Remove on mainnet.
   explorerTx: 'https://sepolia.voyager.online/tx/',
   explorerContract: 'https://sepolia.voyager.online/contract/',
   explorerNft: 'https://sepolia.voyager.online/nft/',      // + <contract>/<tokenId>
