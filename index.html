@@ -108,6 +108,7 @@
     <h2 id="overTitle">GAME OVER</h2>
     <p class="big">SCORE: <span id="finalScore">0</span></p>
     <p id="newHigh" class="big blink hidden" style="color:#ff2bd6">★ NEW HIGH SCORE! ★</p>
+    <p id="overRank" class="rankUp hidden" role="status"></p>
     <p id="overReview" class="tips hidden" role="status"></p>
     <p><span id="overGentle" class="gentleTag hidden">🫧 GENTLE · </span>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
@@ -266,6 +267,15 @@
       <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
       <h2 class="petTitle" id="statsTitle">📊 MY STATS <span class="rubyJp" lang="ja" aria-label="きろく, kiroku">きろく</span></h2>
       <p class="tips" id="statsSub"></p>
+      <div id="statsRank" class="statsRank" role="group" aria-label="Your kana rank">
+        <div class="rankRing" aria-hidden="true"><span id="rankIcon" class="rankIcon">🌱</span></div>
+        <div class="rankText">
+          <span class="rankHead">🎖️ Kana rank</span>
+          <b id="rankName" class="rankName">Kana Sprout</b> <span id="rankJp" class="rankJp" lang="ja">めばえ</span>
+          <span class="rankBar"><span id="rankPct" class="rankPct">0%</span></span>
+          <small id="rankNext" class="rankNext"></small>
+        </div>
+      </div>
       <ul id="statsGrid" aria-label="Your stats"></ul>
       <div id="statKana" class="row">
         <button id="statBest" type="button" class="statKana best"></button>

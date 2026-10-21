@@ -157,7 +157,7 @@
       level: DEMO ? 3 : 1, score: 0, lives: 5, combo: 0, best: 0, kills: 0, levelKills: 0, shots: 0, hits: 0,
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, played: {}, caught: {}, target: null, demoT: 0, demoN: 0,
-      pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], evo: null,
+      pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], mStart: masteredCount(), evo: null,
       lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}
     };
     if (reviewItems && REV) { // 🔁 a review round: only your trickiest kana, a calm level-2 pace, no words or level-ups
@@ -1394,7 +1394,15 @@
     var SKY = window.KA_SKY, skyNew = SKY && SKY.note ? SKY.note(masteredCount()) : [];
     $("overSky").innerHTML = skyNew.length ? "🌌 New sky unlocked: " + skyNew.map(function (k) { return "<b>" + k.icon + " " + k.name + "</b>"; }).join(" · ") + "! Pick it with 🌌 Sky on the title screen." : "";
     show("overSky", skyNew.length > 0);
-    overPetMood = isNew || G.newMastered.length || skyNew.length ? "cheer" : "happy";
+    // 🎖️ Rank up: this game's newly mastered kana lifted you to the next Kana rank (see 📊 My stats)
+    var ST = window.KA_STATS, rkA = ST && ST.rank ? ST.rank(G.mStart, KANA_TOTAL) : null, rkB = ST && ST.rank ? ST.rank(masteredCount(), KANA_TOTAL) : null;
+    var rankUp = !!(rkA && rkB && rkB.index > rkA.index);
+    $("overRank").innerHTML = rankUp ? "🎖️ Rank up! You're now a <b>" + rkB.icon + " " + rkB.name + "</b> <span lang='ja' aria-label='" + rkB.jp + ", " + rkB.ro + "'>" + rkB.jp + "</span>!" +
+      (rkB.next ? " <small>" + rkB.line + "</small>" : " <small>すごい! 👑</small>") : "";
+    $("overRank").classList.toggle("top", rankUp && rkB.top);
+    show("overRank", rankUp);
+    if (rankUp) window.dispatchEvent(new CustomEvent("ka:rankup", { detail: { from: rkA.name, to: rkB.name, index: rkB.index, mastered: rkB.mastered } }));
+    overPetMood = isNew || G.newMastered.length || skyNew.length || rankUp ? "cheer" : "happy";
     setTimeout(function () { show("overScreen", true); show("controls", false); show("pauseBtn", false); }, 700);
   }
   function pause() { if (state !== "play") return; state = "pause"; renderRecap(); show("pauseScreen", true); input.blur(); }

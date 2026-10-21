@@ -71,7 +71,24 @@
       { id: "nicks", icon: "🏷️", value: String(s.nicks), label: "nicknames given" }
     ];
   }
-  var API = { snapshot: snapshot, tiles: tiles };
+  // 🎖️ Kana rank: a cute title that grows with kana mastered (out of 142)
+  var RANKS = [
+    { at: 0, icon: "🌱", name: "Kana Sprout", jp: "めばえ", ro: "mebae" },
+    { at: 10, icon: "🐣", name: "Kana Chick", jp: "ひよこ", ro: "hiyoko" },
+    { at: 30, icon: "🎒", name: "Kana Student", jp: "せいと", ro: "seito" },
+    { at: 60, icon: "🥷", name: "Kana Ninja", jp: "にんじゃ", ro: "ninja" },
+    { at: 100, icon: "🏯", name: "Kana Samurai", jp: "さむらい", ro: "samurai" },
+    { at: 142, icon: "👑", name: "Kana Sensei", jp: "せんせい", ro: "sensei" }
+  ];
+  function rank(mastered, total) {
+    total = num(total) || 142; mastered = Math.min(num(mastered), total);
+    var i = 0; RANKS.forEach(function (r, j) { if (mastered >= Math.min(r.at, total)) i = j; });
+    var r = RANKS[i], nx = RANKS[i + 1] || null, need = nx ? Math.min(nx.at, total) - mastered : 0;
+    return { index: i, icon: r.icon, name: r.name, jp: r.jp, ro: r.ro, mastered: mastered, total: total, pct: Math.round(100 * mastered / total), top: !nx,
+      next: nx ? { icon: nx.icon, name: nx.name, need: need } : null,
+      line: nx ? need + " more kana to become " + nx.icon + " " + nx.name : "You know every kana! すごい 👑" };
+  }
+  var API = { snapshot: snapshot, tiles: tiles, rank: rank, RANKS: RANKS };
   if (typeof module !== "undefined" && module.exports) { module.exports = API; return; }
   root.KA_STATS = API;
 
@@ -105,17 +122,27 @@
       el.setAttribute("aria-label", a[2].replace(/^\S+ /, "") + ": " + b.ch + ", " + b.ro + ", " + a[3](b) + ". Tap to hear it.");
     });
     $("statKana").classList.toggle("hidden", !s.best && !s.tricky);
+    var R = rank(s.mastered, s.total), rb = $("statsRank");
+    if (rb) {
+      rb.classList.toggle("top", R.top); rb.dataset.rank = String(R.index);
+      rb.style.setProperty("--pct", R.pct);
+      $("rankIcon").textContent = R.icon; $("rankName").textContent = R.name;
+      $("rankJp").textContent = R.jp; $("rankJp").setAttribute("aria-label", R.jp + ", " + R.ro);
+      $("rankPct").textContent = R.pct + "%"; $("rankNext").textContent = R.line;
+      rb.classList.remove("sweep"); void rb.offsetWidth; rb.classList.add("sweep");
+    }
+    s.rank = R;
     $("statsSince").textContent = s.since ? s.since.text : "";
     $("statsSince").classList.toggle("hidden", !s.since);
     var P = ka().pet ? ka().pet() : null, nick = ka().nickOf && P ? ka().nickOf(P.id) : "", who = nick || (P ? P.name : "Your companion");
     $("statsSub").textContent = who + ": " + (s.seen ? (s.mastered ? "Look how much you know! すごい ✨" : "Every kana you meet makes me grow! がんばって") : "Play a game and your stats will bloom here 🌱");
     $("statsSay").textContent = "";
-    $("statsSr").textContent = "Your stats: " + s.mastered + " of " + s.total + " kana mastered, " + s.right + " right answers" + (s.acc == null ? "" : ", " + s.acc + " percent accuracy") + ", best score " + s.high + ".";
+    $("statsSr").textContent = "Your kana rank: " + R.name + ", " + R.pct + " percent. " + R.line.replace(/ [^\w\s.!,]+ /g, " ") + ". Your stats: " + s.mastered + " of " + s.total + " kana mastered, " + s.right + " right answers" + (s.acc == null ? "" : ", " + s.acc + " percent accuracy") + ", best score " + s.high + ".";
     return s;
   }
   function open() {
     if (isOpen()) return; lastFocus = document.activeElement;
-    render(); screen.classList.remove("hidden"); $("statsBack").focus();
+    render(); screen.classList.remove("hidden"); try { $("statsBack").focus({ preventScroll: true }); } catch (e) { $("statsBack").focus(); } $("statsSheet").scrollTop = 0;
     try { root.dispatchEvent(new CustomEvent("ka:stats", { detail: last })); } catch (e) {}
   }
   function close() {
