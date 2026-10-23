@@ -500,7 +500,7 @@
   });
   // keyboard shortcuts 1-4 for tap mode on desktop
   document.addEventListener("keydown", function (ev) {
-    var onBtn = document.activeElement && document.activeElement.tagName === "BUTTON" && document.activeElement.id !== "startBtn";
+    var onBtn = document.activeElement && /^(BUTTON|A|SUMMARY)$/.test(document.activeElement.tagName) && document.activeElement.id !== "startBtn";
     if (!$("omikujiScreen").classList.contains("hidden")) { if (ev.key === "Escape") { ev.preventDefault(); closeOmikuji(); } return; }
     if (state === "title" && ev.key === "Enter" && !onBtn && $("petScreen").classList.contains("hidden") && !$("startScreen").classList.contains("hidden")) { ev.preventDefault(); startNormal(); return; }
     if (state === "over" && ev.key === "Enter" && Date.now() - overAt > 600 && $("petScreen").classList.contains("hidden")) { ev.preventDefault(); playAgain(); return; }

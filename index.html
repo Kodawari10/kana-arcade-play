@@ -46,47 +46,70 @@
       </div>
       <button id="wbClose" type="button" class="wbClose" aria-label="Close the welcome message" title="Close">✕</button>
     </div>
-    <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
-       Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. Chain hits for a combo multiplier!</p>
-    <div class="row" id="scriptRow">
-      <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
-      <button class="alt modeBtn rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
-      <button class="alt modeBtn" data-script="both">MIX</button>
-    </div>
-    <div class="row" id="inputRow">
-      <button class="alt inBtn" data-input="type">⌨ Type</button>
-      <button class="alt inBtn" data-input="tap">👆 Tap</button>
-    </div>
-    <div class="row" id="gentleRow">
-      <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
-      <button id="musicBtn" class="alt small" type="button" aria-pressed="false" aria-keyshortcuts="B" title="Soft arcade music (B)">🎵 Music: OFF</button>
-      <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
-      <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
-      <button id="skyBtn" class="alt small" type="button" aria-haspopup="dialog" title="Choose the playfield sky">🌌 Sky: 🌃</button>
-      <button id="statsBtn" class="alt small" type="button" aria-haspopup="dialog" title="See how your kana learning is going">📊 Stats</button>
-      <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
-    </div>
-    <p class="tips" id="gentleNote"></p>
+    <p id="tagline" class="tagline">Zap the falling kana by typing (or tapping) their <b>romaji</b> ✨</p>
+    <section id="playCard" class="homeCard playCard" aria-labelledby="playHead">
+      <h2 id="playHead" class="cardHead">🎮 Let's play</h2>
+      <div class="pickLbl" id="scriptLbl">1 · Which kana?</div>
+      <div class="row" id="scriptRow" role="group" aria-labelledby="scriptLbl">
+        <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
+        <button class="alt modeBtn rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
+        <button class="alt modeBtn" data-script="both">MIX</button>
+      </div>
+      <div class="pickLbl" id="inputLbl">2 · How do you answer?</div>
+      <div class="row" id="inputRow" role="group" aria-labelledby="inputLbl">
+        <button class="alt inBtn" data-input="type">⌨ Type</button>
+        <button class="alt inBtn" data-input="tap">👆 Tap</button>
+      </div>
+      <div class="pickLbl" id="petLbl">3 · Pick your companion</div>
+      <div id="petPicker" class="row" role="group" aria-labelledby="petLbl"></div>
+      <p class="big hiLine"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
+      <div class="row playRow">
+        <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+        <button id="reviewBtn" class="alt review hidden" type="button" title="A short round with only the kana you miss most">🔁 Review my misses</button>
+      </div>
+      <details id="howTo" class="howTo">
+        <summary>❓ How to play</summary>
+        <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
+           Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. After a few levels, whole words drop in too. Chain hits for a combo multiplier!</p>
+        <p class="tips" id="tips"></p>
+      </details>
+    </section>
     <div id="questCard" role="group" aria-labelledby="questTitle">
       <div id="questTitle">📜 DAILY QUEST <span id="questJp" lang="ja"></span></div>
       <div id="questText"></div>
       <div class="bar qbar" id="questBar" role="progressbar" aria-labelledby="questText" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><div id="questFill"></div><span id="questProg"></span></div>
       <div id="questStreak"></div>
     </div>
-    <div id="petPicker" class="row"></div>
-    <p class="big"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
-    <div class="row">
-      <button id="startBtn">▶ START</button>
-      <button id="reviewBtn" class="alt review hidden" type="button" title="A short round with only the kana you miss most">🔁 REVIEW</button>
-      <button id="petBtn" class="alt">★ MY COMPANION</button>
-      <button id="badgeBtn" class="alt">🏅 BADGES</button>
-      <button id="omikujiBtn" class="alt" aria-haspopup="dialog">🎋 OMIKUJI</button>
-    </div>
+    <section id="moreCard" class="homeCard moreCard" aria-labelledby="moreHead">
+      <h2 id="moreHead" class="cardHead">🌸 Your corner</h2>
+      <div class="tileGrid">
+        <button id="petBtn" class="alt tile">🐾 My companion</button>
+        <button id="badgeBtn" class="alt tile">🏅 Badges &amp; wallet</button>
+        <button id="statsBtn" class="alt tile" type="button" aria-haspopup="dialog" title="See how your kana learning is going">📊 My stats</button>
+        <button id="omikujiBtn" class="alt tile" aria-haspopup="dialog">🎋 Omikuji</button>
+      </div>
+      <h3 class="subHead" id="settingsHead">⚙️ Settings</h3>
+      <div class="row settingsRow" id="gentleRow" role="group" aria-labelledby="settingsHead">
+        <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
+        <button id="musicBtn" class="alt small" type="button" aria-pressed="false" aria-keyshortcuts="B" title="Soft arcade music (B)">🎵 Music: OFF</button>
+        <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
+        <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
+        <button id="skyBtn" class="alt small" type="button" aria-haspopup="dialog" title="Choose the playfield sky">🌌 Sky: 🌃</button>
+        <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
+      </div>
+      <p class="tips" id="gentleNote"></p>
+    </section>
     <div class="row hidden" id="installRow">
       <button id="installBtn" class="alt small" type="button" aria-describedby="installNote">📲 Add to Home Screen</button>
       <span class="tips" id="installNote">Keep Kana Arcade as a little app: one tap to open, plays offline.</span>
     </div>
-    <p class="tips" id="tips"></p>
+    <section id="builtOn" class="homeCard builtOn" aria-labelledby="builtHead">
+      <h2 id="builtHead" class="cardHead">⛓️ Built on Starknet</h2>
+      <ul class="builtList">
+        <li><a href="https://github.com/keep-starknet-strange/starkzap" target="_blank" rel="noopener noreferrer">⚡ StarkZap<span class="srOnly"> (opens in a new tab)</span></a><span>Connects your wallet and stamps your kana badges on Starknet Sepolia (test network).</span></li>
+        <li><a href="https://github.com/keep-starknet-strange/starknet-agentic" target="_blank" rel="noopener noreferrer">🤖 Starknet Agentic<span class="srOnly"> (opens in a new tab)</span></a><span>Its skill format lets AI agents read (never change) your badges.</span></li>
+      </ul>
+    </section>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">
