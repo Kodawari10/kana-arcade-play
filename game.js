@@ -1516,11 +1516,24 @@
     });
   }
 
+  // ---------- ☰ More (home): companion picker, quest, settings, how to play, install, Built on Starknet ----------
+  function setMore(open, scroll) {
+    var area = $("moreArea"), btn = $("moreBtn"); if (!area || !btn) return;
+    area.classList.toggle("hidden", !open); btn.setAttribute("aria-expanded", open ? "true" : "false"); btn.classList.toggle("on", open);
+    btn.querySelector("small").textContent = open ? "Less" : "More";
+    if (open && scroll) area.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" });
+    requestAnimationFrame(resize);
+  }
+  if ($("moreBtn")) {
+    $("moreBtn").addEventListener("click", function () { setMore($("moreArea").classList.contains("hidden"), true); });
+    if (window.__kaMoreOpen) setMore(true); // test hook: tests that use the settings start with More open
+  }
+
   // ---------- 🎋 omikuji screen ----------
   function applyOmikujiBtn() {
     var o = omikujiToday(), b = $("omikujiBtn");
     b.classList.toggle("fresh", !o);
-    b.innerHTML = o ? '🎋 LUCKY <span lang="ja">' + rubyHTML(o.hira) + "</span>" : "🎋 OMIKUJI";
+    b.innerHTML = '<span class="ib" aria-hidden="true">🎋</span><small>' + (o ? 'LUCKY <span lang="ja">' + rubyHTML(o.hira) + "</span>" : "OMIKUJI") + "</small>";
     b.setAttribute("aria-label", o ? "Omikuji: today's lucky kana is " + o.hira + ", " + o.romaji : "Omikuji: draw today's fortune");
   }
   function renderSlip(o) {
@@ -1623,7 +1636,7 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
   // test hook
-  window.__kanaArcade = { get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+  window.__kanaArcade = { setMore: setMore, get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, saveGroupPhoto: saveGroupPhoto, groupInfo: groupInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },

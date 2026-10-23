@@ -87,24 +87,24 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 .bdg.sel { outline: 3px solid #2be8ff; outline-offset: 2px; }
 .bdg em { position: absolute; top: -4px; right: -4px; font-style: normal; font-size: 12px; color: #fff; background: #7b3cff; border-radius: 50%; width: 18px; height: 18px; line-height: 18px; box-shadow: 0 0 8px #7b3cff; }
 .bdg.onchain { box-shadow: 0 0 0 2px #7b3cff, 0 0 14px #7b3cffaa; }
-#chainBox { width: min(420px, 94vw); flex: 0 0 auto; border: 2px solid #7b3cff; border-radius: 12px; padding: 10px 12px; background: #120a3acc; box-shadow: 0 0 14px #7b3cff66;
+#chainBox, #walletBox { width: min(420px, 94vw); flex: 0 0 auto; border: 2px solid #7b3cff; border-radius: 12px; padding: 10px 12px; background: #120a3acc; box-shadow: 0 0 14px #7b3cff66;
   display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
-#chainBox h3 { font-size: 16px; color: #c9a8ff; text-shadow: 0 0 8px #7b3cff; }
-#chainBox h3 small { font-size: 11px; color: #9a8acb; text-shadow: none; }
-#chainBox p { max-width: none; }
-#chainBox .muted { color: #9a8acb; }
-#chainBox .small, #chainBox .note { font-size: 12px; }
-#chainBox .note { color: #d9ccff; background: #1d1150; border-radius: 8px; padding: 6px 8px; text-align: left; }
-#chainBox a { color: #2be8ff; }
-#chainBox .faucet-link { display: inline-block; margin: 2px 0; padding: 2px 10px; border-radius: 999px; background: #ff7ac8; color: #2a0a3a; font-weight: bold; text-decoration: none; box-shadow: 0 0 8px #ff7ac866; white-space: nowrap; }
-#chainBox .faucet-link:focus-visible { outline: 3px solid #ffe94d; outline-offset: 2px; }
-#chainBox > button:not(.small) { background: #7b3cff; color: #fff; box-shadow: 0 0 12px #7b3cff; }
-#chainBox button:disabled { opacity: .45; cursor: default; }
-#chainBox .pill { font-size: 12px; color: #6dffb0; } #chainBox .pill.bad { color: #ffb36b; }
-#chainBox .addr { font-size: 13px; color: #fff; letter-spacing: 1px; }
-#chainBox .stats { display: flex; gap: 8px; justify-content: center; }
-#chainBox .stats div { flex: 1; background: #1d1150; border-radius: 8px; padding: 6px; }
-#chainBox .stats b { display: block; font-size: 22px; color: #ffe94d; } #chainBox .stats span { font-size: 11px; color: #b9c8ff; }
+#chainBox h3, #walletBox h3 { font-size: 16px; color: #c9a8ff; text-shadow: 0 0 8px #7b3cff; }
+#chainBox h3 small, #walletBox h3 small { font-size: 11px; color: #9a8acb; text-shadow: none; }
+#chainBox p, #walletBox p { max-width: none; }
+#chainBox .muted, #walletBox .muted { color: #9a8acb; }
+#chainBox .small, #chainBox .note, #walletBox .small, #walletBox .note { font-size: 12px; }
+#chainBox .note, #walletBox .note { color: #d9ccff; background: #1d1150; border-radius: 8px; padding: 6px 8px; text-align: left; }
+#chainBox a, #walletBox a { color: #2be8ff; }
+#chainBox .faucet-link, #walletBox .faucet-link { display: inline-block; margin: 2px 0; padding: 2px 10px; border-radius: 999px; background: #ff7ac8; color: #2a0a3a; font-weight: bold; text-decoration: none; box-shadow: 0 0 8px #ff7ac866; white-space: nowrap; }
+#chainBox .faucet-link:focus-visible, #walletBox .faucet-link:focus-visible { outline: 3px solid #ffe94d; outline-offset: 2px; }
+#chainBox > button:not(.small), #walletBox > button:not(.small) { background: #7b3cff; color: #fff; box-shadow: 0 0 12px #7b3cff; }
+#chainBox button:disabled, #walletBox button:disabled { opacity: .45; cursor: default; }
+#chainBox .pill, #walletBox .pill { font-size: 12px; color: #6dffb0; } #chainBox .pill.bad, #walletBox .pill.bad { color: #ffb36b; }
+#chainBox .addr, #walletBox .addr { font-size: 13px; color: #fff; letter-spacing: 1px; }
+#chainBox .stats, #walletBox .stats { display: flex; gap: 8px; justify-content: center; }
+#chainBox .stats div, #walletBox .stats div { flex: 1; background: #1d1150; border-radius: 8px; padding: 6px; }
+#chainBox .stats b, #walletBox .stats b { display: block; font-size: 22px; color: #ffe94d; } #chainBox .stats span, #walletBox .stats span { font-size: 11px; color: #b9c8ff; }
 .wopt { display: flex; align-items: center; gap: 10px; text-align: left; background: #1d1150; color: #fff; border: 2px solid #7b3cff; box-shadow: none; font-size: 15px; padding: 8px 12px; }
 .wopt.cart { border-color: #ffe94d; }
 .wopt small { display: block; font-weight: normal; font-size: 11px; color: #c9b8ff; }
@@ -551,3 +551,52 @@ button.tile { font-size: 15px; padding: 10px 8px; min-height: 52px; border-radiu
 .playCard .petPick { flex: 1 1 0; min-width: 0; max-width: 140px; padding: 6px 4px; }
 .playCard .petPick canvas { width: 56px; height: 56px; }
 @media (max-width: 360px) { .homeCard { padding-left: 8px; padding-right: 8px; } .playCard .petPick small { font-size: 10px; } }
+
+/* ---- 🔗 home wallet button + wallet picker sheet ---- */
+.homeWallet { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: -4px; }
+button.walletBtn { font-size: 15px; min-height: 44px; padding: 8px 16px; border-radius: 999px; color: #d9c4ff; border-color: #9b6bff; box-shadow: 0 0 8px #7b3cff88; background: #120a3acc; }
+.walletOn { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.walletChip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; min-height: 36px; border-radius: 999px; border: 2px solid #6dffb0; background: #0b2a2acc; color: #e8f7ff; font-size: 14px; }
+.walletChip b { letter-spacing: 1px; color: #fff; }
+.walletKind { font-size: 12px; color: #6dffb0; }
+.walletDot { width: 9px; height: 9px; border-radius: 50%; background: #6dffb0; box-shadow: 0 0 6px #6dffb0; }
+button.walletDisc { min-height: 36px; font-size: 13px; color: #ffd0e6; border-color: #ff8fb8; box-shadow: none; }
+#walletScreen { z-index: 30; background: #07021acc; }
+#walletSheet { position: relative; width: min(480px, 100%); max-height: 100%; overflow-y: auto; background: #10063a; border: 2px solid #9b6bff; border-radius: 14px; box-shadow: 0 0 22px #7b3cff88;
+  padding: 18px 14px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#walletSheet > * { flex-shrink: 0; }
+#walletTitle { font-size: clamp(22px, 6vw, 28px); color: #d9c4ff !important; text-shadow: 0 0 10px #7b3cff !important; }
+#walletClose { position: absolute; top: 8px; right: 8px; }
+#walletBox { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.wopt { width: 100%; min-height: 56px; }
+a.wopt { text-decoration: none; border-radius: 8px; font-weight: bold; }
+a.wopt.notInstalled { border-style: dashed; opacity: .9; }
+.wopt .wtag { margin-left: auto; font-size: 11px; font-weight: bold; color: #ffe94d; white-space: nowrap; }
+.wopt > span:nth-child(2) { flex: 1 1 auto; min-width: 0; }
+.wico.ready { background: #ff875b; } .wico.braavos { background: #1d8a5a; } .wico.cartIco { background: #ffe94d; color: #07021a; }
+.wopt:focus-visible { outline: 3px solid #ffe94d; outline-offset: 2px; }
+
+/* ---- ✨ simplest home: title · one line · 🔗 wallet · kana + Type/Tap · ▶ PLAY · one icon row (☰ More) ---- */
+#startScreen { justify-content: safe center; }
+#kaToast { z-index: 40; }
+.playCard { gap: 10px; padding: 14px 12px; }
+.iconRow { display: flex; gap: 6px; justify-content: center; width: min(460px, 100%); }
+button.iconBtn { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 2px; min-height: 58px;
+  border-radius: 12px; font-size: 20px; line-height: 1; background: #07021acc; border-color: #6d5bd6; color: #d9c4ff; box-shadow: none; }
+button.iconBtn small { font-size: 11px; font-weight: bold; letter-spacing: .5px; color: #ffd0e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+button.iconBtn small rt { font-size: 8px; }
+button.iconBtn.on { background: #6d5bd6; color: #fff; } button.iconBtn.on small { color: #fff; }
+#omikujiBtn.iconBtn small { overflow: visible; }
+.moreArea { width: min(460px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 4px; }
+.moreArea > * { flex-shrink: 0; }
+.homeCard h2.moreHead { color: #d9c4ff; }
+h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
+.moreArea .howTo { padding: 4px 12px 8px; }
+.homeFoot { font-size: 12px; color: #9a8acb; max-width: 460px; }
+.homeFoot a { color: #b9c8ff; text-underline-offset: 3px; display: inline-block; padding: 6px 2px; }
+.homeFoot a:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
+@media (min-width: 720px) { .iconRow, .moreArea { width: min(620px, 100%); } }
+.steps[hidden] { display: none; }
+#petCard #petPicker { flex-wrap: nowrap; gap: 6px; width: 100%; }
+#petCard .petPick { flex: 1 1 0; min-width: 0; max-width: 140px; padding: 6px 4px; }
+#petCard .petPick canvas { width: 56px; height: 56px; }

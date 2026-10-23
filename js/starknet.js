@@ -152,29 +152,90 @@
     const at = STEP_ORDER.indexOf(step);
     ol.querySelectorAll('li').forEach((li, i) => { li.classList.toggle('done', (at >= 0 && i < at) || step === 'READY'); li.classList.toggle('now', i === at && step !== 'READY'); });
   }
-  async function renderPicker() {
+  // Wallet picker: always lists Cartridge, Ready and Braavos (each with a one-line description).
+  // It renders into the badge book (#chainBox) or into the home 🔗 Connect wallet sheet (#walletBox).
+  let host = box;
+  const KNOWN = [
+    { key: 'ready', name: 'Ready', ico: 'R', desc: 'Browser extension wallet (formerly Argent X)', match: w => displayWalletName(w) === 'Ready', install: 'https://www.ready.co/' },
+    { key: 'braavos', name: 'Braavos', ico: 'B', desc: 'Browser extension or mobile wallet', match: w => /braavos/i.test(String(w && w.id) + ' ' + String(w && w.name)), install: 'https://braavos.app/' },
+  ];
+  const sheetOpen = () => { const w = $('walletScreen'); return !!w && !w.classList.contains('hidden'); };
+  async function renderPicker(target) {
+    host = target && target.nodeType === 1 ? target : box;
     view = 'picker';
-    box.innerHTML = `<h3>Connect a Starknet wallet <small>(${esc(C.networkName || C.network)})</small></h3><p class="muted">Looking for wallets…</p>`;
+    const head = host === box ? `<h3>Connect a Starknet wallet <small>(${esc(C.networkName || C.network)})</small></h3>` : '';
+    host.innerHTML = `${head}<p class="muted">Looking for wallets…</p>`;
     let list = [];
     try { list = await (await gsn()).getAvailableWallets(); } catch (e) { /* extensions are optional */ }
     if (view !== 'picker') return;
-    const parts = [`<h3>Connect a Starknet wallet <small>(${esc(C.networkName || C.network)})</small></h3>`];
+    const parts = [head];
     if (cartridgeOn) {
-      parts.push(`<button type="button" class="wopt cart" id="optCartridge"><span class="wico">✦</span><span><b>Play with Cartridge</b><small>Passkey / social login · no seed phrase · free stamps when sponsored</small></span></button>
+      parts.push(`<button type="button" class="wopt cart" id="optCartridge" data-wallet="cartridge"><span class="wico cartIco">✦</span><span><b>Cartridge</b><small>Sign in with a passkey or social login · no extension, works on phones · free stamps when sponsored</small></span></button>
         <p class="muted small">🔒 The game session can only <b>claim Kana Arcade badges</b>${configured ? '' : ' (once the contract is live)'}. It can’t move tokens.</p>
         <ol class="steps" id="cartSteps" hidden aria-live="polite"><li>Sign in</li><li>Check account</li><li>Set up</li><li>Ready ✦</li></ol>`);
     }
-    if (list.length) {
-      if (cartridgeOn) parts.push('<p class="muted small">— or a browser wallet —</p>');
-      list.forEach((w, i) => parts.push(`<button type="button" class="wopt" data-ext="${i}">${iconSrc(w) ? `<img src="${esc(iconSrc(w))}" alt="" width="28" height="28">` : '<span class="wico">✦</span>'}<span><b>${esc(displayWalletName(w))}</b></span></button>`));
-    } else {
-      parts.push(`<p class="muted small">No browser wallet found. ${cartridgeOn ? 'Cartridge works without one, or install ' : 'Install '}${(C.installLinks || []).map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.name)}</a>`).join(' · ')}.</p>`);
-    }
+    const used = new Set();
+    KNOWN.forEach(k => {
+      const i = list.findIndex((w, j) => !used.has(j) && k.match(w));
+      if (i >= 0) {
+        used.add(i); const w = list[i];
+        parts.push(`<button type="button" class="wopt" data-ext="${i}" data-wallet="${k.key}">${iconSrc(w) ? `<img src="${esc(iconSrc(w))}" alt="" width="28" height="28">` : `<span class="wico ${k.key}">${k.ico}</span>`}<span><b>${esc(k.name)}</b><small>${esc(k.desc)}</small></span><span class="wtag">Detected</span></button>`);
+      } else {
+        parts.push(`<a class="wopt notInstalled" data-wallet="${k.key}" href="${esc(k.install)}" target="_blank" rel="noopener noreferrer"><span class="wico ${k.key}">${k.ico}</span><span><b>${esc(k.name)}</b><small>${esc(k.desc)} · not found in this browser</small></span><span class="wtag">Get it ↗<span class="srOnly"> (opens in a new tab)</span></span></a>`);
+      }
+    });
+    list.forEach((w, i) => { if (!used.has(i)) parts.push(`<button type="button" class="wopt" data-ext="${i}">${iconSrc(w) ? `<img src="${esc(iconSrc(w))}" alt="" width="28" height="28">` : '<span class="wico">✦</span>'}<span><b>${esc(displayWalletName(w))}</b><small>Starknet browser wallet</small></span><span class="wtag">Detected</span></button>`); });
+    if (!list.length) parts.push(`<p class="muted small">No browser wallet found${cartridgeOn ? ': Cartridge works without one' : ''}. On a phone, you can also open this page inside the Ready or Braavos app’s browser.</p>`);
     parts.push('<button type="button" class="alt small" id="pickBack">Keep playing without a wallet ♡</button>');
-    box.innerHTML = parts.join('');
-    const cb = $('optCartridge'); if (cb) cb.onclick = connectCartridge;
-    box.querySelectorAll('[data-ext]').forEach(b => { b.onclick = () => connectExtension(list[Number(b.dataset.ext)]); });
-    $('pickBack').onclick = () => { view = 'home'; render(); };
+    host.innerHTML = parts.join('');
+    const cb = host.querySelector('#optCartridge'); if (cb) cb.onclick = connectCartridge;
+    host.querySelectorAll('[data-ext]').forEach(b => { b.onclick = () => connectExtension(list[Number(b.dataset.ext)]); });
+    host.querySelector('#pickBack').onclick = () => { view = 'home'; if (host !== box) closeSheet(); else render(); };
+  }
+
+  // ---------- 🔗 home screen: Connect wallet button / connected chip ----------
+  const homeWrap = $('homeWallet'), sheet = $('walletScreen');
+  let sheetFrom = null;
+  function openSheet() {
+    if (!sheet) return;
+    sheetFrom = document.activeElement; sheet.classList.remove('hidden');
+    $('walletClose').focus();
+    renderPicker($('walletBox')).then(() => { if (!sheetOpen()) return; const f = $('optCartridge') || sheet.querySelector('.wopt') || $('walletClose'); if (f) f.focus(); });
+  }
+  function closeSheet() {
+    if (!sheet || sheet.classList.contains('hidden')) return;
+    sheet.classList.add('hidden'); host = box; if (view === 'picker') view = 'home';
+    const w = $('walletBox'); if (w) w.innerHTML = '';
+    const back = sheetFrom && sheetFrom.offsetParent ? sheetFrom : (address ? $('homeDisc') : $('homeConnect')); if (back) back.focus();
+  }
+  function updateHome() {
+    if (!homeWrap) return;
+    homeWrap.classList.remove('hidden');
+    const on = !!address;
+    $('homeConnect').classList.toggle('hidden', on); $('homeWalletOn').classList.toggle('hidden', !on);
+    if (on) {
+      $('homeAddr').textContent = short(address);
+      $('homeWalletKind').textContent = walletKind === 'cartridge' ? 'Cartridge' : (walletLabel || 'Wallet');
+      $('homeAddrChip').setAttribute('aria-label', 'Connected with ' + $('homeWalletKind').textContent + ': ' + short(address) + (chainOk ? '' : ', wrong network'));
+      $('homeAddrChip').classList.toggle('bad', !chainOk);
+    }
+  }
+  let walletLabel = '';
+  if (homeWrap) {
+    $('homeConnect').addEventListener('click', openSheet);
+    $('homeDisc').addEventListener('click', () => disconnect());
+    $('walletClose').addEventListener('click', closeSheet);
+    sheet.addEventListener('click', ev => { if (ev.target === sheet) closeSheet(); });
+    window.addEventListener('keydown', ev => {
+      if (!sheetOpen() || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      if (ev.key === 'Escape') { ev.preventDefault(); ev.stopImmediatePropagation(); closeSheet(); return; }
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.stopImmediatePropagation(); return; }
+      if (ev.key === 'Tab') {
+        const f = [$('walletClose'), ...sheet.querySelectorAll('.wopt, #pickBack')].filter(e => e && e.offsetParent !== null), i = f.indexOf(document.activeElement);
+        ev.preventDefault(); ev.stopImmediatePropagation(); f[(i + (ev.shiftKey ? f.length - 1 : 1) + f.length) % f.length].focus();
+      } else ev.stopImmediatePropagation(); // the game's title shortcuts stay quiet while the sheet is open
+    }, true);
+    updateHome();
   }
 
   async function connectCartridge() {
@@ -193,7 +254,7 @@
       if (cs.address !== address) minted.clear();
       cs.walletId = 'cartridge'; cs.address = address; saveCs();
       let who = short(address); try { const u = await connected.username(); if (u) who = u; } catch (e) { /* optional */ }
-      view = 'home'; BOOK.toast(`Connected with Cartridge ✦ ${who}`); BOOK.say(`Yay, we're connected, ${who}! ✦`);
+      view = 'home'; closeSheet(); BOOK.toast(`Connected with Cartridge ✦ ${who}`); BOOK.say(`Yay, we're connected, ${who}! ✦`);
       await sync(true);
     } catch (e) {
       const k = classifyError(e); showStep('FAILED');
@@ -217,7 +278,7 @@
         sw.on && sw.on('accountsChanged', a => { if (a && a[0]) { address = normalize(a[0]); cs.address = address; minted.clear(); saveCs(); sync(); } else disconnect(); });
         sw.on && sw.on('networkChanged', c => { chainOk = !c || BigInt(c) === BigInt(C.chainId); render(); });
       } catch (e) { /* optional */ }
-      view = 'home';
+      view = 'home'; walletLabel = displayWalletName(w); closeSheet();
       if (!silent) { BOOK.toast(chainOk ? `Connected ${displayWalletName(w)} ✦ ${short(address)}` : `Connected, but please switch your wallet to ${C.networkName}`); BOOK.say("Connected! Now your badges can be stamped on Starknet ✦"); }
       await sync(!silent);
       return true;
@@ -233,7 +294,7 @@
       else if (walletKind === 'extension') { try { (await gsn()).disconnect({ clearLastWallet: true }); } catch (e) { /* ignore */ } }
     } catch (e) { /* ignore */ }
     wallet = null; walletKind = null; address = null; cs = {}; minted.clear(); saveCs(); feeFallbackUsed = false; statusHtml = ''; board = '';
-    view = 'home'; render(); BOOK.toast('Wallet disconnected. Your badges stay right here ♡');
+    walletLabel = ''; view = 'home'; render(); BOOK.toast('Wallet disconnected. Your badges stay right here ♡');
   }
 
   // ---------- sync / reads ----------
@@ -367,6 +428,7 @@
 
   // ---------- UI (inside the badge book) ----------
   function render() {
+    updateHome();
     BOOK.render();
     if (view === 'picker') return;
     box.classList.remove('hidden');
@@ -374,7 +436,7 @@
       box.innerHTML = `<h3>✦ Starknet <small>(optional)</small></h3>
         <p class="muted small">Stamp your badges on ${esc(C.networkName || C.network)} as soulbound collectibles. You never need a wallet to play.</p>
         <button type="button" id="chainConnect">✦ CONNECT WALLET</button>`;
-      $('chainConnect').onclick = renderPicker;
+      $('chainConnect').onclick = () => renderPicker(box);
       return;
     }
     const paysFee = walletKind === 'extension' || (walletKind === 'cartridge' && (feeFallbackUsed || !isSponsoredMode(feeMode)));
@@ -405,6 +467,7 @@
   }
   window.KA_STARKNET = {
     plan, calldataFor, validateCalldata, classifyError, minted, sync, config: C, configured,
+    openPicker: openSheet, closePicker: closeSheet,
     get address() { return address; }, get walletKind() { return walletKind; }, get lastError() { return lastError; },
   };
 })();
