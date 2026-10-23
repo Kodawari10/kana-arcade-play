@@ -909,6 +909,15 @@
       var b = prepCanvas($("bigPet")); petPokeT = Math.max(0, petPokeT - 1 / 60);
       if (doze && doze.tick(performance.now())) dozeOff();
       var asleep = doze && doze.isDozing();
+      var dancing = danceT > 0 && !asleep;
+      if (danceT > 0) { danceT = Math.max(0, danceT - 1 / 60); if (danceT === 0) $("danceBtn").classList.remove("on"); }
+      if (dancing) { // 🪩 bop, sway and a little hop (Gentle / reduce motion: still and happy)
+        drawLights(b, t);
+        var ph = (DANCE_DUR - danceT) * 7.5, mv = calm() ? 0 : 1;
+        b.x.save(); b.x.translate(b.sz / 2 + mv * Math.sin(ph) * b.sz * 0.05, b.sz * 0.92 - mv * Math.abs(Math.sin(ph)) * b.sz * 0.07); b.x.rotate(mv * Math.sin(ph) * 0.12);
+        CP.draw(b.x, progress.pet, petStage(), 0, 0, b.sz * 0.62, calm() ? "happy" : ((ph % 6.28) < 3.14 ? "cheer" : "happy"), t);
+        b.x.restore(); drawDance(b, t);
+      } else
       CP.draw(b.x, progress.pet, petStage(), b.sz / 2, b.sz * 0.92, b.sz * 0.62, asleep ? "sleep" : (petPokeT > 0 ? "cheer" : "idle"), t);
       if (asleep) DOZE.zs(t, calm()).forEach(function (z) { // 💤 little floating z's
         b.x.font = "bold " + Math.round(b.sz * 0.11 * z.size) + "px 'Press Start 2P', monospace, sans-serif"; b.x.textAlign = "center"; b.x.globalAlpha = z.alpha;
@@ -960,6 +969,7 @@
     $("bigPet").setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); $("petSay").innerHTML = "💬 Tap " + escHTML(callName(P)) + " to chat! <span lang='ja'>" + rubyHTML("なでなで") + "</span>"; $("petSay").dataset.line = "";
     closeNick(false); renderNick(); stampMet(P.id); renderSince();
     if (doze) doze.reset(performance.now()); $("bigPet").classList.remove("dozing");
+    danceT = 0; danceBits = []; $("danceBtn").classList.remove("on");
     show("startScreen", false); show("overScreen", false); show("petScreen", true);
   }
   function buildGrid() {
@@ -1086,6 +1096,55 @@
     el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
     var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak(L.speak, { force: true });
   }
+  // 🪩 Dance party: your companion bops along, music notes, hearts and kana you've mastered float up, soft party
+  // lights glow and a bouncy tune plays. Gentle mode / reduced motion: it stays still with a few soft fading notes.
+  // Nothing is saved.
+  var DANCE_DUR = 4.2, danceT = 0, danceBits = [], danceCount = 0;
+  function dance() {
+    if (!petScreenOpen()) return false;
+    var P = CP.petById(progress.pet), el = $("petSay"), b = $("bigPet");
+    if (doze) { doze.poke(performance.now()); b.classList.remove("dozing"); b.setAttribute("aria-label", "Pet " + P.name + (nickOf(P.id) ? ", nicknamed " + nickOf(P.id) : "")); }
+    var mk = Object.keys(progress.kana || {}).filter(function (ch) { return CP.isMastered(progress.kana[ch]); });
+    for (var i = mk.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), tmp = mk[i]; mk[i] = mk[j]; mk[j] = tmp; }
+    var kana = mk.slice(0, 3), syms = ["♪", "♫", "♥", "♪", "♫"], cols = ["#ff2bd6", "#2be8ff", "#ffe14d", "#8aff6d", "#ff8fb8"], items = syms.concat(kana);
+    if (calm()) items = ["♪", "♫"].concat(kana.slice(0, 1));
+    danceBits = items.map(function (ch, k) { return { ch: ch, kana: kana.indexOf(ch) >= 0, dx: (k % 2 ? 1 : -1) * (18 + (k * 23) % 62), delay: calm() ? k * 0.5 : k * 0.38, color: cols[k % cols.length] }; });
+    danceT = DANCE_DUR; danceCount++; petPokeT = 0;
+    $("danceBtn").classList.add("on");
+    var who = escHTML(callName(P));
+    el.innerHTML = "🪩 <b lang='ja'>" + rubyHTML("おどろう!") + "</b> Let's dance! " + who + " is dancing" + (kana.length ? " with kana you mastered: <span lang='ja'>" + kana.join(" ") + "</span>" : "") + "!";
+    el.dataset.line = "dance";
+    el.classList.remove("pop"); void el.offsetWidth; if (!calm()) el.classList.add("pop");
+    var notes = [523, 659, 784, 659, 880, 784, 1047, 1319];
+    notes.forEach(function (f, k) {
+      if (calm()) { if (k % 2 === 0) tone("sine", f, f, 0.22, 0.12, k * 0.2); return; }
+      tone("triangle", f, f, 0.14, 0.28, k * 0.16); if (k % 2 === 0) tone("square", f / 4, f / 4, 0.1, 0.12, k * 0.16);
+    });
+    var V = window.KA_VOICE; if (V && V.supported && !settings.muted) setTimeout(function () { if (!settings.muted) V.speak("おどろう", { force: true }); }, 1400);
+    try { window.dispatchEvent(new CustomEvent("ka:dance", { detail: { pet: P.id, kana: kana.slice() } })); } catch (e) {}
+    return true;
+  }
+  function drawDance(b, t) {
+    var age = DANCE_DUR - danceT, x = b.x, sz = b.sz;
+    danceBits.forEach(function (d) {
+      var a = age - d.delay; if (a < 0 || a > 2.2) return;
+      var alpha = a < 0.25 ? a / 0.25 : (a > 1.7 ? (2.2 - a) / 0.5 : 1), rise = calm() ? 0 : a * 42, wob = calm() ? 0 : Math.sin(a * 6 + d.dx) * 6;
+      x.globalAlpha = Math.max(0, Math.min(1, alpha)); x.textAlign = "center";
+      x.font = (d.kana ? "bold " + Math.round(sz * 0.13) + "px sans-serif" : Math.round(sz * 0.12) + "px sans-serif");
+      x.lineWidth = 3; x.strokeStyle = "#fff"; x.strokeText(d.ch, sz / 2 + d.dx + wob, sz * 0.36 - rise);
+      x.fillStyle = d.color; x.fillText(d.ch, sz / 2 + d.dx + wob, sz * 0.36 - rise); x.globalAlpha = 1;
+    });
+  }
+  function drawLights(b, t) {
+    if (calm()) return;
+    var x = b.x, sz = b.sz, cols = ["#ff2bd6", "#2be8ff", "#ffe14d"];
+    cols.forEach(function (c, i) {
+      var ang = t * 2.2 + i * 2.09, cx = sz / 2 + Math.cos(ang) * sz * 0.28, cy = sz * 0.55 + Math.sin(ang) * sz * 0.16;
+      var g = x.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.32); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)");
+      x.globalAlpha = 0.28 * Math.min(1, danceT / 0.5); x.fillStyle = g; x.fillRect(0, 0, sz, sz); x.globalAlpha = 1;
+    });
+  }
+  $("danceBtn").addEventListener("click", function () { dance(); });
   $("bigPet").addEventListener("pointerdown", petChat);
   $("bigPet").addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.stopPropagation(); petChat(); } });
   // 🏷️ nickname pill + little edit box under the companion's name
@@ -1576,6 +1635,7 @@
     sky: function () { return window.KA_SKY && window.KA_SKY.current ? window.KA_SKY.current() : "neon"; }, masteredCount: masteredCount, dakuOf: function (ch) { return DAKU_OF[ch] || null; }, pool: function () { return G ? pool().map(function (x) { return x.k[0]; }) : []; },
     showBanner: function () { if (G) showBanner(); return G && G.banner ? { title: G.banner.title, row: G.banner.row ? G.banner.row.name : null } : null; },
     doze: function () { if (doze && petScreenOpen()) { doze.force(); dozeOff(); } return !!(doze && doze.isDozing()); },
+    dance: dance, danceInfo: function () { return { on: danceT > 0, t: danceT, bits: danceBits.map(function (d) { return d.ch; }), count: danceCount, line: $("petSay").dataset.line }; },
     isDozing: function () { return !!(doze && doze.isDozing()); }, setDozeDelay: function (ms) { if (doze) { doze.setDelay(ms); doze.reset(performance.now()); } }, dozeCount: function () { return dozeCount; },
     met: function (id) { return met[id || progress.pet] || null; }, renderSince: renderSince,
     nickOf: nickOf, setNick: function (id, n) { var r = setNick(id, n); if (!$("petScreen").classList.contains("hidden")) renderNick(); return r; },
