@@ -144,6 +144,7 @@
     <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
     <p id="overPetLine" class="tips"></p>
     <p id="toPractice" class="tips"></p>
+    <button id="drillBtn" type="button" class="alt small drillBtn hidden" title="Untimed flashcards on the kana you just missed">⚡ Quick drill</button>
     <p id="overNear" class="tips nearLine hidden"></p>
     <p id="overLook" class="tips lookLine hidden"></p>
     <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
@@ -212,6 +213,23 @@
     <div id="badgeGrid" role="list"></div>
     <div id="chainBox" class="hidden"></div>
     <button id="badgeBack">◀ BACK</button>
+  </div>
+  <div id="drillScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drillTitle">
+    <div id="drillSheet">
+      <button id="drillClose" type="button" class="wbClose" aria-label="Close quick drill" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="drillTitle">⚡ QUICK DRILL <span class="rubyJp" lang="ja" aria-label="れんしゅう, renshū">れんしゅう</span></h2>
+      <div id="drillCard">
+        <p class="tips drillSub">No timer, no lives. Pick the romaji <span id="drillCount" class="drillCount">1 / 1</span></p>
+        <button id="drillKana" type="button" class="drillKana" lang="ja">あ</button>
+        <div id="drillChoices" class="drillChoices" role="group" aria-label="Choices"></div>
+        <p id="drillFeedback" class="drillFeedback" role="status" aria-live="polite"></p>
+      </div>
+      <div id="drillDone" class="hidden">
+        <p id="drillScore" class="drillScore" role="status"></p>
+        <p class="tips">Just practice: your scores and progress stay the same.</p>
+        <div class="row"><button id="drillAgain" type="button">⚡ AGAIN</button><button id="drillBack" type="button" class="alt">◀ BACK</button></div>
+      </div>
+    </div>
   </div>
   <div id="omikujiScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="omikujiTitle">
     <h2 class="petTitle" id="omikujiTitle">🎋 OMIKUJI <span class="rubyJp" lang="ja" aria-label="おみくじ, omikuji">おみくじ</span></h2>
@@ -353,6 +371,8 @@
 <script src="js/music.js"></script>
 <script src="js/near.js"></script>
 <script src="js/lookalike.js"></script>
+<script src="js/mnemonic.js"></script>
+<script src="js/drill.js"></script>
 <script src="js/nick.js"></script>
 <script src="js/since.js"></script>
 <script src="js/doze.js"></script>

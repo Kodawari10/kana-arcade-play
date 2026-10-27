@@ -121,7 +121,7 @@ button.small { font-size: 14px; padding: 6px 10px; min-height: 36px; min-width: 
 .kc.hear, .pk.hear { animation: kanaHear .45s ease-out; }
 @keyframes kanaHear { 0% { transform: scale(1); } 35% { transform: scale(1.18); box-shadow: 0 0 16px #ff8fb8; } 100% { transform: scale(1); } }
 .kc .pb { display: block; }
-.hearLine { min-height: 1.5em; color: #ffd0e6; }
+.hearLine { min-height: 1.5em; color: #ffd0e6; flex-shrink: 0; }
 .hearLine b { font-size: 1.5em; color: #fff; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; vertical-align: -2px; }
 .pk { font: inherit; font-size: 1em; padding: 2px 8px; min-height: 36px; margin: 2px; color: #b9c8ff; background: #1b0f45; border: 1px solid #ff8fb8; border-radius: 10px; box-shadow: 0 0 6px #ff8fb866; cursor: pointer; }
 .pk b { color: #fff; font-size: 1.3em; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
@@ -600,3 +600,31 @@ h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
 #petCard #petPicker { flex-wrap: nowrap; gap: 6px; width: 100%; }
 #petCard .petPick { flex: 1 1 0; min-width: 0; max-width: 140px; padding: 6px 4px; }
 #petCard .petPick canvas { width: 56px; height: 56px; }
+
+/* 💡 memory hints */
+.hintNote { color: #fff3b0; }
+.hintNote b { color: #ffe94d; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+/* ⚡ quick drill */
+.drillBtn { margin-top: -4px; }
+.drillBtn small { opacity: .8; }
+#drillScreen { z-index: 40; background: rgba(7,2,26,.94); }
+#drillSheet { position: relative; width: min(460px, 100%); background: #10063a; border: 2px solid #ffe94d; border-radius: 14px; box-shadow: 0 0 22px #ffe94d66;
+  padding: 14px 14px 16px; text-align: center; box-sizing: border-box; }
+.drillSub { margin: 4px 0; }
+.drillCount { color: #ffe94d; font-weight: bold; margin-left: 4px; white-space: nowrap; }
+.drillKana { display: block; margin: 8px auto; min-width: 120px; min-height: 120px; font-size: 76px; line-height: 1; color: #fff; background: #1b0f45;
+  border: 2px solid #ff8fb8; border-radius: 18px; box-shadow: 0 0 16px #ff2bd688; cursor: pointer;
+  font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.drillChoices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 6px; }
+.drillAns { position: relative; min-height: 52px; font: bold 22px "Courier New", monospace; color: #fff; background: #1b0f45; border: 2px solid #2be8ff; border-radius: 12px; cursor: pointer; }
+.drillAns small { position: absolute; top: 3px; left: 7px; font-size: 11px; color: #8a9bdc; }
+.drillAns.right { background: #0f5a36; border-color: #6dffb0; box-shadow: 0 0 12px #6dffb0; }
+.drillAns.wrong { background: #4a0f22; border-color: #ff6b8a; opacity: .7; }
+.drillAns:focus-visible, .drillKana:focus-visible { outline: 3px solid #ffe94d; outline-offset: 2px; }
+.drillFeedback { min-height: 2.6em; margin: 6px 0 0; line-height: 1.45; color: #ffd0e6; }
+.drillFeedback.good { color: #6dffb0; }
+.drillFeedback.bad { color: #ffb3c4; }
+.drillFeedback b[lang] { font-size: 1.4em; color: #fff; }
+.drillFeedback .ro { color: #6dffb0; font-size: 1.2em; }
+.drillScore { font-size: 1.3em; color: #ffe94d; margin: 14px 0 6px; }
+#overScreen > p, #overScreen > .drillBtn { flex-shrink: 0; }
