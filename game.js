@@ -79,6 +79,7 @@
   // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
   var KW = window.KA_WORDS;
   var NEAR = window.KA_NEAR; // 🌱 almost mastered kana
+  var PACE = window.KA_PACE, KDEC = window.KA_DECODE; // 🐢 catch-up pace, 🔤 what did I answer?
   var KH = window.KA_HINT, KD = window.KA_DRILL; // 💡 memory hints, ⚡ quick drill
   var LOOK = window.KA_LOOK; // 👀 look-alike kana (ぬ/め, シ/ツ…)
   var wordStats = KW ? KW.normalize(load("words", null)) : {};
@@ -159,7 +160,7 @@
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, played: {}, caught: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], mStart: masteredCount(), evo: null,
-      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}
+      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}, pace: PACE ? PACE.start() : null, decoded: []
     };
     if (reviewItems && REV) { // 🔁 a review round: only your trickiest kana, a calm level-2 pace, no words or level-ups
       G.review = REV.start(reviewItems); G.level = 2; G.lucky = null;
@@ -295,6 +296,7 @@
   }
 
   function kill(e) {
+    if (PACE && G.pace) paceEvent(PACE.hit(G.pace));
     e.dead = true; G.hits++; G.shots++; G.combo++; G.best = Math.max(G.best, G.combo);
     var heightBonus = Math.round(10 * (1 - Math.max(0, e.y) / groundY()));
     var pts = (10 + heightBonus) * G.level * mult();
@@ -345,6 +347,7 @@
     sfx.miss();
     petMood("sad", 1.4, "うぅ…");
     sayKana(e.ch, 380); // hear the one you missed (a whole word for words)
+    paceEvent(PACE && G.pace ? PACE.miss(G.pace) : null);
 
     if (e.word) { wordStat(e.word.jp).w++; save("words", wordStats); }
     else recordAnswer(e.ch, false);
@@ -355,6 +358,24 @@
     if (G.lives <= 0) gameOver();
   }
 
+  // 🐢 catch-up pace: 2 kana on the ground in a row → everything falls slower for a bit, back up as you zap kana
+  function paceFactor() { return G && G.pace ? G.pace.factor : 1; }
+  function paceEvent(r) {
+    if (!r) return;
+    var msg = r === "back" ? "⚡ back to full speed!" : r === "slower" ? "🐢 even slower, take your time" : "🐢 slowing down a little";
+    G.texts.push({ x: W / 2, y: H * 0.3, s: msg, c: r === "back" ? "#2be8ff" : "#6dffb0", t: 0, dur: 1.8 });
+    if (r !== "back") { G.pet.say = "だいじょうぶ!"; G.pet.sayT = 1.6; }
+    try { window.dispatchEvent(new CustomEvent("ka:pace", { detail: { kind: r, factor: G.pace.factor } })); } catch (e) {}
+  }
+  // 🔤 a wrong answer that is another kana's sound: name that kana ("ke" is け), never the right answer
+  function decodeWrong(t, ro) {
+    if (!KDEC || !t || t.word || t.dead) return null;
+    var k = KDEC.kanaFor(ro, t.ch, t.answers); if (!k) return null;
+    G.texts = G.texts.filter(function (x) { return !x.decode; });
+    G.texts.push({ x: t.x, y: t.y + fontSize() * 1.1, s: KDEC.line(ro, k), c: "#ff8fd9", t: 0, dur: 1.6, decode: true });
+    G.decoded.push({ ro: ro, kana: k, target: t.ch });
+    return k;
+  }
   function wrongAnswer(ch) {
     G.shots++; G.combo = 0; G.shake = Math.max(G.shake, 0.15); sfx.wrong();
     petMood("sad", 0.8, "あれ?");
@@ -435,13 +456,13 @@
       var prev = lowestMatching(v.slice(0, cut), true);
       if (prev) { kill(prev); input.value = v.slice(cut); handleTyped(); return; }
     }
-    wrongAnswer(); input.classList.add("bad");
+    decodeWrong(currentTarget(), v); wrongAnswer(); input.classList.add("bad");
     setTimeout(function () { input.value = ""; input.classList.remove("bad"); }, 220);
   }
   function submitTyped() {
     var v = input.value.toLowerCase(); if (!v || state !== "play") return;
     var hit = lowestMatching(v, true);
-    if (hit) kill(hit); else wrongAnswer();
+    if (hit) kill(hit); else { decodeWrong(currentTarget(), v); wrongAnswer(); }
     input.value = "";
   }
   input.addEventListener("input", handleTyped);
@@ -499,7 +520,7 @@
       b.classList.add("flash-ok"); kill(G.target);
     } else {
       b.classList.add("flash-bad"); b.disabled = true; wrongAnswer(G.target.word ? null : G.target.ch);
-      lookMixup(G.target, b.dataset.v);
+      if (!lookMixup(G.target, b.dataset.v)) decodeWrong(G.target, b.dataset.v);
       if (navigator.vibrate && !calm()) try { navigator.vibrate(40); } catch (er) {}
     }
   }
@@ -535,12 +556,12 @@
       if (G.evo.t > G.evo.dur) { G.evo = null; petMood("cheer", 2, "ありがとう!"); }
     }
     if (!G.banner && !G.evo) {
-      G.spawnT -= dt;
+      G.spawnT -= dt * paceFactor();
       if (G.spawnT <= 0 && G.enemies.length < maxOnScreen()) { spawn(); G.spawnT = spawnEvery() * (0.75 + Math.random() * 0.5); }
     }
     var slow = G.evo ? 0.05 : (G.banner ? 0.25 : 1);
     G.enemies.slice().forEach(function (e) {
-      e.wob += dt * 3; e.y += e.v * H * dt * slow;
+      e.wob += dt * 3; e.y += e.v * H * dt * slow * paceFactor();
       if (e.y + fontSize() * 0.35 >= gy && !e.dead) missGround(e);
     });
     if (G.review && !G.reviewDone && REV.finished(G.review) && !G.enemies.length) reviewDone();
@@ -707,7 +728,7 @@
           ctx.strokeStyle = "#ffe94d"; ctx.lineWidth = 1.5; ctx.strokeRect(hx - hw / 2, hy - hf * 0.85, hw, hf * 1.7);
           ctx.fillStyle = "#fff3b0"; ctx.fillText(hs, hx, hy + 1);
         }
-      } else if (tx.look) { // 👀 look-alike hint: a small orange pill kept on screen
+      } else if (tx.look || tx.decode) { // 👀 look-alike hint: a small orange pill kept on screen
         ctx.font = "bold " + Math.round(fs * 0.42) + "px " + JP_FONT;
         var lw = ctx.measureText(tx.s).width + 20, lx = Math.max(lw / 2 + 4, Math.min(W - lw / 2 - 4, tx.x)), ly = Math.min(groundY() - fs * 2.2, tx.y);
         ctx.fillStyle = "rgba(30,12,0,0.8)"; ctx.fillRect(lx - lw / 2, ly - fs * 0.33, lw, fs * 0.66);
@@ -774,7 +795,7 @@
     var sz = Math.max(14, Math.min(22, W / 26));
     ctx.textAlign = "left"; ctx.textBaseline = "top";
     neonText("SCORE " + G.score, 12, 12, sz, "#ffe94d", 8);
-    neonText(G.review ? "🔁 REVIEW · " + REV.left(G.review) + " LEFT" : "LV " + G.level, 12, 14 + sz * 1.2, sz * 0.85, G.review ? "#6dffb0" : "#2be8ff", 8);
+    neonText(G.review ? "🔁 REVIEW · " + REV.left(G.review) + " LEFT" : "LV " + G.level + (PACE && PACE.active(G.pace) ? " · 🐢" : ""), 12, 14 + sz * 1.2, sz * 0.85, G.review ? "#6dffb0" : "#2be8ff", 8);
     var hearts = ""; for (var i = 0; i < 5; i++) hearts += i < G.lives ? "♥" : "·";
     neonText(hearts, 12, 16 + sz * 2.2, sz, "#ff3b5c", 8);
     if (G.combo >= 2) {
