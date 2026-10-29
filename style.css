@@ -628,3 +628,8 @@ h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
 .drillFeedback .ro { color: #6dffb0; font-size: 1.2em; }
 .drillScore { font-size: 1.3em; color: #ffe94d; margin: 14px 0 6px; }
 #overScreen > p, #overScreen > .drillBtn { flex-shrink: 0; }
+/* ⏱ slow to spot */
+.slowLine { color: #bfe6ff; }
+.slowLine .pk { border-color: #7fd8ff; box-shadow: 0 0 6px #7fd8ff66; }
+.slowLine .pk small { margin-left: 3px; font-size: .75em; color: #7fd8ff; }
+.slowLine > small { display: block; opacity: .8; }

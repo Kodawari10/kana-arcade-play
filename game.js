@@ -79,6 +79,7 @@
   // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
   var KW = window.KA_WORDS;
   var NEAR = window.KA_NEAR; // 🌱 almost mastered kana
+  var SLOWK = window.KA_SLOW; // ⏱ slow to spot
   var PACE = window.KA_PACE, KDEC = window.KA_DECODE; // 🐢 catch-up pace, 🔤 what did I answer?
   var KH = window.KA_HINT, KD = window.KA_DRILL; // 💡 memory hints, ⚡ quick drill
   var LOOK = window.KA_LOOK; // 👀 look-alike kana (ぬ/め, シ/ツ…)
@@ -160,7 +161,7 @@
       enemies: [], particles: [], lasers: [], texts: [], spawnT: 0.6, shake: 0, flash: 0,
       banner: null, missed: {}, played: {}, caught: {}, target: null, demoT: 0, demoN: 0,
       pet: { mood: "idle", moodT: 0, say: "", sayT: 0 }, petStage: petStage(), xpGained: 0, newMastered: [], mStart: masteredCount(), evo: null,
-      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}, pace: PACE ? PACE.start() : null, decoded: []
+      lucky: omikujiToday(), luckyHits: 0, words: 0, wordsCleared: [], missedWords: {}, wordHello: false, review: null, mixups: {}, pace: PACE ? PACE.start() : null, decoded: [], clock: 0, times: []
     };
     if (reviewItems && REV) { // 🔁 a review round: only your trickiest kana, a calm level-2 pace, no words or level-ups
       G.review = REV.start(reviewItems); G.level = 2; G.lucky = null;
@@ -296,6 +297,7 @@
   }
 
   function kill(e) {
+    if (!e.word && e.frontAt != null) G.times.push({ ch: e.ch, s: G.clock - e.frontAt }); // ⏱
     if (PACE && G.pace) paceEvent(PACE.hit(G.pace));
     e.dead = true; G.hits++; G.shots++; G.combo++; G.best = Math.max(G.best, G.combo);
     var heightBonus = Math.round(10 * (1 - Math.max(0, e.y) / groundY()));
@@ -543,6 +545,10 @@
 
   // ---------- update / draw ----------
   function update(dt) {
+    if (!G.banner && !G.evo) { // ⏱ game clock (stops for banners / evolution); stamp when a kana becomes the next one to answer
+      G.clock += dt;
+      var nx = currentTarget(); if (nx && !nx.word && nx.frontAt == null) nx.frontAt = G.clock;
+    }
     if (G.banner) { G.banner.t += dt; if (G.banner.t > G.banner.dur) G.banner = null; }
     var gy = groundY();
     if (G.pet.moodT > 0) { G.pet.moodT -= dt; if (G.pet.moodT <= 0) G.pet.mood = "idle"; }
@@ -1076,7 +1082,8 @@
     var r = applyFind(true), d = $("findDice");
     if (r) $("findSay").innerHTML = "🎲 Surprise! <b lang='ja'>" + m.h + "</b> <b lang='ja'>" + m.k + "</b> = " + m.ro + (m.mastered ? " · ★ you know this one!" : " · tap 🎲 again for another");
     if (d && !calm()) { d.classList.remove("roll"); void d.offsetWidth; d.classList.add("roll"); }
-    var b = document.querySelector('#kanaGrid .kc.found, #dakuGrid .kc.found'); if (b) gridClick({ target: b });
+    var b = document.querySelector('#kanaGrid .kc.found, #dakuGrid .kc.found');
+    if (b) { gridClick({ target: b }); if (b.scrollIntoView) b.scrollIntoView({ block: "nearest", behavior: calm() ? "auto" : "smooth" }); } // the line above grew (hint, notes): keep the pick in view
     window.dispatchEvent(new CustomEvent("ka:surprise", { detail: { ch: m.ch, h: m.h, k: m.k, ro: m.ro, mastered: m.mastered, script: gridScript } }));
     return { ch: m.ch, h: m.h, k: m.k, ro: m.ro, mastered: m.mastered, script: gridScript };
   }
@@ -1113,6 +1120,7 @@
   }
   $("kanaGrid").addEventListener("click", gridClick);
   $("dakuGrid").addEventListener("click", gridClick);
+  $("overSlow").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   $("toPractice").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".pk[data-ch]"); if (b) hearKana(b, "practiceSay"); });
   // 💬 Companion chatter: each pat gets a heart and a little Japanese line (romaji on top + meaning), spoken aloud
   function petChat() {
@@ -1468,7 +1476,15 @@
     $("toPractice").innerHTML = (missed.length || mw.length) ? "Practice these (tap to hear): " + missed.map(function (c) { return "<button type='button' class='pk' data-ch='" + c + "' aria-label='" + c + " = " + lookup[c] + ", tap to hear it'><b lang='ja'>" + c + "</b>=" + lookup[c] + "</button>"; }).concat(mw.map(function (w) {
       return "<button type='button' class='pk pw' data-ch='" + w.jp + "' aria-label='" + w.jp + " = " + w.ro + ", " + w.en + ", tap to hear it'><b lang='ja'>" + rubyHTML(w.jp) + "</b>=" + w.ro + " " + w.emoji + "</button>"; })).join(" ") : "";
     $("practiceSay").textContent = ""; show("practiceSay", false);
-    drillItems = missed.map(function (c) { return { ch: c, ro: romajiOf(c) || lookup[c] }; }).filter(function (it) { return it.ro; });
+    // ⏱ slow to spot: right answers that took you a long think (kana you also missed are already listed above)
+    var skipM = {}; missed.forEach(function (c) { skipM[c] = 1; });
+    var slowList = SLOWK && !G.review ? SLOWK.list(G.times, { max: 3, skip: skipM }) : [];
+    $("overSlow").innerHTML = slowList.length ? "⏱ Slow to spot (tap to hear): " + slowList.map(function (it) {
+      var ro = romajiOf(it.ch) || lookup[it.ch];
+      return "<button type='button' class='pk slowPk' data-ch='" + it.ch + "' aria-label='" + it.ch + " = " + ro + ", took you " + it.s + " seconds, tap to hear it'><b lang='ja'>" + it.ch + "</b>=" + ro + " <small>" + it.s + "s</small></button>";
+    }).join(" ") + " <small>Right, but slow: a little practice makes them instant.</small>" : "";
+    show("overSlow", slowList.length > 0);
+    drillItems = missed.concat(slowList.map(function (it) { return it.ch; })).map(function (c) { return { ch: c, ro: romajiOf(c) || lookup[c] }; }).filter(function (it) { return it.ro; });
     show("drillBtn", !!KD && drillItems.length > 0);
     if (drillItems.length) $("drillBtn").innerHTML = "⚡ Quick drill <small>(" + drillItems.length + " kana)</small>";
     questEvent({ type: "game" });
@@ -1743,7 +1759,7 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
   // test hook
-  window.__kanaArcade = { drillOpen: drillOpen, drillPick: drillPick, get drill() { return drill; }, get drillItems() { return drillItems; }, setMore: setMore, get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+  window.__kanaArcade = { slowList: function () { return G && SLOWK ? SLOWK.list(G.times, { max: 3 }) : []; }, drillOpen: drillOpen, drillPick: drillPick, get drill() { return drill; }, get drillItems() { return drillItems; }, setMore: setMore, get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, saveGroupPhoto: saveGroupPhoto, groupInfo: groupInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },
