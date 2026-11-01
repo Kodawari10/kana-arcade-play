@@ -338,6 +338,11 @@
         <button id="statBest" type="button" class="statKana best"></button>
         <button id="statTricky" type="button" class="statKana tricky"></button>
       </div>
+      <div id="statMix" class="statMix hidden" role="group" aria-labelledby="mixHead">
+        <p id="mixHead" class="mixHead">🔀 My mix-ups <small>kana you mix up most, over all your games</small></p>
+        <div id="mixList" class="mixList"></div>
+        <button id="mixDrill" type="button" class="alt small">⚡ Drill my mix-ups</button>
+      </div>
       <p id="statsSay" class="tips hearLine" role="status" aria-live="polite"></p>
       <p id="statsSince" class="sincePill hidden"></p>
       <div id="saveCode" class="saveCode">
@@ -377,6 +382,7 @@
 <script src="js/pace.js"></script>
 <script src="js/decode.js"></script>
 <script src="js/slowspot.js"></script>
+<script src="js/mixlog.js"></script>
 <script src="js/nick.js"></script>
 <script src="js/since.js"></script>
 <script src="js/doze.js"></script>

@@ -122,6 +122,7 @@
       el.setAttribute("aria-label", a[2].replace(/^\S+ /, "") + ": " + b.ch + ", " + b.ro + ", " + a[3](b) + ". Tap to hear it.");
     });
     $("statKana").classList.toggle("hidden", !s.best && !s.tricky);
+    renderMix();
     var R = rank(s.mastered, s.total), rb = $("statsRank");
     if (rb) {
       rb.classList.toggle("top", R.top); rb.dataset.rank = String(R.index);
@@ -139,6 +140,32 @@
     $("statsSay").textContent = "";
     $("statsSr").textContent = "Your kana rank: " + R.name + ", " + R.pct + " percent. " + R.line.replace(/ [^\w\s.!,]+ /g, " ") + ". Your stats: " + s.mastered + " of " + s.total + " kana mastered, " + s.right + " right answers" + (s.acc == null ? "" : ", " + s.acc + " percent accuracy") + ", best score " + s.high + ".";
     return s;
+  }
+  // 🔀 My mix-ups: the kana pairs you confuse most (saved across games by game.js as kanaArcade.mixlog)
+  var mixPairs = [];
+  function renderMix() {
+    var M = root.KA_MIX, box = $("statMix"); if (!box) return;
+    mixPairs = M ? M.pairs(read("mixlog"), 3) : [];
+    box.classList.toggle("hidden", !mixPairs.length);
+    $("mixList").innerHTML = mixPairs.map(function (p, i) {
+      return '<button type="button" class="mixPk" data-i="' + i + '" aria-label="' + p.a + ' ' + p.ra + ' mixed up with ' + p.b + ' ' + p.rb + ', ' + p.n + ' times. Tap to hear both and how to tell them apart.">' +
+        '<b lang="ja">' + p.a + '</b><small>' + p.ra + '</small> ↔ <b lang="ja">' + p.b + '</b><small>' + p.rb + '</small> <span class="mixN">×' + p.n + '</span></button>';
+    }).join("");
+  }
+  function hearMix(i) {
+    var p = mixPairs[i]; if (!p) return null;
+    var L = root.KA_LOOK, tip = L ? L.tipFor(p.a, p.b) : "", V = root.KA_VOICE, k = ka(), muted = k.settings && k.settings.muted, line = $("statsSay");
+    var hint = root.KA_HINT, ha = hint ? hint.hint(p.a) : "", hb = hint ? hint.hint(p.b) : "";
+    var body = "<b lang='ja'>" + p.a + "</b> = " + p.ra + " · <b lang='ja'>" + p.b + "</b> = " + p.rb + " · " +
+      (tip ? "👀 " + esc(tip) : "💡 " + esc(ha) + " / " + esc(hb)).replace(/[\u3040-\u30ff]/g, "<b lang='ja'>$&</b>");
+    if (V && V.supported && !muted) { V.speak(p.a, { force: true }); setTimeout(function () { V.speak(p.b, { interrupt: false }); }, 50); line.innerHTML = "🔊 " + body; }
+    else line.innerHTML = body + (V && V.supported ? " · sound is off" : "");
+    try { root.dispatchEvent(new CustomEvent("ka:mixhear", { detail: { a: p.a, b: p.b, tip: tip } })); } catch (e) {}
+    return p;
+  }
+  function drillMix() {
+    var M = root.KA_MIX; if (!M || !mixPairs.length || !ka().drillKana) return false;
+    var chs = M.kana(mixPairs); close(); return ka().drillKana(chs);
   }
   function open() {
     if (isOpen()) return; lastFocus = document.activeElement;
@@ -165,6 +192,8 @@
     $("statsBack").addEventListener("click", close);
     $("statBest").addEventListener("click", function () { hear($("statBest")); });
     $("statTricky").addEventListener("click", function () { hear($("statTricky")); });
+    $("mixList").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".mixPk"); if (b) hearMix(+b.dataset.i); });
+    $("mixDrill").addEventListener("click", drillMix);
     screen.addEventListener("click", function (ev) { if (ev.target === screen) close(); });
     // capture on window (loaded before js/keys.js) so the sheet owns Esc / Enter / Tab while open
     root.addEventListener("keydown", function (ev) {
@@ -173,11 +202,11 @@
       var tg = ev.target && ev.target.tagName; if (tg === "TEXTAREA" && ev.key !== "Tab") { ev.stopImmediatePropagation(); return; } // 💾 typing a save code
       if (ev.key === "Enter" || ev.key === " ") { ev.stopImmediatePropagation(); return; }
       if (ev.key === "Tab") {
-        var f = [$("statsClose"), $("statBest"), $("statTricky"), $("scToggle"), $("scOut"), $("scCopy"), $("scIn"), $("scRestore"), $("scUndo"), $("statsBack")].filter(function (e) { return e && e.offsetParent !== null; }), i = f.indexOf(document.activeElement);
+        var f = [$("statsClose"), $("statBest"), $("statTricky")].concat(Array.prototype.slice.call(document.querySelectorAll("#mixList .mixPk")), [$("mixDrill"), $("scToggle"), $("scOut"), $("scCopy"), $("scIn"), $("scRestore"), $("scUndo"), $("statsBack")]).filter(function (e) { return e && e.offsetParent !== null; }), i = f.indexOf(document.activeElement);
         ev.preventDefault(); ev.stopImmediatePropagation(); f[(i + (ev.shiftKey ? f.length - 1 : 1) + f.length) % f.length].focus();
       }
     }, true);
   }
-  API.open = open; API.close = close; API.isOpen = isOpen; API.render = render; API.last = function () { return last; };
+  API.drillMix = drillMix; API.hearMix = hearMix; API.open = open; API.close = close; API.isOpen = isOpen; API.render = render; API.last = function () { return last; };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })(this);

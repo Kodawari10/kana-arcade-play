@@ -79,6 +79,8 @@
   // 💬 words (js/words.js; per-word stats in their own save key kanaArcade.words, so old saves load unchanged)
   var KW = window.KA_WORDS;
   var NEAR = window.KA_NEAR; // 🌱 almost mastered kana
+  var MIX = window.KA_MIX; // 🔀 my mix-ups (saved across games)
+  function logMix(target, other) { if (!MIX || !target || !other) return; save("mixlog", MIX.add(load("mixlog", {}), target, other)); }
   var SLOWK = window.KA_SLOW; // ⏱ slow to spot
   var PACE = window.KA_PACE, KDEC = window.KA_DECODE; // 🐢 catch-up pace, 🔤 what did I answer?
   var KH = window.KA_HINT, KD = window.KA_DRILL; // 💡 memory hints, ⚡ quick drill
@@ -375,7 +377,7 @@
     var k = KDEC.kanaFor(ro, t.ch, t.answers); if (!k) return null;
     G.texts = G.texts.filter(function (x) { return !x.decode; });
     G.texts.push({ x: t.x, y: t.y + fontSize() * 1.1, s: KDEC.line(ro, k), c: "#ff8fd9", t: 0, dur: 1.6, decode: true });
-    G.decoded.push({ ro: ro, kana: k, target: t.ch });
+    G.decoded.push({ ro: ro, kana: k, target: t.ch }); logMix(t.ch, k);
     return k;
   }
   function wrongAnswer(ch) {
@@ -507,7 +509,7 @@
   function lookMixup(t, ro) {
     if (!LOOK || !t || t.word) return null;
     var other = LOOK.partnerByRomaji(t.ch, ro, romajiOf); if (!other) return null;
-    G.mixups[t.ch] = other;
+    G.mixups[t.ch] = other; logMix(t.ch, other);
     G.texts.push({ x: t.x, y: t.y + fontSize() * 1.1, s: "👀 that's " + other + " (" + ro + ")! look again", c: "#ffb36b", t: 0, dur: 1.6, look: true });
     return other;
   }
@@ -1551,9 +1553,10 @@
     var out = []; ROWS.forEach(function (r) { r.kana.forEach(function (k) { out.push({ ch: k[0], ro: k[2], script: "hira" }); out.push({ ch: k[1], ro: k[2], script: "kata" }); }); });
     return out;
   }
-  function drillOpen() {
-    if (!KD || !drillItems.length) return false;
-    drill = KD.build(drillItems, drillPool(), { n: 6, look: LOOK ? LOOK.partners : null, roOf: romajiOf });
+  function drillOpen(items) {
+    var list = Array.isArray(items) ? items : drillItems;
+    if (!KD || !list.length) return false;
+    drill = KD.build(list, drillPool(), { n: 6, look: LOOK ? LOOK.partners : null, roOf: romajiOf }); drill.src = list;
     show("drillDone", false); show("drillCard", true); show("drillScreen", true);
     drillRender(); try { window.dispatchEvent(new CustomEvent("ka:drill", { detail: { open: true, n: drill.total } })); } catch (e) {}
     return true;
@@ -1561,7 +1564,8 @@
   function drillClose() {
     if ($("drillScreen").classList.contains("hidden")) return;
     show("drillScreen", false); drill = null; drillLock = false; overAt = Date.now();
-    var b = $("drillBtn"); if (b && !b.classList.contains("hidden")) b.focus({ preventScroll: true });
+    var b = $("drillBtn"); if (b && !b.classList.contains("hidden") && b.offsetParent !== null) b.focus({ preventScroll: true });
+    else if (state === "title" && $("statsBtn")) $("statsBtn").focus({ preventScroll: true });
   }
   function drillRender() {
     var c = KD.card(drill);
@@ -1597,10 +1601,10 @@
     $("drillAgain").focus({ preventScroll: true });
     try { window.dispatchEvent(new CustomEvent("ka:drill", { detail: { open: true, done: true, first: s.first, cards: s.cards } })); } catch (e) {}
   }
-  $("drillBtn").addEventListener("click", drillOpen);
+  $("drillBtn").addEventListener("click", function () { drillOpen(); });
   $("drillClose").addEventListener("click", drillClose);
   $("drillBack").addEventListener("click", drillClose);
-  $("drillAgain").addEventListener("click", drillOpen);
+  $("drillAgain").addEventListener("click", function () { drillOpen(drill && drill.src ? drill.src : undefined); });
   $("drillKana").addEventListener("click", function () { if (drill && drill.cur) { var V = window.KA_VOICE; if (V && V.supported && !settings.muted) V.speak(drill.cur.ch, { force: true }); } });
   $("drillChoices").addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest(".drillAns"); if (b && !b.disabled) drillPick(b.dataset.v); });
   document.addEventListener("keydown", function (ev) {
@@ -1759,7 +1763,7 @@
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
   // test hook
-  window.__kanaArcade = { slowList: function () { return G && SLOWK ? SLOWK.list(G.times, { max: 3 }) : []; }, drillOpen: drillOpen, drillPick: drillPick, get drill() { return drill; }, get drillItems() { return drillItems; }, setMore: setMore, get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
+  window.__kanaArcade = { drillKana: function (chs) { return drillOpen((chs || []).map(function (c) { return { ch: c, ro: romajiOf(c) }; }).filter(function (it) { return it.ro; })); }, slowList: function () { return G && SLOWK ? SLOWK.list(G.times, { max: 3 }) : []; }, drillOpen: drillOpen, drillPick: drillPick, get drill() { return drill; }, get drillItems() { return drillItems; }, setMore: setMore, get state() { return state; }, recap: function () { return state === "pause" ? renderRecap() : null; }, get game() { return G; }, settings: settings, progress: progress, petStage: petStage,
     petHearts: function () { return petHearts.length; }, petPats: function () { return petPats; },
     toast: showToast, saveSticker: saveSticker, stickerInfo: stickerInfo, saveGroupPhoto: saveGroupPhoto, groupInfo: groupInfo, cheer: function () { sfx.level(); }, drop: function () { sfx.drop(); }, pet: function () { return CP.petById(progress.pet); },
     setGentle: setGentle, setMusic: setMusic, music: function () { return music ? music.info() : null; }, setCostumes: setCostumes, costumeLine: costumeLine, setVoice: setVoice, omikuji: function () { return omikujiToday(); }, welcome: function () { return welcomeOn ? welcomeInfo : null; }, checkWelcome: checkWelcome, isCalm: calm, get quest() { return quest; }, killFor: function (ch) { if (state === "play" && G) { var e = G.enemies[0]; if (!e) { spawn(); e = G.enemies[0]; } if (ch) { e.ch = ch; } kill(e); } },

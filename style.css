@@ -633,3 +633,13 @@ h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
 .slowLine .pk { border-color: #7fd8ff; box-shadow: 0 0 6px #7fd8ff66; }
 .slowLine .pk small { margin-left: 3px; font-size: .75em; color: #7fd8ff; }
 .slowLine > small { display: block; opacity: .8; }
+/* 🔀 my mix-ups (stats) */
+.statMix { width: 100%; text-align: center; margin: 4px 0; }
+.mixHead { margin: 2px 0 6px; color: #ffc98f; font-weight: bold; }
+.mixHead small { display: block; font-weight: normal; opacity: .75; font-size: .8em; }
+.mixList { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 6px; }
+.mixPk { font: inherit; min-height: 44px; padding: 4px 10px; color: #ffe2bf; background: #1b0f45; border: 1px solid #ffb36b; border-radius: 12px; box-shadow: 0 0 6px #ffb36b55; cursor: pointer; }
+.mixPk b { font-size: 1.4em; color: #fff; font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.mixPk small { margin: 0 4px 0 2px; color: #ffc98f; }
+.mixPk .mixN { color: #ffe94d; font-size: .85em; }
+.mixPk:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
