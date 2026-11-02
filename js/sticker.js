@@ -1,6 +1,6 @@
 /* 📸 Companion sticker: draws a cute 640×800 picture card of your companion (its name in Japanese, growth stage,
    how many kana you've mastered and a strip of them, today's date) right in the browser, then saves it as a PNG
-   (share sheet on phones that can share files, normal download otherwise). Works offline, no wallet, no save keys.
+   (share sheet on phones that can share files, normal download otherwise). Works offline, no save keys.
    Needs window.COMPANION for the art. Exposes window.KA_STICKER. */
 (function (root) {
   "use strict";

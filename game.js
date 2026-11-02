@@ -1643,7 +1643,7 @@
     });
   }
 
-  // ---------- ☰ More (home): companion picker, quest, settings, how to play, install, Built on Starknet ----------
+  // ---------- ☰ More (home): companion picker, quest, settings, how to play, install ----------
   function setMore(open, scroll) {
     var area = $("moreArea"), btn = $("moreBtn"); if (!area || !btn) return;
     area.classList.toggle("hidden", !open); btn.setAttribute("aria-expanded", open ? "true" : "false"); btn.classList.toggle("on", open);

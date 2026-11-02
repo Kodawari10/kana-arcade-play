@@ -13,7 +13,7 @@
     { name: "wa-row", kana: [["わ","ワ","wa"],["を","ヲ","wo","o"],["ん","ン","n","nn"]] }
   ];
   // ゛ Tenten & ゜ maru: the voiced kana, unlocked after the ten basic rows (levels 11-15).
-  // Kept apart from ROWS so badges (and their on-chain ids) and words stay exactly as before.
+  // Kept apart from ROWS so badges (and their ids) and words stay exactly as before.
   // じ/ぢ both sound "ji" and ず/づ both "zu"; ぢ/づ also accept "di"/"du" (how keyboards type them).
   var DAKUTEN = [
     { name: "ga-row", from: "ka-row", mark: "゛", tip: "k → g", kana: [["が","ガ","ga"],["ぎ","ギ","gi"],["ぐ","グ","gu"],["げ","ゲ","ge"],["ご","ゴ","go"]] },

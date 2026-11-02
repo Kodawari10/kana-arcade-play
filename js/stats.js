@@ -2,7 +2,7 @@
 // script), right answers, accuracy, kana met, best score, words cleared, companions met, badges, daily quest streak
 // and nicknames, plus a gold "⭐ Your best kana" card and a "😅 Trickiest kana" card (tap either to hear it), and a
 // "📅 Learning since" line. It only READS what the game already keeps on this device, so it never changes your save.
-// Offline, no wallet. Pure logic (KA_STATS.snapshot) is testable in node; the 📊 STATS sheet wires itself up in the browser.
+// Offline. Pure logic (KA_STATS.snapshot) is testable in node; the 📊 STATS sheet wires itself up in the browser.
 (function (root) {
   "use strict";
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

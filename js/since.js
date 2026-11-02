@@ -1,7 +1,7 @@
 /* 📅 Together since: remembers the day you and each companion became friends (the first day it was your companion).
    Pure logic only; game.js draws the little pill on the ★ companion screen. Saved on this device as kanaArcade.met
    ({ petId: "2026-10-20" } local dates, or "old" for companions you already played with before this feature).
-   Never sent anywhere or on-chain. Exposes window.KA_SINCE (and module.exports for tests). */
+   Never sent anywhere. Exposes window.KA_SINCE (and module.exports for tests). */
 (function (root) {
   "use strict";
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

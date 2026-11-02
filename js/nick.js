@@ -1,6 +1,6 @@
 /* 🏷️ Companion nicknames: give Nekomaru, Kon or Ryuta your own pet name (up to 16 letters, Japanese welcome).
    Pure logic only; game.js draws the pill and the little edit box. Saved on this device as kanaArcade.nicks
-   ({ petId: "Mochi" }), never sent anywhere or on-chain. Exposes window.KA_NICK (and module.exports for tests). */
+   ({ petId: "Mochi" }), never sent anywhere. Exposes window.KA_NICK (and module.exports for tests). */
 (function (root) {
   "use strict";
   var MAX = 16;

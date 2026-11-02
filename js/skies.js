@@ -1,7 +1,7 @@
 // 🌌 Arcade skies: six playfield backgrounds you unlock by mastering kana (★ 8+ right, 80%+ accuracy).
 // 🌃 Neon night (the classic look) is always there; 🌸 Sakura night, 🌊 Deep sea, 🗻 Fuji dusk, 🏮 Festival
 // lanterns and 🌈 Rainbow aurora open up at 5 / 15 / 30 / 50 / 75 mastered kana. Drawn on the canvas only, so it
-// works offline with no downloads and no wallet. One save key, kanaArcade.sky = { id, best }: "best" remembers the
+// works offline with no downloads. One save key, kanaArcade.sky = { id, best }: "best" remembers the
 // most kana you ever had mastered, so a sky you earned stays yours even if a kana slips. Junk falls back to neon.
 // Pure logic + drawing are testable in node (module.exports); the 🌌 SKY sheet wires itself up in the browser.
 (function (root) {

@@ -1,6 +1,5 @@
 /* Kana Arcade: 🏅 Badge book (offline). Shows the 32 badges you can earn (20 kana-row badges + 12 companion
- * growth stamps), with your companion explaining them. The optional Starknet layer (js/starknet.js) plugs in
- * through KA_BOOK.setChain(...) to mark badges that are stamped on-chain; without it everything still works. */
+ * growth stamps), with your companion explaining them. Badges live only on this device. */
 (function () {
   "use strict";
   var B = window.KA_BADGES, CP = window.COMPANION, A = window.__kanaArcade;
@@ -8,7 +7,6 @@
   var $ = function (id) { return document.getElementById(id); };
   var SEEN_KEY = "kanaArcade.badgesSeen";
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
-  var chain = null; // { minted: Set<number>, connected: bool, configured: bool, holders(id), tokenUrl(id) }
   var from = "startScreen", selected = null, tipI = 0, sayT = 0;
 
   function progress() { return A.progress; }
@@ -20,9 +18,8 @@
     function () { return "Master every kana in a row to earn its badge! ★"; },
     function () { return "When I grow up, you get a growth stamp. Let's grow together ♡"; },
     function () { return "Badges live right here on this device. No internet needed!"; },
-    function () { return chain && chain.enabled ? "Want to keep them forever? Connect a wallet and stamp them on Starknet ✦ (totally optional)" : "Keep playing, more badges are waiting!"; },
-    function () { return chain && chain.enabled ? "On Starknet, badges are soulbound: nobody can sell or move them. They just say “I learned this!”" : "がんばって! You can do it!"; },
-    function () { return chain && chain.enabled ? "With Cartridge you sign in with a passkey, no seed phrase. Minting can even be free when it's sponsored!" : "Tap a badge and I'll tell you about it."; },
+    function () { return "Keep playing, more badges are waiting!"; },
+    function () { return "がんばって! You can do it!"; },
     function () { return "Tap a badge and I'll tell you about it."; }
   ];
   function say(msg, hold) {
@@ -33,32 +30,30 @@
   function nextTip() { say(TIPS[tipI++ % TIPS.length]()); }
 
   function render() {
-    var got = new Set(earned()), on = chain && chain.minted ? chain.minted : new Set();
+    var got = new Set(earned());
     var n = 0, html = "";
     B.ALL.forEach(function (b, i) {
       if (i === 20) html += '<div class="bdgSep">' + "COMPANION GROWTH STAMPS" + "</div>";
       if (i === 0) html += '<div class="bdgSep">' + "KANA ROW BADGES" + "</div>";
-      var has = got.has(b.id), oc = on.has(b.id); if (has || oc) n++;
-      var cls = "bdg " + b.kind + (has || oc ? " got" : "") + (oc ? " onchain" : "") + (selected === b.id ? " sel" : "");
-      html += '<button type="button" role="listitem" class="' + cls + '" data-id="' + b.id + '" aria-label="' + esc(b.title + (has || oc ? ", earned" : ", not earned yet") + (oc ? ", on Starknet" : "")) + '">' +
+      var has = got.has(b.id); if (has) n++;
+      var cls = "bdg " + b.kind + (has ? " got" : "") + (selected === b.id ? " sel" : "");
+      html += '<button type="button" role="listitem" class="' + cls + '" data-id="' + b.id + '" aria-label="' + esc(b.title + (has ? ", earned" : ", not earned yet")) + '">' +
         '<b>' + esc(b.icon) + '</b><i>' + esc(b.kind === "row" ? (b.script === "hiragana" ? "ひら" : "カタ") : b.name.split(" · ")[1]) + '</i>' +
-        (b.kind === "stamp" ? '<u>' + esc(b.name.split(" · ")[0]) + '</u>' : "") + (oc ? '<em aria-hidden="true">✦</em>' : "") + "</button>";
+        (b.kind === "stamp" ? '<u>' + esc(b.name.split(" · ")[0]) + '</u>' : "") + "</button>";
     });
     $("badgeGrid").innerHTML = html;
-    $("badgeSub").textContent = n + " / " + B.count + " badges earned" + (on.size ? "  ·  ✦ " + on.size + " on Starknet" : "");
+    $("badgeSub").textContent = n + " / " + B.count + " badges earned";
     $("badgeGrid").querySelectorAll(".bdg").forEach(function (el) { el.addEventListener("click", function () { explain(+el.dataset.id); }); });
   }
 
   function explain(id) {
     var b = B.BY_ID[id]; if (!b) return; selected = id; render();
-    var got = earned().indexOf(id) >= 0, oc = chain && chain.minted && chain.minted.has(id);
+    var got = earned().indexOf(id) >= 0;
     var msg = b.desc + ". ";
-    if (oc) msg += "It's stamped on Starknet as a soulbound badge ✦";
-    else if (got) msg += chain && chain.enabled ? "You earned it! It can be stamped on Starknet if you like ✦" : "You earned it! すごい!";
+    if (got) msg += "You earned it! すごい!";
     else if (b.kind === "row") msg += "Not yet: master all " + b.chars.length + " of these kana to earn it.";
     else msg += "Not yet: keep learning and " + b.name.split(" · ")[0] + " will grow!";
     say(msg, true);
-    if (chain && chain.describe) chain.describe(id).then(function (extra) { if (extra && selected === id) say(msg + " " + extra, true); }).catch(function () {});
   }
 
   var visibleFrom = function () { return ["startScreen", "overScreen"].filter(function (k) { return !$(k).classList.contains("hidden"); })[0] || "startScreen"; };
@@ -128,7 +123,6 @@
   }, true);
 
   window.KA_BOOK = {
-    open: open, close: close, isOpen: isOpen, render: function () { if (isOpen()) render(); }, say: say, toast: toast, earned: earned, explain: explain,
-    setChain: function (c) { chain = c; if (isOpen()) render(); }
+    open: open, close: close, isOpen: isOpen, render: function () { if (isOpen()) render(); }, say: say, toast: toast, earned: earned, explain: explain
   };
 })();

@@ -37,10 +37,6 @@
   <div id="startScreen" class="overlay">
     <h1>KANA ARCADE<span class="jp rubyJp" lang="ja">かなアーケード</span></h1>
     <p id="tagline" class="tagline">Zap the falling kana by typing (or tapping) their <b>romaji</b> ✨</p>
-    <div id="homeWallet" class="homeWallet hidden" role="group" aria-label="Starknet wallet">
-      <button id="homeConnect" class="alt small walletBtn" type="button" aria-haspopup="dialog" title="Optional: connect a Starknet wallet (Sepolia testnet) to stamp your badges">🔗 Connect wallet</button>
-      <span id="homeWalletOn" class="walletOn hidden"><span class="walletChip" id="homeAddrChip" title="Connected Starknet wallet"><span class="walletDot" aria-hidden="true"></span><span id="homeWalletKind" class="walletKind"></span> <b id="homeAddr"></b></span><button id="homeDisc" class="alt small walletDisc" type="button">Disconnect</button></span>
-    </div>
     <div id="welcomeCard" class="hidden" role="group" aria-labelledby="wbHi">
       <canvas id="welcomePet" class="petCanvas" data-size="64" aria-hidden="true"></canvas>
       <div class="wbBody">
@@ -68,7 +64,7 @@
     </section>
     <nav id="iconRow" class="iconRow" aria-label="More of Kana Arcade">
       <button id="petBtn" aria-label="My companion" class="alt iconBtn"><span class="ib" aria-hidden="true">🐾</span><small>Buddy</small></button>
-      <button id="badgeBtn" aria-label="Badges and wallet" class="alt iconBtn"><span class="ib" aria-hidden="true">🏅</span><small>Badges</small></button>
+      <button id="badgeBtn" aria-label="Badges" class="alt iconBtn"><span class="ib" aria-hidden="true">🏅</span><small>Badges</small></button>
       <button id="statsBtn" aria-label="My stats" class="alt iconBtn" type="button" aria-haspopup="dialog" title="See how your kana learning is going"><span class="ib" aria-hidden="true">📊</span><small>Stats</small></button>
       <button id="omikujiBtn" class="alt iconBtn" aria-haspopup="dialog"><span class="ib" aria-hidden="true">🎋</span><small>OMIKUJI</small></button>
       <button id="moreBtn" class="alt iconBtn moreBtn" type="button" aria-expanded="false" aria-controls="moreArea"><span class="ib" aria-hidden="true">☰</span><small>More</small></button>
@@ -108,15 +104,7 @@
         <button id="installBtn" class="alt small" type="button" aria-describedby="installNote">📲 Add to Home Screen</button>
         <span class="tips" id="installNote">Keep Kana Arcade as a little app: one tap to open, plays offline.</span>
       </div>
-      <section id="builtOn" class="homeCard builtOn" aria-labelledby="builtHead">
-        <h2 id="builtHead" class="cardHead">⛓️ Built on Starknet</h2>
-        <ul class="builtList">
-          <li><a href="https://github.com/keep-starknet-strange/starkzap" target="_blank" rel="noopener noreferrer">⚡ StarkZap<span class="srOnly"> (opens in a new tab)</span></a><span>Connects your wallet and stamps your kana badges on Starknet Sepolia (test network).</span></li>
-          <li><a href="https://github.com/keep-starknet-strange/starknet-agentic" target="_blank" rel="noopener noreferrer">🤖 Starknet Agentic<span class="srOnly"> (opens in a new tab)</span></a><span>Its skill format lets AI agents read (never change) your badges.</span></li>
-        </ul>
-      </section>
     </div>
-    <p id="homeFoot" class="homeFoot">Built on Starknet · <a href="https://github.com/keep-starknet-strange/starkzap" target="_blank" rel="noopener noreferrer">StarkZap<span class="srOnly"> (opens in a new tab)</span></a> · <a href="https://github.com/keep-starknet-strange/starknet-agentic" target="_blank" rel="noopener noreferrer">Starknet Agentic<span class="srOnly"> (opens in a new tab)</span></a></p>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">
@@ -212,7 +200,6 @@
       <div id="badgeSay" class="say" aria-live="polite"></div>
     </div>
     <div id="badgeGrid" role="list"></div>
-    <div id="chainBox" class="hidden"></div>
     <button id="badgeBack">◀ BACK</button>
   </div>
   <div id="drillScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drillTitle">
@@ -311,14 +298,6 @@
       <button id="skyBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
-  <div id="walletScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="walletTitle">
-    <div id="walletSheet">
-      <button id="walletClose" type="button" class="wbClose" aria-label="Close the wallet picker" title="Close (Esc)">✕</button>
-      <h2 class="petTitle" id="walletTitle">🔗 Connect a wallet</h2>
-      <p class="tips" id="walletSub">Optional, for stamping your badges on Starknet Sepolia (test network). You never need a wallet to play.</p>
-      <div id="walletBox" class="chainBox"></div>
-    </div>
-  </div>
   <div id="statsScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
     <div id="statsSheet">
       <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
@@ -348,7 +327,7 @@
       <div id="saveCode" class="saveCode">
         <button id="scToggle" class="alt small" type="button" aria-expanded="false" aria-controls="scBox">💾 Move my progress to another device</button>
         <div id="scBox" class="hidden">
-          <p class="tips">Copy this code and paste it on your other phone or laptop under <b>Restore</b>. It's only your learning progress: no wallet, no keys.</p>
+          <p class="tips">Copy this code and paste it on your other phone or laptop under <b>Restore</b>. It's only your learning progress.</p>
           <textarea id="scOut" readonly rows="3" spellcheck="false" aria-label="Your save code"></textarea>
           <button id="scCopy" class="alt small" type="button">📋 Copy code</button>
           <label for="scIn" class="scLbl">♻️ Restore from a code</label>
@@ -399,9 +378,5 @@
 <script src="js/swipe.js"></script>
 <script src="js/badges.js"></script>
 <script src="js/badge-book.js"></script>
-<!-- optional Starknet layer: never loads a wallet library or touches the network until you tap Connect -->
-<script src="js/starknet-config.js"></script>
-<script src="js/starknet-abi.js"></script>
-<script src="js/starknet.js"></script>
 </body>
 </html>

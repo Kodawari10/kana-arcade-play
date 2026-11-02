@@ -1,5 +1,5 @@
 /* Kana Arcade badges: a sticker book of things you've learned (works fully offline).
- * The same ids are used by the optional on-chain contract (contracts/src/lib.cairo):
+ * Badge ids are stable (old saves and the "new badge" note rely on them):
  *   row badges   1..20  = script * 10 + row + 1   (script 0 = hiragana, 1 = katakana; row order = kana.js)
  *   growth stamps 100 + pet * 10 + stage          (pet order = companion.js PETS; stage 1..4 = Baby..Master)
  * Earned badges are derived from the existing save (progress), so nothing new is stored and old saves just work. */

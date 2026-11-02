@@ -1,7 +1,7 @@
 /* 💾 Save code: move your progress to another phone or laptop. In 📊 My stats, "Move my progress" shows a
    short code made from this device's Kana Arcade save (mastered kana, companions, words, quest, badges seen,
    high scores, settings). Copy it, paste it on the other device under "Restore" and tap twice to confirm.
-   The wallet state (kanaArcade.chain) never goes into a code, so no wallet, session or key ever moves.
+   A leftover kanaArcade.chain key left by an older version never goes into a code; it just stays where it is.
    Before a restore, the old save is kept in kanaArcade.beforeRestore so "Undo last restore" can bring it back.
    Pure logic (encode / decode / checks) is exported for tests. Exposes window.KA_SAVECODE. */
 (function (root) {
