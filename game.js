@@ -1377,7 +1377,7 @@
   }
   $("costumeBtn").addEventListener("click", function () { setCostumes(!KC.wanted()); });
 
-  function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; }
+  function applyMute() { $("muteBtn").textContent = settings.muted ? "🔇" : "🔊"; $("muteBtn").setAttribute("aria-pressed", settings.muted ? "true" : "false"); }
 
   // ---------- 🎵 arcade music (js/music.js): a soft chiptune loop, quicker each level, calm in Gentle mode ----------
   var KM = window.KA_MUSIC, music = KM ? KM.create({
