@@ -1,5 +1,5 @@
 // Offline cache for Kana Arcade. Bump VERSION when files change.
-var VERSION = "kana-arcade-v45";
+var VERSION = "kana-arcade-v46";
 var FILES = ["./", "./index.html", "./style.css", "./kana.js", "./js/romaji.js", "./js/voice.js", "./js/quest.js", "./js/omikuji.js", "./js/welcome.js", "./js/keys.js", "./js/install.js", "./js/swipe.js", "./js/costumes.js", "./js/words.js", "./js/review.js", "./js/chatter.js", "./js/sticker.js", "./js/music.js", "./js/near.js", "./js/lookalike.js", "./js/mnemonic.js", "./js/drill.js", "./js/pace.js", "./js/decode.js", "./js/slowspot.js", "./js/mixlog.js", "./js/skies.js", "./js/nick.js", "./js/since.js", "./js/doze.js", "./js/find.js", "./js/recap.js", "./js/twin.js", "./js/stats.js", "./js/savecode.js", "./companion.js", "./game.js", "./manifest.webmanifest",
   "./js/badges.js", "./js/badge-book.js",
   "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
