@@ -59,6 +59,7 @@
       </div>
       <div class="row playRow">
         <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+        <button id="learnBtn" class="alt learnBtn" type="button" title="Learn real Japanese words and phrases">📚 Learn</button>
         <button id="reviewBtn" class="alt review hidden" type="button" title="A short round with only the kana you miss most">🔁 Review my misses</button>
       </div>
     </section>
@@ -97,7 +98,7 @@
       <details id="howTo" class="howTo homeCard">
         <summary>❓ How to play</summary>
           <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
-             Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. After a few levels, whole words drop in too. Chain hits for a combo multiplier!</p>
+             Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. After a few levels, whole words drop in too. Tap <b>📚 Learn</b> for themed decks of real words and everyday phrases with review. Chain hits for a combo multiplier!</p>
         <p class="tips" id="tips"></p>
       </details>
       <div class="row hidden" id="installRow">
@@ -298,6 +299,45 @@
       <button id="skyBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
     </div>
   </div>
+  <div id="learnScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="learnTitle">
+    <div id="learnSheet">
+      <button id="learnClose" type="button" class="wbClose" aria-label="Close Learn" title="Close (Esc)">✕</button>
+      <div id="learnHub">
+        <h2 class="petTitle" id="learnTitle">📚 LEARN JAPANESE <span class="rubyJp" lang="ja" aria-label="にほんご, nihongo">にほんご</span></h2>
+        <p class="tips" id="learnCounts"></p>
+        <p class="tips" id="learnDue"></p>
+        <div id="learnDecks" class="learnDecks" role="list"></div>
+      </div>
+      <div id="learnPlay" class="hidden">
+        <h2 class="petTitle" id="learnDeckTitle">Deck</h2>
+        <button id="learnBackHub" type="button" class="alt small">◀ Decks</button>
+        <div id="learnModes" class="learnModes">
+          <button type="button" data-mode="words" class="learnMode">💬 Words<span>See Japanese → pick the meaning</span></button>
+          <button type="button" data-mode="phrases" class="learnMode">🗣️ Phrases<span>Everyday expressions</span></button>
+          <button type="button" data-mode="listen" class="learnMode">🔊 Listen<span>Hear Japanese → pick the meaning</span></button>
+          <button type="button" data-mode="situations" class="learnMode">🎬 Situations<span>What would you say?</span></button>
+          <button type="button" data-mode="review" class="learnMode">🔁 Review<span>Due cards from this deck</span></button>
+        </div>
+        <div id="learnCard" class="learnCard hidden">
+          <p id="learnProgress" class="learnProgress">1 / 10</p>
+          <p id="learnPrompt" class="learnPrompt"></p>
+          <p id="learnSub" class="tips"></p>
+          <button id="learnHear" type="button" class="alt small learnHear hidden" aria-label="Hear it again">🔊 Hear</button>
+          <div id="learnChoices" class="learnChoices" role="group" aria-label="Choices"></div>
+          <div id="learnTypeRow" class="learnTypeRow hidden">
+            <input id="learnType" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer">
+            <button id="learnTypeGo" type="button">OK</button>
+          </div>
+          <p id="learnFeedback" class="learnFeedback" role="status" aria-live="polite"></p>
+        </div>
+        <div id="learnDone" class="hidden">
+          <p id="learnScore" class="learnScore"></p>
+          <p id="learnScoreSub" class="tips"></p>
+          <div class="row"><button id="learnAgain" type="button">🔁 AGAIN</button><button id="learnToHub" type="button" class="alt">📚 Decks</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="statsScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
     <div id="statsSheet">
       <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
@@ -350,6 +390,10 @@
 <script src="js/welcome.js"></script>
 <script src="js/costumes.js"></script>
 <script src="js/words.js"></script>
+<script src="js/vocab-data.js"></script>
+<script src="js/vocab.js"></script>
+<script src="js/srs.js"></script>
+<script src="js/learn.js"></script>
 <script src="js/review.js"></script>
 <script src="js/chatter.js"></script>
 <script src="js/sticker.js"></script>

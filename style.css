@@ -582,3 +582,37 @@ h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
 .mixPk small { margin: 0 4px 0 2px; color: #ffc98f; }
 .mixPk .mixN { color: #ffe94d; font-size: .85em; }
 .mixPk:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
+
+/* 📚 Learn Japanese */
+.learnBtn { min-height: 48px; font-size: 16px; border-color: #ff8fd9; color: #ffd0e6; box-shadow: 0 0 8px #ff8fd966; }
+#learnScreen { z-index: 28; background: rgba(7,2,26,.94); }
+#learnSheet { position: relative; width: min(520px, 100%); max-height: 100%; overflow-y: auto; background: #10063a; border: 2px solid #ff8fd9; border-radius: 14px; box-shadow: 0 0 22px #ff8fd988; padding: 14px 14px 18px; box-sizing: border-box; text-align: center; }
+#learnSheet > * { flex-shrink: 0; }
+.learnDecks { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.learnDeck { display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; align-items: center; width: 100%; min-height: 48px; padding: 8px 10px; text-align: left; background: #1b0f45; border: 1px solid #ff8fd9; border-radius: 12px; color: #ffe6f3; cursor: pointer; }
+.learnDeck .ldIcon { font-size: 22px; text-align: center; }
+.learnDeck .ldName { font-weight: bold; font-size: 14px; }
+.learnDeck .ldName small { display: block; font-weight: normal; opacity: .75; font-size: 12px; }
+.learnDeck .ldProg { font-size: 12px; color: #ffe94d; white-space: nowrap; }
+.learnDeck:focus-visible { outline: 3px solid #2be8ff; outline-offset: 2px; }
+.learnModes { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.learnMode { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; min-height: 48px; padding: 8px 12px; background: #1b0f45; border: 2px solid #2be8ff; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; text-align: left; }
+.learnMode span { font-weight: normal; font-size: 12px; color: #b9c8ff; }
+.learnProgress { color: #ffe94d; font-weight: bold; margin: 4px 0; }
+.learnPrompt { font-size: clamp(22px, 7vw, 34px); margin: 8px 0; color: #fff; line-height: 1.35; }
+.learnKana { font-family: 'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; font-size: 1.15em; }
+.learnKanji { color: #ffd0e6; font-size: .7em; display: block; }
+.learnChoices { display: grid; grid-template-columns: 1fr; gap: 6px; margin: 10px 0; }
+.learnAns { position: relative; min-height: 48px; padding: 8px 12px 8px 28px; text-align: left; font: bold 16px "Courier New", monospace; color: #fff; background: #1b0f45; border: 2px solid #2be8ff; border-radius: 12px; cursor: pointer; }
+.learnAns small { position: absolute; left: 8px; top: 6px; font-size: 11px; color: #8a9bdc; }
+.learnAns.right { background: #0f5a36; border-color: #6dffb0; }
+.learnAns.wrong { background: #4a0f22; border-color: #ff6b8a; opacity: .75; }
+.learnAns:focus-visible { outline: 3px solid #ffe94d; outline-offset: 2px; }
+.learnTypeRow { display: flex; gap: 6px; margin: 8px 0; }
+#learnType { flex: 1; min-height: 44px; font: 16px "Courier New", monospace; padding: 6px 10px; border-radius: 10px; border: 2px solid #ff8fd9; background: #fff5fb; color: #3a0b2a; }
+.learnFeedback { min-height: 2.2em; margin: 6px 0 0; color: #ffd0e6; }
+.learnFeedback.good { color: #6dffb0; }
+.learnFeedback.bad { color: #ffb3c4; }
+.learnScore { font-size: 1.4em; color: #ffe94d; margin: 16px 0 6px; }
+.learnHear { margin: 4px auto 8px; }
+@media (min-width: 600px) { .learnChoices { grid-template-columns: 1fr 1fr; } }

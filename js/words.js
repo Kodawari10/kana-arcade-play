@@ -31,7 +31,11 @@
     ["トマト", "tomato", "🍅"], ["メモ", "memo", "🗒️"], ["ハム", "ham", "🥓"], ["ゲーム", "game", "🎮"],
     ["タイヤ", "tire", "🛞"], ["ヨーヨー", "yo-yo", "🪀"],
     ["カメラ", "camera", "📷"], ["ホテル", "hotel", "🏨"], ["クラス", "class", "🏫"], ["テレビ", "TV", "📺"],
-    ["ラーメン", "ramen", "🍜"], ["メロン", "melon", "🍈"], ["レモン", "lemon", "🍋"], ["パン", "bread", "🥖"]
+    ["ラーメン", "ramen", "🍜"], ["メロン", "melon", "🍈"], ["レモン", "lemon", "🍋"], ["パン", "bread", "🥖"],
+    ["みず", "water", "💧"], ["ごはん", "rice", "🍚"], ["ともだち", "friend", "👫"],
+    ["せんせい", "teacher", "👩‍🏫"], ["あした", "tomorrow", "📆"],
+    ["おはよう", "good morning", "🌅"], ["すみません", "excuse me", "🙇"], ["ください", "please", "🙏"],
+    ["コンビニ", "convenience store", "🏪"], ["レストラン", "restaurant", "🍽️"],
   ];
   // voiced kana → [base kana, romaji alternates] (hiragana; katakana is +0x60)
   var DAKU = { "が": ["か", "ga"], "ぎ": ["き", "gi"], "ぐ": ["く", "gu"], "げ": ["け", "ge"], "ご": ["こ", "go"],
