@@ -304,13 +304,22 @@
       <button id="learnClose" type="button" class="wbClose" aria-label="Close Learn" title="Close (Esc)">✕</button>
       <div id="learnHub">
         <h2 class="petTitle" id="learnTitle">📚 LEARN JAPANESE <span class="rubyJp" lang="ja" aria-label="にほんご, nihongo">にほんご</span></h2>
+        <p class="tips" id="learnProf"></p>
         <p class="tips" id="learnCounts"></p>
         <p class="tips" id="learnDue"></p>
-        <div id="learnDecks" class="learnDecks" role="list"></div>
+        <div class="learnTabs" role="tablist" aria-label="Learn sections">
+          <button type="button" class="learnTab on" data-tab="path" role="tab" aria-selected="true">🗺️ Path</button>
+          <button type="button" class="learnTab" data-tab="decks" role="tab" aria-selected="false">📚 Decks</button>
+        </div>
+        <div id="learnPath" class="learnPath" role="tabpanel"></div>
+        <div id="learnDecksWrap" class="hidden">
+          <div id="learnDecks" class="learnDecks" role="list"></div>
+        </div>
+        <label class="learnFuri"><input type="checkbox" id="learnFuri" checked> Show furigana on kanji</label>
       </div>
       <div id="learnPlay" class="hidden">
         <h2 class="petTitle" id="learnDeckTitle">Deck</h2>
-        <button id="learnBackHub" type="button" class="alt small">◀ Decks</button>
+        <button id="learnBackHub" type="button" class="alt small">◀ Back</button>
         <div id="learnModes" class="learnModes">
           <button type="button" data-mode="words" class="learnMode">💬 Words<span>See Japanese → pick the meaning</span></button>
           <button type="button" data-mode="phrases" class="learnMode">🗣️ Phrases<span>Everyday expressions</span></button>
@@ -330,6 +339,7 @@
           </div>
           <p id="learnFeedback" class="learnFeedback" role="status" aria-live="polite"></p>
         </div>
+        <div id="pathStudy" class="pathStudy hidden"></div>
         <div id="learnDone" class="hidden">
           <p id="learnScore" class="learnScore"></p>
           <p id="learnScoreSub" class="tips"></p>
@@ -343,6 +353,7 @@
       <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
       <h2 class="petTitle" id="statsTitle">📊 MY STATS <span class="rubyJp" lang="ja" aria-label="きろく, kiroku">きろく</span></h2>
       <p class="tips" id="statsSub"></p>
+      <p class="tips" id="statsProf"></p>
       <div id="statsRank" class="statsRank" role="group" aria-label="Your kana rank">
         <div class="rankRing" aria-hidden="true"><span id="rankIcon" class="rankIcon">🌱</span></div>
         <div class="rankText">
@@ -393,6 +404,11 @@
 <script src="js/vocab-data.js"></script>
 <script src="js/vocab.js"></script>
 <script src="js/srs.js"></script>
+<script src="js/kanji-data.js"></script>
+<script src="js/grammar-data.js"></script>
+<script src="js/reading-data.js"></script>
+<script src="js/path-data.js"></script>
+<script src="js/path.js"></script>
 <script src="js/learn.js"></script>
 <script src="js/review.js"></script>
 <script src="js/chatter.js"></script>

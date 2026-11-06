@@ -616,3 +616,41 @@ h2.moreHead { font-size: 17px; color: #d9c4ff; text-shadow: 0 0 8px #7b3cff; }
 .learnScore { font-size: 1.4em; color: #ffe94d; margin: 16px 0 6px; }
 .learnHear { margin: 4px auto 8px; }
 @media (min-width: 600px) { .learnChoices { grid-template-columns: 1fr 1fr; } }
+
+/* ── Proficiency Path (Learn v47) ── */
+.learnTabs { display: flex; gap: 6px; margin: 8px 0; }
+.learnTab { flex: 1; min-height: 44px; padding: 8px; font: bold 14px "Courier New", monospace; color: #b9c8ff; background: #140a36; border: 2px solid #5a4a9a; border-radius: 12px; cursor: pointer; }
+.learnTab.on { color: #fff; border-color: #ff8fd9; background: #2a1458; box-shadow: 0 0 8px #ff8fd966; }
+.learnFuri { display: flex; align-items: center; gap: 8px; margin: 10px 0 4px; color: #b9c8ff; font-size: 13px; cursor: pointer; }
+.learnFuri input { width: 18px; height: 18px; }
+.learnPath { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-height: min(55vh, 420px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.pathLevel { width: 100%; text-align: left; padding: 10px 12px; background: #1b0f45; border: 1px solid #7a6ab8; border-radius: 12px; color: #ffe6f3; cursor: pointer; min-height: 52px; }
+.pathLevel.locked { opacity: .55; cursor: not-allowed; }
+.pathLevel .plHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: bold; }
+.pathLevel .plJp { color: #ffe94d; }
+.pathLevel .plBlurb { display: block; font-size: 12px; color: #b9c8ff; margin-top: 2px; font-weight: normal; }
+.pathLevel .plBadge { color: #6dffb0; font-size: 12px; }
+.pathUnits { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.pathUnit { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; width: 100%; min-height: 48px; padding: 8px 10px; text-align: left; background: #1b0f45; border: 1px solid #2be8ff; border-radius: 12px; color: #fff; cursor: pointer; }
+.pathUnit.locked { opacity: .5; border-color: #5a4a9a; cursor: not-allowed; }
+.pathUnit .puTitle { font-weight: bold; font-size: 14px; }
+.pathUnit .puMeta { display: block; font-size: 11px; color: #b9c8ff; font-weight: normal; }
+.pathUnit .puStat { font-size: 12px; color: #ffe94d; white-space: nowrap; }
+.pathStudy { margin-top: 8px; }
+.psBlock { background: #140a36; border: 1px solid #5a4a9a; border-radius: 12px; padding: 10px; margin: 8px 0; }
+.psBlock h3 { margin: 0 0 6px; color: #ffd0e6; font-size: 15px; }
+.psKanji { display: flex; flex-wrap: wrap; gap: 6px; }
+.psKanjiBtn { min-width: 44px; min-height: 44px; font-size: 22px; padding: 4px 8px; background: #1b0f45; border: 1px solid #ff8fd9; border-radius: 10px; color: #fff; cursor: pointer; font-family: 'Hiragino Sans','Yu Gothic','Meiryo','Noto Sans CJK JP',sans-serif; }
+.psKanjiDetail { margin-top: 8px; color: #ffe6f3; font-size: 14px; line-height: 1.45; }
+.psKanjiDetail ruby rt { font-size: .55em; color: #ffe94d; }
+.psGram { margin: 8px 0; padding: 8px; border-left: 3px solid #2be8ff; }
+.psGram .psTitle { font-weight: bold; color: #ffe94d; }
+.psGram .psExpl { color: #b9c8ff; font-size: 13px; margin: 4px 0; }
+.psEx { margin: 4px 0; font-size: 13px; }
+.psEx .jp { color: #fff; font-size: 15px; }
+.psEx .ro { color: #8a9bdc; font-size: 12px; }
+.psEx .en { color: #ffd0e6; }
+.psRead { white-space: pre-wrap; line-height: 1.7; font-size: 16px; color: #fff; padding: 8px; background: #0d0724; border-radius: 8px; }
+.psActions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.psActions button { min-height: 44px; }
+#statsProf { color: #ffe94d; font-weight: bold; }

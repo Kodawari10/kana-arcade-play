@@ -137,6 +137,11 @@
     $("statsSince").classList.toggle("hidden", !s.since);
     var P = ka().pet ? ka().pet() : null, nick = ka().nickOf && P ? ka().nickOf(P.id) : "", who = nick || (P ? P.name : "Your companion");
     $("statsSub").textContent = who + ": " + (s.seen ? (s.mastered ? "Look how much you know! すごい ✨" : "Every kana you meet makes me grow! がんばって") : "Play a game and your stats will bloom here 🌱");
+    var sp = $("statsProf");
+    if (sp) {
+      var PATH = root.KA_PATH;
+      sp.textContent = PATH ? ("🎯 Proficiency: " + PATH.proficiency(PATH.load())) : "";
+    }
     $("statsSay").textContent = "";
     $("statsSr").textContent = "Your kana rank: " + R.name + ", " + R.pct + " percent. " + R.line.replace(/ [^\w\s.!,]+ /g, " ") + ". Your stats: " + s.mastered + " of " + s.total + " kana mastered, " + s.right + " right answers" + (s.acc == null ? "" : ", " + s.acc + " percent accuracy") + ", best score " + s.high + ".";
     return s;
