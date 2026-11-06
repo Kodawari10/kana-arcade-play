@@ -59,10 +59,13 @@
     });
     $("learnDecks").innerHTML = html;
     $("learnDue").textContent = dueN ? ("🔁 " + dueN + " due for review today") : "Follow the Path, or pick a deck ✨";
-    $("learnCounts").textContent = V.counts().words + " words · " + V.counts().phrases + " phrases · " + V.counts().situations + " situations";
+    var vc = V.counts();
+    var bl = vc.byLevel || {};
+    var n5w = (bl.N5 && bl.N5.words) || 0, n4w = (bl.N4 && bl.N4.words) || 0;
+    $("learnCounts").textContent = vc.words + " words (N5 " + n5w + " · N4 " + n4w + ") · " + vc.phrases + " phrases · " + vc.situations + " situations";
     if (P) {
       var c = P.counts();
-      $("learnProf").textContent = "🎯 " + P.proficiency(P.load()) + " · " + c.kanjiN5 + " N5 kanji · " + c.grammar + " grammar · " + c.readings + " readings";
+      $("learnProf").textContent = "🎯 " + P.proficiency(P.load()) + " · kanji N5 " + c.kanjiN5 + "/N4 " + c.kanjiN4 + " · grammar " + (c.grammarN5||0) + "+" + (c.grammarN4||0) + " · readings " + c.readings;
       var f = $("learnFuri"); if (f) f.checked = P.furiganaOn();
       renderPath();
     } else {

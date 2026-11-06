@@ -83,6 +83,7 @@
     var errs = [], seen = {}, ids = {};
     DATA.ITEMS.forEach(function (it, i) {
       if (!it.id || !it.deck || !it.kana || !it.ro || !it.en) errs.push("missing fields @" + i);
+      if (it.level && it.level !== "N5" && it.level !== "N4" && it.level !== "N3" && it.level !== "N2" && it.level !== "N1") errs.push("bad level " + it.level + " @" + i);
       if (!deck(it.deck)) errs.push("unknown deck " + it.deck);
       if (!isKanaOnly(it.kana)) errs.push("non-kana in kana: " + it.kana);
       if (ids[it.id]) errs.push("dup id " + it.id); ids[it.id] = 1;
@@ -147,9 +148,9 @@
     distractors: distractors, quizChoices: quizChoices, acceptAnswer: acceptAnswer,
     situationMatch: situationMatch, shuffle: shuffle,
     counts: function () {
-      var c = { words: 0, phrases: 0, decks: {} };
+      var c = { words: 0, phrases: 0, decks: {}, byLevel: {} };
       DATA.DECKS.forEach(function (d) { c.decks[d.id] = 0; });
-      DATA.ITEMS.forEach(function (it) { c[it.kind === "p" ? "phrases" : "words"]++; c.decks[it.deck] = (c.decks[it.deck] || 0) + 1; });
+      DATA.ITEMS.forEach(function (it) { c[it.kind === "p" ? "phrases" : "words"]++; c.decks[it.deck] = (c.decks[it.deck] || 0) + 1; var lv = it.level || "N5"; if (!c.byLevel[lv]) c.byLevel[lv] = { words: 0, phrases: 0 }; c.byLevel[lv][it.kind === "p" ? "phrases" : "words"]++; });
       c.situations = DATA.SITUATIONS.length; c.total = DATA.ITEMS.length; return c;
     }
   };

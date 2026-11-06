@@ -154,11 +154,17 @@
     isLevelUnlocked: isLevelUnlocked, isUnitUnlocked: isUnitUnlocked, proficiency: proficiency,
     checkpointQuiz: checkpointQuiz, levelTest: levelTest, withOptions: withOptions, rubyHtml: rubyHtml,
     counts: function () {
+      var g = (GD && GD.GRAMMAR) || [];
+      var r = (RD && RD.READINGS) || [];
       return {
         kanjiN5: kanjiForLevel("N5").length,
         kanjiN4: kanjiForLevel("N4").length,
-        grammar: (GD && GD.GRAMMAR || []).length,
-        readings: (RD && RD.READINGS || []).length,
+        grammar: g.length,
+        grammarN5: g.filter(function (x) { return x.level === "N5"; }).length,
+        grammarN4: g.filter(function (x) { return x.level === "N4"; }).length,
+        readings: r.length,
+        readingsN5: r.filter(function (x) { return x.level === "N5"; }).length,
+        readingsN4: r.filter(function (x) { return x.level === "N4"; }).length,
         unitsN5: unitsFor("N5").length,
         unitsN4: unitsFor("N4").length
       };
