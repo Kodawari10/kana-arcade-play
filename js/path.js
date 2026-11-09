@@ -6,7 +6,15 @@
   var KD = root.KA_KANJI_DATA || (typeof require === "function" ? require("./kanji-data.js") : null);
   var GD = root.KA_GRAMMAR_DATA || (typeof require === "function" ? require("./grammar-data.js") : null);
   var RD = root.KA_READING_DATA || (typeof require === "function" ? require("./reading-data.js") : null);
-  if (!PD) return;
+  function syncPathData() {
+    if (root.KA_PATH_DATA) PD = root.KA_PATH_DATA;
+    if (root.KA_KANJI_DATA) KD = root.KA_KANJI_DATA;
+    if (root.KA_GRAMMAR_DATA) GD = root.KA_GRAMMAR_DATA;
+    if (root.KA_READING_DATA) RD = root.KA_READING_DATA;
+    if (PD && typeof API !== "undefined" && API) { API.LEVELS = PD.LEVELS; API.UNITS = PD.UNITS; }
+    return !!PD;
+  }
+  if (!PD && typeof document === "undefined") return;
   var KEY = "kanaArcade.path", FURI_KEY = "kanaArcade.furigana";
 
   function load() {
@@ -23,9 +31,9 @@
   function furiganaOn() { try { return JSON.parse(localStorage.getItem(FURI_KEY) || "true") !== false; } catch (e) { return true; } }
   function setFurigana(on) { try { localStorage.setItem(FURI_KEY, JSON.stringify(!!on)); } catch (e) {} return !!on; }
 
-  function levelById(id) { return PD.LEVELS.filter(function (l) { return l.id === id; })[0] || null; }
-  function unitsFor(level) { return PD.UNITS.filter(function (u) { return u.level === level; }).sort(function (a, b) { return a.order - b.order; }); }
-  function unitById(id) { return PD.UNITS.filter(function (u) { return u.id === id; })[0] || null; }
+  function levelById(id) { if (!PD) syncPathData(); if (!PD) return null; return PD.LEVELS.filter(function (l) { return l.id === id; })[0] || null; }
+  function unitsFor(level) { if (!PD) syncPathData(); if (!PD) return []; return PD.UNITS.filter(function (u) { return u.level === level; }).sort(function (a, b) { return a.order - b.order; }); }
+  function unitById(id) { if (!PD) syncPathData(); if (!PD) return null; return PD.UNITS.filter(function (u) { return u.id === id; })[0] || null; }
   function kanjiByCh(ch) { return (KD && KD.KANJI || []).filter(function (k) { return k.ch === ch; })[0] || null; }
   function kanjiForLevel(lv) { return (KD && KD.KANJI || []).filter(function (k) { return k.level === lv; }); }
   function grammarById(id) { return (GD && GD.GRAMMAR || []).filter(function (g) { return g.id === id; })[0] || null; }
@@ -146,7 +154,8 @@
   function escape(s) { return String(s || "").replace(/[&<>"']/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]; }); }
 
   var API = {
-    KEY: KEY, LEVELS: PD.LEVELS, UNITS: PD.UNITS,
+    KEY: KEY, LEVELS: PD ? PD.LEVELS : [], UNITS: PD ? PD.UNITS : [],
+    syncData: syncPathData,
     load: load, save: save, furiganaOn: furiganaOn, setFurigana: setFurigana,
     levelById: levelById, unitsFor: unitsFor, unitById: unitById,
     kanjiByCh: kanjiByCh, kanjiForLevel: kanjiForLevel, grammarById: grammarById, readingById: readingById,

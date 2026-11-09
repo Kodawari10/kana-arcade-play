@@ -3,7 +3,7 @@
 (function (root) {
   "use strict";
   var DATA = root.KA_VOCAB_DATA || (typeof require === "function" ? require("./vocab-data.js") : null);
-  if (!DATA) return;
+  if (!DATA && typeof document === "undefined") return;
 
   // Hepburn from hiragana/katakana (covers ん, long ー, small ya/yu/yo, dakuten)
   var MAP = {
@@ -74,12 +74,12 @@
     return typeof s === "string" && s.length > 0 && /^[\u3040-\u309F\u30A0-\u30FF\u30FC\u3099\u309A]+$/.test(s);
   }
 
-  function byId(id) { for (var i = 0; i < DATA.ITEMS.length; i++) if (DATA.ITEMS[i].id === id) return DATA.ITEMS[i]; return null; }
-  function deck(id) { for (var i = 0; i < DATA.DECKS.length; i++) if (DATA.DECKS[i].id === id) return DATA.DECKS[i]; return null; }
-  function items(deckId, kind) {
+  function byId(id) { if (!DATA && root.KA_VOCAB_DATA) API.syncData(); if (!DATA) return null; for (var i = 0; i < DATA.ITEMS.length; i++) if (DATA.ITEMS[i].id === id) return DATA.ITEMS[i]; return null; }
+  function deck(id) { if (!DATA && root.KA_VOCAB_DATA) API.syncData(); if (!DATA) return null; for (var i = 0; i < DATA.DECKS.length; i++) if (DATA.DECKS[i].id === id) return DATA.DECKS[i]; return null; }
+  function items(deckId, kind) { if (!DATA && root.KA_VOCAB_DATA) API.syncData(); if (!DATA) return [];
     return DATA.ITEMS.filter(function (it) { return (!deckId || it.deck === deckId) && (!kind || it.kind === kind); });
   }
-  function validate() {
+  function validate() { if (!DATA && root.KA_VOCAB_DATA) API.syncData(); if (!DATA) return ["no data"];
     var errs = [], seen = {}, ids = {};
     DATA.ITEMS.forEach(function (it, i) {
       if (!it.id || !it.deck || !it.kana || !it.ro || !it.en) errs.push("missing fields @" + i);
@@ -142,12 +142,19 @@
   }
 
   var API = {
-    DECKS: DATA.DECKS, ITEMS: DATA.ITEMS, SITUATIONS: DATA.SITUATIONS,
+    DECKS: DATA ? DATA.DECKS : [], ITEMS: DATA ? DATA.ITEMS : [], SITUATIONS: DATA ? DATA.SITUATIONS : [],
+    syncData: function () {
+      if (root.KA_VOCAB_DATA) DATA = root.KA_VOCAB_DATA;
+      if (!DATA) return false;
+      API.DECKS = DATA.DECKS; API.ITEMS = DATA.ITEMS; API.SITUATIONS = DATA.SITUATIONS;
+      return true;
+    },
     byId: byId, deck: deck, items: items, validate: validate,
     kanaToRo: kanaToRo, isKanaOnly: isKanaOnly, roMatches: roMatches,
     distractors: distractors, quizChoices: quizChoices, acceptAnswer: acceptAnswer,
     situationMatch: situationMatch, shuffle: shuffle,
     counts: function () {
+      if (!DATA && root.KA_VOCAB_DATA) API.syncData(); if (!DATA) return { words: 0, phrases: 0, decks: {}, byLevel: {}, situations: 0, total: 0 };
       var c = { words: 0, phrases: 0, decks: {}, byLevel: {} };
       DATA.DECKS.forEach(function (d) { c.decks[d.id] = 0; });
       DATA.ITEMS.forEach(function (it) { c[it.kind === "p" ? "phrases" : "words"]++; c.decks[it.deck] = (c.decks[it.deck] || 0) + 1; var lv = it.level || "N5"; if (!c.byLevel[lv]) c.byLevel[lv] = { words: 0, phrases: 0 }; c.byLevel[lv][it.kind === "p" ? "phrases" : "words"]++; });

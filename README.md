@@ -9,3 +9,6 @@ JLPT Path in Learn (N5 foundation). Kanji/grammar educational lists; see main re
 
 ## v48
 N5 vocab 800 + N4 complete (kanji/grammar/readings/units). Data: open-anki-jlpt-decks & kanji-data (MIT). See main README.
+
+## v49
+Phrases restored to 160; Learn data lazy-loads. N3 deferred.

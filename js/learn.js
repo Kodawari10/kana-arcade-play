@@ -4,7 +4,7 @@
   "use strict";
   var V = root.KA_VOCAB, SRS = root.KA_SRS, P = root.KA_PATH;
   var $ = function (id) { return document.getElementById(id); };
-  if (!V || !SRS) return;
+  if (!SRS) return; // V/P may hydrate after KA_DATA.ensure
   var screen, deckId = null, mode = null, queue = [], qi = 0, score = { ok: 0, n: 0 }, lock = false, lastFocus = null;
   var tab = "path", unitId = null, pathMode = null; // pathMode: study|checkpoint|leveltest
 
@@ -295,9 +295,19 @@
   function open() {
     if (isOpen()) return; lastFocus = document.activeElement;
     ["startScreen", "overScreen", "petScreen", "statsScreen", "badgeScreen"].forEach(function (id) { var e = $(id); if (e) e.classList.add("hidden"); });
-    screen.classList.remove("hidden"); show("learnHub"); tab = "path"; renderHub();
-    try { $("learnClose").focus({ preventScroll: true }); } catch (e) {}
-    try { root.dispatchEvent(new CustomEvent("ka:learn", { detail: { open: true } })); } catch (e) {}
+    function go() {
+      if (root.KA_VOCAB && root.KA_VOCAB.syncData) root.KA_VOCAB.syncData();
+      if (root.KA_PATH && root.KA_PATH.syncData) root.KA_PATH.syncData();
+      P = root.KA_PATH; V = root.KA_VOCAB;
+      screen.classList.remove("hidden"); show("learnHub"); tab = "path"; renderHub();
+      try { $("learnClose").focus({ preventScroll: true }); } catch (e) {}
+      try { root.dispatchEvent(new CustomEvent("ka:learn", { detail: { open: true } })); } catch (e) {}
+    }
+    if (root.KA_DATA && root.KA_DATA.ensure) {
+      root.KA_DATA.ensure(["vocab","kanji","grammar","reading","path"]).then(go).catch(function (err) {
+        console.warn(err); go();
+      });
+    } else go();
   }
   function close() {
     if (!isOpen()) return; screen.classList.add("hidden"); show("learnHub");
