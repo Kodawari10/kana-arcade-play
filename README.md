@@ -12,3 +12,6 @@ N5 vocab 800 + N4 complete (kanji/grammar/readings/units). Data: open-anki-jlpt-
 
 ## v49
 Phrases restored to 160; Learn data lazy-loads. N3 deferred.
+
+## v50
+N3 first batch lazy pack (80 kanji / 200 vocab / 15 grammar / 2 units).

@@ -90,6 +90,19 @@
 
   function openLevel(levelId) {
     if (!P) return;
+    if (levelId === "N3" && root.KA_DATA && root.KA_DATA.ensure) {
+      root.KA_DATA.ensure(["n3"]).then(function () {
+        if (root.KA_PATH && root.KA_PATH.syncData) root.KA_PATH.syncData();
+        if (root.KA_VOCAB && root.KA_VOCAB.syncData) root.KA_VOCAB.syncData();
+        P = root.KA_PATH; V = root.KA_VOCAB;
+        openLevelReady(levelId);
+      }).catch(function (e) { console.warn(e); openLevelReady(levelId); });
+      return;
+    }
+    openLevelReady(levelId);
+  }
+  function openLevelReady(levelId) {
+    if (!P) return;
     var st = P.load();
     if (!P.isLevelUnlocked(st, levelId)) return;
     var lv = P.levelById(levelId);

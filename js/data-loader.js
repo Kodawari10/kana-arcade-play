@@ -7,8 +7,10 @@
     kanji: "js/kanji-data.js",
     grammar: "js/grammar-data.js",
     reading: "js/reading-data.js",
-    path: "js/path-data.js"
+    path: "js/path-data.js",
+    n3: "js/n3-pack.js"
   };
+  var CORE = ["vocab", "kanji", "grammar", "reading", "path"];
   var loaded = {}, inflight = {};
 
   function loadOne(name) {
@@ -31,7 +33,7 @@
   }
 
   function ensure(names) {
-    names = names || Object.keys(FILES);
+    names = names || CORE;
     return Promise.all(names.map(loadOne)).then(function () {
       if (root.KA_VOCAB && root.KA_VOCAB.syncData) root.KA_VOCAB.syncData();
       if (root.KA_PATH && root.KA_PATH.syncData) root.KA_PATH.syncData();
@@ -39,5 +41,5 @@
     });
   }
 
-  root.KA_DATA = { ensure: ensure, FILES: FILES, loaded: loaded };
+  root.KA_DATA = { ensure: ensure, FILES: FILES, CORE: CORE, loaded: loaded };
 })(typeof window !== "undefined" ? window : this);

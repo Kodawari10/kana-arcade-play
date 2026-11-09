@@ -168,14 +168,18 @@
       return {
         kanjiN5: kanjiForLevel("N5").length,
         kanjiN4: kanjiForLevel("N4").length,
+        kanjiN3: kanjiForLevel("N3").length,
         grammar: g.length,
         grammarN5: g.filter(function (x) { return x.level === "N5"; }).length,
         grammarN4: g.filter(function (x) { return x.level === "N4"; }).length,
+        grammarN3: g.filter(function (x) { return x.level === "N3"; }).length,
         readings: r.length,
         readingsN5: r.filter(function (x) { return x.level === "N5"; }).length,
         readingsN4: r.filter(function (x) { return x.level === "N4"; }).length,
+        readingsN3: r.filter(function (x) { return x.level === "N3"; }).length,
         unitsN5: unitsFor("N5").length,
-        unitsN4: unitsFor("N4").length
+        unitsN4: unitsFor("N4").length,
+        unitsN3: unitsFor("N3").length
       };
     }
   };
