@@ -15,3 +15,6 @@ Phrases restored to 160; Learn data lazy-loads. N3 deferred.
 
 ## v50
 N3 first batch lazy pack (80 kanji / 200 vocab / 15 grammar / 2 units).
+
+## v51
+N3 batch 2: 180 kanji / 450 vocab / 30 grammar / 4 readings / 4 units (lazy n3-pack).
