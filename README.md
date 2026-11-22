@@ -21,3 +21,6 @@ N3 batch 2: 180 kanji / 450 vocab / 30 grammar / 4 readings / 4 units (lazy n3-p
 
 ## v52
 N3 batch 3: 270 kanji / 700 vocab / 45 grammar / 6 readings / 6 units; richer N3 level test.
+
+## v54
+🔥 Play streak: a small title-screen pill counts the days you played (any game counts), with a 7-day dot strip, your best run, and gentle milestone cheers (3/7/14/…). Local only, never sent anywhere. New `js/streak.js`.

@@ -1437,6 +1437,8 @@
     show("controls", true); show("pauseBtn", true);
     applyInputMode();
     if (settings.input === "type" && !isTouch) setTimeout(function () { input.focus(); }, 50);
+    // 🔥 a game played today feeds the play streak (js/streak.js); harmless if that module is absent
+    try { window.dispatchEvent(new CustomEvent("ka:play", { detail: { review: !!(reviewItems && reviewItems.length), script: settings.script, gentle: settings.gentle } })); } catch (e) {}
   }
   // 🔁 review rounds (js/review.js): no save keys, they read your kana stats
   var REV = window.KA_REVIEW, REVIEW_XP = 15, lastReview = false;

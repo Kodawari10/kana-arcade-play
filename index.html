@@ -47,6 +47,12 @@
       </div>
       <button id="wbClose" type="button" class="wbClose" aria-label="Close the welcome message" title="Close">✕</button>
     </div>
+    <div id="streakChip" class="streakChip hidden" role="status" aria-live="polite">
+      <span id="streakHead" class="streakHead"></span>
+      <span id="streakWeek" class="streakWeek" aria-hidden="true"></span>
+      <span id="streakBest" class="streakBest hidden"></span>
+      <span id="streakSub" class="streakSub hidden"></span>
+    </div>
     <section id="playCard" class="homeCard playCard" aria-label="Start a game">
       <div class="row" id="scriptRow" role="group" aria-label="Which kana">
         <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
@@ -464,6 +470,7 @@
 <script src="game.js"></script>
 <script src="js/skies.js"></script>
 <script src="js/stats.js"></script>
+<script src="js/streak.js"></script>
 <script src="js/savecode.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/install.js"></script>
