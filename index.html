@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07021a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kana Arcade">
+<title>Kana Arcade — かなアーケード</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="hudButtons">
+      <button id="modeToggle" class="alt small" title="Switch input: keyboard typing / tap answers">⌨ TYPE</button>
+      <button id="muteBtn" class="alt small" title="Mute / unmute">🔊</button>
+      <button id="pauseBtn" class="alt small hidden" title="Pause (Esc)">❚❚</button>
+      <button id="keysBtn" class="alt small keysOpen" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash">?</button>
+    </div>
+  </div>
+  <div id="controls" class="hidden">
+    <div id="typeBar">
+      <input id="input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="12" placeholder="type romaji">
+    </div>
+    <div id="tapBar" class="hidden">
+      <button class="ans"></button><button class="ans"></button><button class="ans"></button><button class="ans"></button>
+    </div>
+  </div>
+
+  <div id="startScreen" class="overlay">
+    <h1>KANA ARCADE<span class="jp rubyJp" lang="ja">かなアーケード</span></h1>
+    <p id="tagline" class="tagline">Zap the falling kana by typing (or tapping) their <b>romaji</b> ✨</p>
+    <div id="welcomeCard" class="hidden" role="group" aria-labelledby="wbHi">
+      <canvas id="welcomePet" class="petCanvas" data-size="64" aria-hidden="true"></canvas>
+      <div class="wbBody">
+        <div id="wbHi" role="status" aria-live="polite"><span class="rubyJp wbJp" lang="ja" aria-label="おかえり, okaeri">おかえり</span>! <span id="wbEn"></span></div>
+        <div id="wbText"></div>
+        <div id="wbReview"></div>
+        <p id="wbSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
+      </div>
+      <button id="wbClose" type="button" class="wbClose" aria-label="Close the welcome message" title="Close">✕</button>
+    </div>
+    <section id="playCard" class="homeCard playCard" aria-label="Start a game">
+      <div class="row" id="scriptRow" role="group" aria-label="Which kana">
+        <button class="alt modeBtn rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
+        <button class="alt modeBtn rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
+        <button class="alt modeBtn" data-script="both">MIX</button>
+      </div>
+      <div class="row" id="inputRow" role="group" aria-label="How you answer">
+        <button class="alt inBtn" data-input="type">⌨ Type</button>
+        <button class="alt inBtn" data-input="tap">👆 Tap</button>
+      </div>
+      <div class="row playRow">
+        <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
+        <button id="learnBtn" class="alt learnBtn" type="button" title="Learn real Japanese words and phrases">📚 Learn</button>
+        <button id="reviewBtn" class="alt review hidden" type="button" title="A short round with only the kana you miss most">🔁 Review my misses</button>
+      </div>
+    </section>
+    <nav id="iconRow" class="iconRow" aria-label="More of Kana Arcade">
+      <button id="petBtn" aria-label="My companion" class="alt iconBtn"><span class="ib" aria-hidden="true">🐾</span><small>Buddy</small></button>
+      <button id="badgeBtn" aria-label="Badges" class="alt iconBtn"><span class="ib" aria-hidden="true">🏅</span><small>Badges</small></button>
+      <button id="statsBtn" aria-label="My stats" class="alt iconBtn" type="button" aria-haspopup="dialog" title="See how your kana learning is going"><span class="ib" aria-hidden="true">📊</span><small>Stats</small></button>
+      <button id="omikujiBtn" class="alt iconBtn" aria-haspopup="dialog"><span class="ib" aria-hidden="true">🎋</span><small>OMIKUJI</small></button>
+      <button id="moreBtn" class="alt iconBtn moreBtn" type="button" aria-expanded="false" aria-controls="moreArea"><span class="ib" aria-hidden="true">☰</span><small>More</small></button>
+    </nav>
+    <div id="moreArea" class="moreArea hidden" role="region" aria-labelledby="moreHead">
+      <h2 id="moreHead" class="cardHead moreHead">☰ More</h2>
+      <section id="petCard" class="homeCard" aria-labelledby="petLbl">
+        <h3 class="subHead" id="petLbl">🐾 Play with</h3>
+        <div id="petPicker" class="row" role="group" aria-labelledby="petLbl"></div>
+        <p class="big hiLine"><span id="highLabel">HIGH SCORE:</span> <span id="startHigh">0</span></p>
+      </section>
+    <div id="questCard" role="group" aria-labelledby="questTitle">
+      <div id="questTitle">📜 DAILY QUEST <span id="questJp" lang="ja"></span></div>
+      <div id="questText"></div>
+      <div class="bar qbar" id="questBar" role="progressbar" aria-labelledby="questText" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><div id="questFill"></div><span id="questProg"></span></div>
+      <div id="questStreak"></div>
+    </div>
+      <section id="mochiCard" class="homeCard mochiHome" aria-labelledby="mochiHomeTitle">
+        <h3 id="mochiHomeTitle" class="mochiHomeTitle">🍡 MOCHI MATCH <span class="rubyJp" lang="ja" aria-label="もちあわせ, mochiawase">もちあわせ</span></h3>
+        <p class="tips" id="mochiHomeBlurb">Pair hiragana with katakana. One fresh plate a day.</p>
+        <div id="mochiHomePlate" class="mochiPlate" role="img" aria-label="This week's mochi"></div>
+        <p class="tips" id="mochiHomeWeek"></p>
+        <button id="mochiOpen" class="alt" type="button">🍡 Play today's mochi</button>
+      </section>
+      <section id="moreCard" class="homeCard moreCard" aria-labelledby="settingsHead">
+        <h3 class="subHead" id="settingsHead">⚙️ Settings</h3>
+        <div class="row settingsRow" id="gentleRow" role="group" aria-labelledby="settingsHead">
+          <button id="gentleBtn" class="alt small" type="button" aria-pressed="false" aria-describedby="gentleNote">🫧 Gentle: OFF</button>
+          <button id="musicBtn" class="alt small" type="button" aria-pressed="false" aria-keyshortcuts="B" title="Soft arcade music (B)">🎵 Music: OFF</button>
+          <span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span>
+          <button id="costumeBtn" class="alt small hidden" type="button" aria-pressed="true" title="Spooky-season costumes for your companions">🎃 Costumes: ON</button>
+          <button id="skyBtn" class="alt small" type="button" aria-haspopup="dialog" title="Choose the playfield sky">🌌 Sky: 🌃</button>
+          <button id="keysTitleBtn" class="alt small keysOpen" type="button" aria-haspopup="dialog" aria-keyshortcuts="Shift+Slash" title="Keyboard shortcuts (?)">⌨ Keys <kbd>?</kbd></button>
+        </div>
+        <p class="tips" id="gentleNote"></p>
+      </section>
+      <details id="howTo" class="howTo homeCard">
+        <summary>❓ How to play</summary>
+          <p>Kana are invading! Shoot each falling character by giving its <b>romaji</b> before it hits the ground.
+             Each level unlocks a new kana row (from level 11, the が ぱ tenten &amp; maru rows) and the invaders get faster. After a few levels, whole words drop in too. Tap <b>📚 Learn</b> for themed decks of real words and everyday phrases with review. Chain hits for a combo multiplier! Every 5 in a row, your companion cheers, and a level with no drops earns かんぺき!
+             <b>☰ More</b> also has 🍡 Mochi Match: flip cards, pair each hiragana with its katakana twin, and stamp today's mochi.</p>
+        <p class="tips" id="tips"></p>
+      </details>
+      <div class="row hidden" id="installRow">
+        <button id="installBtn" class="alt small" type="button" aria-describedby="installNote">📲 Add to Home Screen</button>
+        <span class="tips" id="installNote">Keep Kana Arcade as a little app: one tap to open, plays offline.</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="pauseScreen" class="overlay hidden">
+    <h2 style="color:#2be8ff;text-shadow:0 0 12px #2be8ff">PAUSED</h2>
+    <div id="pauseRecap" class="recap" role="group" aria-labelledby="recapHead">
+      <p id="recapHead" class="recapHead">⏸ This game so far</p>
+      <p id="recapStats" class="recapStats"></p>
+      <p id="recapCaught" class="recapRow"></p>
+      <p id="recapMissed" class="recapRow"></p>
+      <p id="recapSay" class="recapSay hidden" aria-live="polite"></p>
+      <p id="recapCheer" class="recapCheer"></p>
+      <span id="recapAria" class="sr" aria-live="polite"></span>
+    </div>
+    <button id="resumeBtn">▶ RESUME</button>
+    <button id="quitBtn" class="alt">QUIT TO TITLE</button>
+  </div>
+
+  <div id="overScreen" class="overlay hidden">
+    <h2 id="overTitle">GAME OVER</h2>
+    <p class="big">SCORE: <span id="finalScore">0</span></p>
+    <p id="newHigh" class="big blink hidden" style="color:#ff2bd6">★ NEW HIGH SCORE! ★</p>
+    <p id="overRank" class="rankUp hidden" role="status"></p>
+    <p id="overReview" class="tips hidden" role="status"></p>
+    <p><span id="overGentle" class="gentleTag hidden">🫧 GENTLE · </span>HIGH <span id="overHigh">0</span> · LV <span id="finalLevel">1</span> · BEST COMBO <span id="finalCombo">0</span> · ACC <span id="finalAcc">0</span>%</p>
+    <canvas id="overPet" class="petCanvas" data-size="120"></canvas>
+    <p id="overPetLine" class="tips"></p>
+    <p id="toPractice" class="tips"></p>
+    <button id="drillBtn" type="button" class="alt small drillBtn hidden" title="Untimed flashcards on the kana you just missed">⚡ Quick drill</button>
+    <p id="overSlow" class="tips slowLine hidden"></p>
+    <p id="overNear" class="tips nearLine hidden"></p>
+    <p id="overLook" class="tips lookLine hidden"></p>
+    <p id="practiceSay" class="tips hearLine hidden" role="status" aria-live="polite"></p>
+    <p id="overQuest" class="tips"></p>
+    <p id="overBadges" class="tips hidden" role="status"></p>
+    <p id="overSky" class="tips skyLine hidden" role="status"></p>
+    <div class="row">
+      <button id="againBtn">▶ PLAY AGAIN</button>
+      <button id="overPetBtn" class="alt">★ COMPANION</button>
+      <button id="overBadgeBtn" class="alt">🏅 BADGES</button>
+      <button id="titleBtn" class="alt">TITLE</button>
+    </div>
+  </div>
+
+  <div id="petScreen" class="overlay hidden">
+    <h2 class="petTitle" id="petName">Nekomaru</h2>
+    <div id="nickRow" class="row nickRow">
+      <button id="nickBtn" class="alt small nickBtn" type="button" title="Give your companion a nickname">🏷️ Give a nickname</button>
+      <form id="nickForm" class="nickForm hidden" autocomplete="off">
+        <label for="nickInput" id="nickLabel" class="srOnly">Nickname</label>
+        <input id="nickInput" type="text" maxlength="32" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="e.g. Mochi" aria-describedby="nickCount">
+        <span id="nickCount" class="nickCount" aria-live="polite">0/16</span>
+        <button id="nickSave" class="small" type="submit">Save</button>
+        <button id="nickCancel" class="alt small" type="button" aria-label="Cancel" title="Cancel (Esc)">✕</button>
+      </form>
+    </div>
+    <p id="petSince" class="sincePill hidden" role="note"></p>
+    <canvas id="bigPet" class="petCanvas" data-size="200" title="Tap to pet!" tabindex="0" role="button" aria-label="Pet your companion" aria-describedby="petSay"></canvas>
+    <p id="petSay" class="say petSay" role="status" aria-live="polite">💬 Tap me! なでなで</p>
+    <p class="big" id="petStage">Egg · たまご</p>
+    <p class="tips hidden" id="petCostume"></p>
+    <div class="bar"><div id="xpFill"></div><span id="xpText"></span></div>
+    <p class="tips" id="petNext"></p>
+    <div class="row"><button id="stickerBtn" class="alt small sticker" type="button" title="Save a picture card of your companion" aria-describedby="stickerSay">📸 Save sticker</button><button id="groupBtn" class="alt small sticker" type="button" title="Save a group photo of all your companions together" aria-describedby="stickerSay">👪 Group photo</button><button id="danceBtn" class="alt small dance" type="button" title="Dance party! Your companion bops along to a little tune" aria-describedby="petSay">🪩 Dance</button></div>
+    <p id="stickerSay" class="sr" role="status" aria-live="polite"></p>
+    <div class="row">
+      <button class="alt gridTab on rubyJp" data-script="hiragana" lang="ja" aria-label="ひらがな, hiragana">ひらがな</button>
+      <button class="alt gridTab rubyJp" data-script="katakana" lang="ja" aria-label="カタカナ, katakana">カタカナ</button>
+    </div>
+    <div class="row"><span class="voiceRow" role="group" aria-label="Kana voice"><span class="voiceLbl" aria-hidden="true">VOICE</span><button class="alt small voiceBtn" type="button" data-gender="female" aria-pressed="true" aria-label="Female voice" title="Female voice (tap to hear あ)">👩 Female</button><button class="alt small voiceBtn" type="button" data-gender="male" aria-pressed="false" aria-label="Male voice" title="Male voice (tap to hear あ)">👨 Male</button></span></div>
+    <div id="findBox" class="findBox">
+    <div class="row findRow" role="search" aria-label="Find a kana">
+      <label for="findInput" class="srOnly">Find a kana by romaji or kana</label>
+      <input id="findInput" type="text" inputmode="text" maxlength="12" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="🔍 Find a kana: shi, tsu, し…" aria-describedby="findSay" aria-keyshortcuts="/" aria-controls="kanaGrid dakuGrid">
+      <button id="findClear" class="alt small hidden" type="button" aria-label="Clear the kana search" title="Clear (Esc)">✕</button>
+      <button id="findDice" class="alt small" type="button" aria-label="Surprise me: show and say a random kana" title="🎲 Surprise me: a random kana to hear">🎲</button>
+    </div>
+    <p id="findSay" class="tips findLine hidden" role="status" aria-live="polite"></p>
+    </div>
+    <p class="tips" id="masteryCount"></p>
+    <p id="gridSay" class="tips hearLine" role="status" aria-live="polite"></p>
+    <div id="kanaGrid"></div>
+    <h3 class="dakuHead"><span lang="ja">が ぱ</span> Tenten &amp; maru <small id="dakuCount"></small></h3>
+    <p class="tips dakuTip">Two little ticks (<span lang="ja">゛</span>) or a tiny circle (<span lang="ja">゜</span>) change the sound: <span lang="ja">か</span> ka → <span lang="ja">が</span> ga, <span lang="ja">は</span> ha → <span lang="ja">ぱ</span> pa.</p>
+    <div id="dakuGrid" aria-label="Tenten and maru kana"></div>
+    <p class="tips">★ = mastered (8+ correct, 80%+ accuracy). Bar = progress toward mastery. 🌱 = almost there (3 or fewer right answers to go). Mastered kana grow your companion!</p>
+    <button id="petBack">◀ BACK</button>
+  </div>
+  <div id="badgeScreen" class="overlay hidden" role="dialog" aria-labelledby="badgeTitle">
+    <h2 class="petTitle" id="badgeTitle">🏅 KANA BADGES</h2>
+    <p class="tips" id="badgeSub"></p>
+    <div id="badgeHelper">
+      <canvas id="badgePet" class="petCanvas" data-size="96" title="Tap me for a tip!"></canvas>
+      <div id="badgeSay" class="say" aria-live="polite"></div>
+    </div>
+    <div id="badgeGrid" role="list"></div>
+    <button id="badgeBack">◀ BACK</button>
+  </div>
+  <div id="drillScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drillTitle">
+    <div id="drillSheet">
+      <button id="drillClose" type="button" class="wbClose" aria-label="Close quick drill" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="drillTitle">⚡ QUICK DRILL <span class="rubyJp" lang="ja" aria-label="れんしゅう, renshū">れんしゅう</span></h2>
+      <div id="drillCard">
+        <p class="tips drillSub">No timer, no lives. Pick the romaji <span id="drillCount" class="drillCount">1 / 1</span></p>
+        <button id="drillKana" type="button" class="drillKana" lang="ja">あ</button>
+        <div id="drillChoices" class="drillChoices" role="group" aria-label="Choices"></div>
+        <p id="drillFeedback" class="drillFeedback" role="status" aria-live="polite"></p>
+      </div>
+      <div id="drillDone" class="hidden">
+        <p id="drillScore" class="drillScore" role="status"></p>
+        <p class="tips">Just practice: your scores and progress stay the same.</p>
+        <div class="row"><button id="drillAgain" type="button">⚡ AGAIN</button><button id="drillBack" type="button" class="alt">◀ BACK</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="omikujiScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="omikujiTitle">
+    <h2 class="petTitle" id="omikujiTitle">🎋 OMIKUJI <span class="rubyJp" lang="ja" aria-label="おみくじ, omikuji">おみくじ</span></h2>
+    <p class="tips" id="omikujiSub">Shake the box for today's fortune and your lucky kana!</p>
+    <button id="omikujiBox" type="button" aria-label="Shake the omikuji box to draw today's fortune"><span class="okBox" aria-hidden="true">🎋</span><span class="okLbl">TAP TO SHAKE</span></button>
+    <div id="omikujiSlip" class="hidden" aria-live="polite">
+      <div class="okTop">今日の運勢 <small>today's fortune</small></div>
+      <div class="okFortune" lang="ja" id="okFortune"></div>
+      <div class="okReading" lang="ja" id="okReading"></div>
+      <div class="okEn" id="okEn"></div>
+      <div class="okLuckyLbl">✨ LUCKY KANA ✨</div>
+      <button type="button" id="okLucky" class="okLucky"></button>
+      <p class="okTip" id="okTip"></p>
+      <p class="okBonus" id="okBonus"></p>
+    </div>
+    <p id="okSay" class="tips hearLine" role="status" aria-live="polite"></p>
+    <button id="omikujiBack">◀ BACK</button>
+  </div>
+  <div id="mochiScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mochiTitle">
+    <h2 class="petTitle" id="mochiTitle">🍡 MOCHI MATCH <span class="rubyJp" lang="ja" aria-label="もちあわせ, mochiawase">もちあわせ</span></h2>
+    <p class="tips" id="mochiFlavor"></p>
+    <p class="tips" id="mochiHelp">Pair each hiragana with its katakana twin. Keys 1–9, 0, Q, W.</p>
+    <div id="mochiPlate" class="mochiPlate" role="img" aria-label="This week's mochi"></div>
+    <p class="tips" id="mochiWeek"></p>
+    <p class="tips" id="mochiBest"></p>
+    <div id="mochiWin" class="mochiWin hidden" role="status">
+      <p id="mochiWinTitle" class="mochiWinTitle" lang="ja">できた!</p>
+      <p class="mochiFest" aria-hidden="true">🍡✨🍡</p>
+      <p id="mochiStars"></p>
+      <p id="mochiWinEn"></p>
+    </div>
+    <div id="mochiDone" class="mochiWin hidden" role="status">
+      <p id="mochiDoneTitle" class="mochiWinTitle">Done for today</p>
+      <p class="mochiFest" aria-hidden="true">🍡✨🍡</p>
+      <p id="mochiDoneEn"></p>
+    </div>
+    <div id="mochiBoard">
+      <div id="mochiGrid" role="group" aria-label="Mochi cards"></div>
+      <p id="mochiFeedback" role="status" aria-live="polite"></p>
+    </div>
+    <div class="row">
+      <button id="mochiAgain" type="button" class="alt hidden">🍡 Another plate</button>
+      <button id="mochiBack" type="button">◀ BACK</button>
+    </div>
+    <div id="mochiFloats" aria-hidden="true"></div>
+  </div>
+  <div id="keysScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="keysTitle">
+    <div id="keysSheet">
+      <button id="keysClose" type="button" class="wbClose" aria-label="Close keyboard shortcuts" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="keysTitle">⌨ SHORTCUTS <span class="rubyJp" lang="ja" aria-label="ショートカット, shōtokatto">ショートカット</span></h2>
+      <div class="keysCols">
+        <section aria-labelledby="kAny"><h3 id="kAny">Anywhere</h3>
+          <dl>
+            <dt><kbd>?</kbd></dt><dd>Open / close this list</dd>
+            <dt><kbd>M</kbd></dt><dd>Sound on / off</dd>
+            <dt><kbd>B</kbd></dt><dd>🎵 Music on / off</dd>
+            <dt><kbd>T</kbd></dt><dd>Switch ⌨ Type / 👆 Tap answers</dd>
+            <dt><kbd>Tab</kbd></dt><dd>Move between buttons</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close the badge book, omikuji, 🌌 sky picker, 📊 stats, welcome card or home screen help</dd>
+          </dl></section>
+        <section aria-labelledby="kPlay"><h3 id="kPlay">In a game</h3>
+          <dl>
+            <dt><kbd>a</kbd>–<kbd>z</kbd></dt><dd>Type the romaji, kana fire by themselves</dd>
+            <dt><kbd>Enter</kbd> <kbd>Space</kbd></dt><dd>Fire what you typed</dd>
+            <dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Pick an answer in 👆 Tap mode</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Pause / resume</dd>
+          </dl></section>
+        <section aria-labelledby="kTitle"><h3 id="kTitle">Title &amp; game over</h3>
+          <dl>
+            <dt><kbd>Enter</kbd></dt><dd>Start / play again</dd>
+          </dl></section>
+        <section aria-labelledby="kPet"><h3 id="kPet">★ My companion</h3>
+          <dl>
+            <dt><kbd>/</kbd></dt><dd>🔍 Find a kana: type romaji or a kana</dd>
+            <dt><kbd>Enter</kbd></dt><dd>Hear the first kana found</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Clear the search</dd>
+            <dt>🎲</dt><dd>Surprise me: a random kana you're still learning</dd>
+          </dl></section>
+      </div>
+      <p class="tips" id="keysNote">While you're typing romaji in a game, <kbd>M</kbd>, <kbd>B</kbd> and <kbd>T</kbd> are just letters (same in the 🔍 search box).</p>
+      <button id="keysBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
+  <div id="installScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div id="installSheet">
+      <button id="installClose" type="button" class="wbClose" aria-label="Close home screen help" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="installTitle">📲 HOME SCREEN <span class="rubyJp" lang="ja" aria-label="ホーム, hōmu">ホーム</span></h2>
+      <canvas id="installPet" class="petCanvas" data-size="96" aria-hidden="true"></canvas>
+      <p class="tips">Keep Kana Arcade as a little app on your iPhone or iPad. It opens in one tap and plays offline.</p>
+      <ol class="installSteps">
+        <li>Tap the <b>Share</b> button <span class="shareIcon" aria-hidden="true">⬆</span> at the bottom (or top) of Safari.</li>
+        <li>Scroll down and tap <b>Add to Home Screen</b> ➕.</li>
+        <li>Tap <b>Add</b>. Your companion is now one tap away 💕</li>
+      </ol>
+      <button id="installDone" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
+  <div id="skyScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="skyTitle">
+    <div id="skySheet">
+      <button id="skyClose" type="button" class="wbClose" aria-label="Close sky picker" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="skyTitle">🌌 SKY <span class="rubyJp" lang="ja" aria-label="そら, sora">そら</span></h2>
+      <p class="tips" id="skySub"></p>
+      <div id="skyList" role="group" aria-label="Playfield skies"></div>
+      <p id="skySay" class="tips hearLine" role="status" aria-live="polite"></p>
+      <p class="tips skyHow">Master kana (★ 8+ right, 80%+ accuracy) to open new skies. Your sky stays yours once you've earned it.</p>
+      <button id="skyBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
+  <div id="learnScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="learnTitle">
+    <div id="learnSheet">
+      <button id="learnClose" type="button" class="wbClose" aria-label="Close Learn" title="Close (Esc)">✕</button>
+      <div id="learnHub">
+        <h2 class="petTitle" id="learnTitle">📚 LEARN JAPANESE <span class="rubyJp" lang="ja" aria-label="にほんご, nihongo">にほんご</span></h2>
+        <p class="tips" id="learnProf"></p>
+        <p class="tips" id="learnCounts"></p>
+        <p class="tips" id="learnDue"></p>
+        <div class="learnTabs" role="tablist" aria-label="Learn sections">
+          <button type="button" class="learnTab on" data-tab="path" role="tab" aria-selected="true">🗺️ Path</button>
+          <button type="button" class="learnTab" data-tab="decks" role="tab" aria-selected="false">📚 Decks</button>
+        </div>
+        <div id="learnPath" class="learnPath" role="tabpanel"></div>
+        <div id="learnDecksWrap" class="hidden">
+          <div id="learnDecks" class="learnDecks" role="list"></div>
+        </div>
+        <label class="learnFuri"><input type="checkbox" id="learnFuri" checked> Show furigana on kanji</label>
+      </div>
+      <div id="learnPlay" class="hidden">
+        <h2 class="petTitle" id="learnDeckTitle">Deck</h2>
+        <button id="learnBackHub" type="button" class="alt small">◀ Back</button>
+        <div id="learnModes" class="learnModes">
+          <button type="button" data-mode="words" class="learnMode">💬 Words<span>See Japanese → pick the meaning</span></button>
+          <button type="button" data-mode="phrases" class="learnMode">🗣️ Phrases<span>Everyday expressions</span></button>
+          <button type="button" data-mode="listen" class="learnMode">🔊 Listen<span>Hear Japanese → pick the meaning</span></button>
+          <button type="button" data-mode="situations" class="learnMode">🎬 Situations<span>What would you say?</span></button>
+          <button type="button" data-mode="review" class="learnMode">🔁 Review<span>Due cards from this deck</span></button>
+        </div>
+        <div id="learnCard" class="learnCard hidden">
+          <p id="learnProgress" class="learnProgress">1 / 10</p>
+          <p id="learnPrompt" class="learnPrompt"></p>
+          <p id="learnSub" class="tips"></p>
+          <button id="learnHear" type="button" class="alt small learnHear hidden" aria-label="Hear it again">🔊 Hear</button>
+          <div id="learnChoices" class="learnChoices" role="group" aria-label="Choices"></div>
+          <div id="learnTypeRow" class="learnTypeRow hidden">
+            <input id="learnType" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer">
+            <button id="learnTypeGo" type="button">OK</button>
+          </div>
+          <p id="learnFeedback" class="learnFeedback" role="status" aria-live="polite"></p>
+        </div>
+        <div id="pathStudy" class="pathStudy hidden"></div>
+        <div id="learnDone" class="hidden">
+          <p id="learnScore" class="learnScore"></p>
+          <p id="learnScoreSub" class="tips"></p>
+          <div class="row"><button id="learnAgain" type="button">🔁 AGAIN</button><button id="learnToHub" type="button" class="alt">📚 Decks</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="statsScreen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+    <div id="statsSheet">
+      <button id="statsClose" type="button" class="wbClose" aria-label="Close my stats" title="Close (Esc)">✕</button>
+      <h2 class="petTitle" id="statsTitle">📊 MY STATS <span class="rubyJp" lang="ja" aria-label="きろく, kiroku">きろく</span></h2>
+      <p class="tips" id="statsSub"></p>
+      <p class="tips" id="statsProf"></p>
+      <div id="statsRank" class="statsRank" role="group" aria-label="Your kana rank">
+        <div class="rankRing" aria-hidden="true"><span id="rankIcon" class="rankIcon">🌱</span></div>
+        <div class="rankText">
+          <span class="rankHead">🎖️ Kana rank</span>
+          <b id="rankName" class="rankName">Kana Sprout</b> <span id="rankJp" class="rankJp" lang="ja">めばえ</span>
+          <span class="rankBar"><span id="rankPct" class="rankPct">0%</span></span>
+          <small id="rankNext" class="rankNext"></small>
+        </div>
+      </div>
+      <ul id="statsGrid" aria-label="Your stats"></ul>
+      <div id="statKana" class="row">
+        <button id="statBest" type="button" class="statKana best"></button>
+        <button id="statTricky" type="button" class="statKana tricky"></button>
+      </div>
+      <div id="statMix" class="statMix hidden" role="group" aria-labelledby="mixHead">
+        <p id="mixHead" class="mixHead">🔀 My mix-ups <small>kana you mix up most, over all your games</small></p>
+        <div id="mixList" class="mixList"></div>
+        <button id="mixDrill" type="button" class="alt small">⚡ Drill my mix-ups</button>
+      </div>
+      <p id="statsSay" class="tips hearLine" role="status" aria-live="polite"></p>
+      <p id="statsSince" class="sincePill hidden"></p>
+      <div id="saveCode" class="saveCode">
+        <button id="scToggle" class="alt small" type="button" aria-expanded="false" aria-controls="scBox">💾 Move my progress to another device</button>
+        <div id="scBox" class="hidden">
+          <p class="tips">Copy this code and paste it on your other phone or laptop under <b>Restore</b>. It's only your learning progress.</p>
+          <textarea id="scOut" readonly rows="3" spellcheck="false" aria-label="Your save code"></textarea>
+          <button id="scCopy" class="alt small" type="button">📋 Copy code</button>
+          <label for="scIn" class="scLbl">♻️ Restore from a code</label>
+          <textarea id="scIn" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a KANA1 code here"></textarea>
+          <div class="row scRow"><button id="scRestore" class="alt small" type="button">♻️ Restore</button><button id="scUndo" class="alt small hidden" type="button">↩ Undo last restore</button></div>
+          <p id="scMsg" class="scMsg" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <p id="statsSr" class="sr" role="status" aria-live="polite"></p>
+      <button id="statsBack" type="button">OK! <span class="rubyJp" lang="ja" aria-label="わかった, wakatta">わかった</span></button>
+    </div>
+  </div>
+  <div id="kaToast" class="hidden" role="status" aria-live="polite"></div>
+</div>
+<script src="kana.js"></script>
+<script src="js/romaji.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/quest.js"></script>
+<script src="js/omikuji.js"></script>
+<script src="js/welcome.js"></script>
+<script src="js/costumes.js"></script>
+<script src="js/words.js"></script>
+<script src="js/data-loader.js"></script>
+<script src="js/vocab.js"></script>
+<script src="js/srs.js"></script>
+<script src="js/path.js"></script>
+<script src="js/learn.js"></script>
+<script src="js/review.js"></script>
+<script src="js/chatter.js"></script>
+<script src="js/sticker.js"></script>
+<script src="js/music.js"></script>
+<script src="js/near.js"></script>
+<script src="js/lookalike.js"></script>
+<script src="js/mnemonic.js"></script>
+<script src="js/drill.js"></script>
+<script src="js/pace.js"></script>
+<script src="js/ribbon.js"></script>
+<script src="js/decode.js"></script>
+<script src="js/slowspot.js"></script>
+<script src="js/mixlog.js"></script>
+<script src="js/nick.js"></script>
+<script src="js/since.js"></script>
+<script src="js/doze.js"></script>
+<script src="js/find.js"></script>
+<script src="js/recap.js"></script>
+<script src="js/twin.js"></script>
+<script src="companion.js"></script>
+<script src="game.js"></script>
+<script src="js/skies.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/savecode.js"></script>
+<script src="js/keys.js"></script>
+<script src="js/install.js"></script>
+<script src="js/swipe.js"></script>
+<script src="js/badges.js"></script>
+<script src="js/badge-book.js"></script>
+<script src="js/mochi.js"></script>
+</body>
+</html>
