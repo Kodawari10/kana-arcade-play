@@ -265,9 +265,10 @@
     $("learnProgress").textContent = (qi + 1) + " / " + queue.length;
     $("learnFeedback").textContent = ""; $("learnFeedback").className = "learnFeedback";
     $("learnPrompt").innerHTML = esc(item.prompt);
-    $("learnSub").textContent = item.kind === "kanji" ? "Pick the meaning" : (item.kind === "grammar" ? "Grammar" : "Comprehension");
+    $("learnSub").textContent = item.kind === "kanji" ? "Pick the meaning" : (item.kind === "grammar" ? "Grammar" : item.kind === "listen" ? "Listening · tap 🔊 to replay" : "Comprehension");
     $("learnTypeRow").classList.add("hidden");
-    $("learnHear").classList.add("hidden");
+    $("learnHear").classList.toggle("hidden", item.kind !== "listen");
+    if (item.kind === "listen" && item.kana) speak(item.kana);
     var opts = item.options || [item.answer];
     $("learnChoices").innerHTML = opts.map(function (o, i) {
       return '<button type="button" class="learnAns" data-ans="' + esc(o) + '" data-i="' + (i + 1) + '"><small>' + (i + 1) + "</small>" + esc(o) + "</button>";

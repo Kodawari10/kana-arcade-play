@@ -122,6 +122,16 @@
     for (var i = q.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = q[i]; q[i] = q[j]; q[j] = t; }
     return q;
   }
+  // 聴解 (listening): hear a real N-level word from the decks (spoken by the device voice), pick its meaning.
+  function listenQs(levelId, n) {
+    var pool = [];
+    var VDATA = root.KA_VOCAB_DATA || (typeof global !== "undefined" ? global.KA_VOCAB_DATA : null);
+    ((VDATA && VDATA.ITEMS) || []).forEach(function (it) { if (it.level === levelId && it.kana) pool.push(it); });
+    shuffleInPlace(pool);
+    return pool.slice(0, n).map(function (it) {
+      return { kind: "listen", id: it.id, type: "listen", prompt: "🔊 Listen, then pick the meaning", options: null, answer: it.en, kana: it.kana, item: it };
+    });
+  }
   function levelTest(levelId) {
     var units = unitsFor(levelId);
     var raw = [];
@@ -132,16 +142,16 @@
     }
     if (levelId === "N3") {
       // JLPT-like sections: vocab, grammar, reading (listening reuses reading/grammar with a listen tag)
-      var q = take("vocab", 8).concat(take("grammar", 8), take("kanji", 5), take("reading", 5));
+      var q = take("vocab", 7).concat(take("grammar", 7), take("kanji", 5), take("reading", 5), listenQs(levelId, 4));
       if (q.length < 20) {
         shuffleInPlace(raw);
         raw.forEach(function (x) { if (q.length < 24 && q.indexOf(x) < 0) q.push(x); });
       }
       q.forEach(function (x, i) {
-        var sec = x.kind === "vocab" || x.kind === "kanji" ? "語彙" : x.kind === "grammar" ? "文法" : "読解";
+        var sec = x.kind === "vocab" || x.kind === "kanji" ? "語彙" : x.kind === "grammar" ? "文法" : x.kind === "listen" ? "聴解" : "読解";
         x.prompt = "【" + sec + "】 " + x.prompt;
       });
-      return q.slice(0, Math.min(24, Math.max(18, q.length)));
+      return q.slice(0, Math.min(28, Math.max(18, q.length)));
     }
     var q = [];
     units.forEach(function (u) { checkpointQuiz(u.id).slice(0, 3).forEach(function (x) { q.push(x); }); });
@@ -159,7 +169,7 @@
         var m = pool[Math.floor(Math.random() * pool.length)];
         if (opts.indexOf(m) < 0) opts.push(m);
       }
-    } else if (item.kind === "vocab" && item.item && root.KA_VOCAB) {
+    } else if ((item.kind === "vocab" || item.kind === "listen") && item.item && root.KA_VOCAB) {
       opts = root.KA_VOCAB.quizChoices(item.item, 4).map(function (o) { return o.en; });
       return Object.assign({}, item, { options: opts, answer: item.item.en });
     } else {
@@ -185,7 +195,7 @@
     kanjiByCh: kanjiByCh, kanjiForLevel: kanjiForLevel, grammarById: grammarById, readingById: readingById,
     markKanaDone: markKanaDone, unitPass: unitPass, levelPass: levelPass,
     isLevelUnlocked: isLevelUnlocked, isUnitUnlocked: isUnitUnlocked, proficiency: proficiency,
-    checkpointQuiz: checkpointQuiz, levelTest: levelTest, withOptions: withOptions, rubyHtml: rubyHtml,
+    checkpointQuiz: checkpointQuiz, levelTest: levelTest, listenQs: listenQs, withOptions: withOptions, rubyHtml: rubyHtml,
     counts: function () {
       var g = (GD && GD.GRAMMAR) || [];
       var r = (RD && RD.READINGS) || [];
